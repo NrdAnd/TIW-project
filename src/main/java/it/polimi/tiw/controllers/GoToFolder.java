@@ -114,7 +114,6 @@ public class GoToFolder extends HttpServlet {
             return;
         }
         
-        
         templateEngine.process(path, ctx, resp.getWriter());
         
     }

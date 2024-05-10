@@ -437,5 +437,24 @@ public class FolderDAO {
 		
 		return result.getString("folder_name");
 	}
+	
+	
+	/**
+	 * This method deletes a specific folder with its subfolders and documents
+	 * @param userID is the user ID
+	 * @param folderID is the folder ID
+	 * @throws SQLException if ther's an exception
+	 */
+	
+	public void deleteFolder (int userID, int folderID) throws SQLException {
+		
+		String query = "WITH RECURSIVE FolderHierarchy AS (SELECT folder_id FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.folder_id FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Folder WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy) ORDER BY folder_id DESC";
+
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setInt(1, userID);
+		statement.setInt(2, folderID);
+		
+		statement.executeUpdate();
+	}
 		
 }
