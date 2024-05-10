@@ -1,0 +1,136 @@
+body {
+	background-color: #ffffff;
+}
+
+table {
+	width: auto;
+}
+
+.scrollable-content {
+	overflow:auto;
+	height: 100vh; /* Imposta l'altezza al 100% della viewport */
+	width: 100%; /* Imposta la larghezza al 100% */
+}
+
+/* Sovrascrive il colore di sfondo della navbar di Bootstrap */
+nav.navbar {
+	background-color: #120b33;
+}
+
+.b-logout {
+	background-color: #ffffff;
+	border-radius: 5px;
+}
+
+.b-logout:hover {
+	background-color: #00b896;
+	border-color: #00b896;
+}
+
+.btn-outline-light {
+	border-radius: 30px; /* Rendi il button stondato */
+	transition: all 0.3s ease; /* Aggiungi un'animazione di transizione */
+}
+
+.internal-btn {
+	color: black; /* Colore del testo nero */
+	border-color: black; /* Colore del bordo nero */
+	transition: all 0.3s ease; /* Aggiungi un'animazione di transizione */
+}
+
+.internal-btn:hover {
+	background-color: #00b896; /* Colore di sfondo al passaggio del mouse */
+	color: white; /* Colore del testo bianco al passaggio del mouse */
+	border-color: #00b896;
+	/* Cambia il colore del bordo al passaggio del mouse */
+	transform: scale(1.05);
+	/* Scala leggermente il tasto al passaggio del mouse */
+}
+
+.go-page-btn {
+	background-color: #00b896;
+	border-color: #00b896;
+	border-radius: 5px; /* Imposta i bordi più squadrati */
+}
+
+.go-page-btn:hover {
+	background-color: #008577; /* Cambia il colore al passaggio del mouse */
+	border-color: #008577;
+}
+
+.message-box {
+	position: fixed;
+	top: 100px;
+	left: 22px;
+	background-color: #f5f5f5; /* Sfondo grigio chiaro */
+	padding: 10px; /* Spazio interno */
+	border-radius: 10px; /* Angoli stondati */
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra */
+}
+
+/* Stile generale dell'albero delle cartelle */
+.folder-tree {
+	list-style: none;
+	padding-left: 20px;
+}
+
+/* Stile dei bottoni delle cartelle */
+.folder-btn {
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 5px 10px;
+	margin: 5px 0;
+	display: inline-block;
+	border-radius: 5px;
+}
+
+/* Stile del bottone per la cartella non cliccabile */
+.folder-btn[disabled] {
+	cursor: default; /* Impedisce il cambio di cursori */
+	background-color: #666; /* Colore di sfondo grigio scuro */
+	color: #fff; /* Testo bianco */
+	border: none; /* Nessun bordo */
+	padding: 5px 10px; /* Spaziatura interna */
+	border-radius: 5px; /* Angoli stondati */
+}
+
+/* Stile dei bottoni delle cartelle al passaggio del mouse */
+.folder-btn:hover {
+	background-color: #f0f0f0;
+	/* Colore di sfondo al passaggio del mouse */
+}
+
+.folder-btn:not([disabled]):hover {
+	background-color: #e0e0e0;
+	/* Colore di sfondo grigio chiaro al passaggio del mouse */
+}
+
+/* Stile degli elementi figlio dell'albero delle cartelle */
+.folder-tree li {
+	margin-left: -1em;
+	/* Imposta il margine negativo per allineare gli elementi figlio */
+}
+
+/*content*/
+.button-group {
+	display: flex;
+	flex-direction: row;
+}
+
+/* Aggiungi un po' di spazio tra i bottoni */
+.button-group form {
+	margin-right: 10px;
+}
+
+.align-top {
+	vertical-align: top;
+}
+
+/* Stile del menu a tendina */
+.custom-select {
+	font-size: 16px; /* Dimensione del testo */
+	padding: 8px 12px;
+	/* Aggiungi spazio tra il testo e i bordi del menu a tendina */
+	margin-bottom: 5px; /* Aggiungi spazio tra le opzioni */
+}
