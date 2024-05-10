@@ -151,19 +151,36 @@ public class DocumentDAO {
     
     
     /**
-     * This method deletes the document inside the current folder and also inside its subfolders
+     * This method deletes the documents inside the current folder and also inside its subfolders
      * @param userID is the user ID
      * @param folderID is the folder ID
      * @throws SQLException if there's an exception
      */
     
-    public void deleteDocuments(int userID, int folderID) throws SQLException {
+    public void deleteDocumentsInFolderAndSubfolders(int userID, int folderID) throws SQLException {
     	
     	String query = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Document WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy);";
     	
     	PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
 		statement.setInt(2, folderID);
+		
+		statement.executeUpdate();
+    }
+    
+    /**
+     * This method deletes a specific document
+     * @param userID is the user ID
+     * @param documentID is the document ID
+     * @throws SQLException if there's an exception
+     */
+    
+    public void deleteDocument(int userID, int documentID) throws SQLException {
+    	
+    	String query = "DELETE FROM Document WHERE owner_id = ? AND document_id = ?";
+    	PreparedStatement statement = connection.prepareStatement(query);
+    	statement.setInt(1, userID);
+		statement.setInt(2, documentID);
 		
 		statement.executeUpdate();
     }
