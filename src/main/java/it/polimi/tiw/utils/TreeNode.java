@@ -1,5 +1,6 @@
 package it.polimi.tiw.utils;
 
+import it.polimi.tiw.beans.Document;
 import it.polimi.tiw.beans.Folder;
 import java.util.ArrayList;
 
@@ -8,11 +9,13 @@ public class TreeNode {
     private Folder folder;
     private ArrayList<TreeNode> children;
     private int childrenListSize;
+    private ArrayList<Document> documentList;
 
     public TreeNode(Folder folder) {
         this.folder = folder;
         this.children = new ArrayList<>();
         this.childrenListSize = 0;
+        this.documentList = new ArrayList<>();
     }
     
 
@@ -33,8 +36,9 @@ public class TreeNode {
         children.add(child);
     }
     
-    public int getChildrenListSize() {
-    	return this.children.size();
-    }
+	public void setDocumentList(ArrayList<Document> documentList) {
+		this.documentList.addAll(documentList);
+	}
+    
 }
 

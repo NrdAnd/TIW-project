@@ -29,7 +29,6 @@ import it.polimi.tiw.utils.ConnectionHandler;
 public class CreateFolder extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private Connection connection = null;
-	private TemplateEngine templateEngine;
 
 	public CreateFolder() {
 		super();
@@ -38,38 +37,31 @@ public class CreateFolder extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
-		ServletContext servletContext = getServletContext();
-		ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver(servletContext);
-		templateResolver.setTemplateMode(TemplateMode.HTML);
-		this.templateEngine = new TemplateEngine();
-		this.templateEngine.setTemplateResolver(templateResolver);
-		templateResolver.setSuffix(".html");
 	}
 
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		doPost(req, resp);
-	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
 		HttpSession session = req.getSession();
+		resp.setContentType("text/plain");
 
 		Integer destinationID;
 		String newFolderName;
 		try {
 			destinationID = Integer.parseInt(req.getParameter("destinationID"));
 		} catch (NumberFormatException | NullPointerException e) {
-			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "DestinationID mancante o vuoto");
-			return;
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println("Errore: DestinationID non valido");
+            return;
 		}
 
 		try {
 			newFolderName = req.getParameter("newFolderName");
 		} catch (IllegalArgumentException | NullPointerException e) {
-			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "NewFolderName mancante o vuoto");
-			return;
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println("Errore: New Folder Name non valido");
+            return;
 		}
 
 		
@@ -80,25 +72,16 @@ public class CreateFolder extends HttpServlet {
 		try {
 			parentFolderDepth = folderDao.getDepthByID(utente.getUserID(), destinationID);
 		} catch (SQLException e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
-			return;
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().println("Errore SQL: impossibile estrarre la profondità della cartella padre");
+            return;
 		}
 
 		if (parentFolderDepth < 0) {
-			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ParentFolderDepth mancante o vuoto");
-			return;
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println("Errore: Profondità negativa");
+            return;
 		}
-
-		/*DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Timestamp timestamp;
-		try {
-			timestamp = new Timestamp(dateFormatter.parse(req.getParameter("Data")).getTime());
-		} catch (ParseException | NullPointerException e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "La formattazione della data non è andata a buon fine");
-			e.printStackTrace();
-			return;
-		}
-		*/
 		
 		boolean newFolderIsRoot;
 		if (parentFolderDepth == 0) {
@@ -113,16 +96,14 @@ public class CreateFolder extends HttpServlet {
 			int code;
 			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID, newFolderIsRoot, parentFolderDepth + 1);
 			if (code != 1) {
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
-				return;
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+	            resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in ");
 			}
 		} catch (SQLException e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
-			return;
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in rubrica");
 		}
-		
-		String url = req.getContextPath() + "/OpenContentManager";
-		resp.sendRedirect(url);
+	
 		
 	}
 	

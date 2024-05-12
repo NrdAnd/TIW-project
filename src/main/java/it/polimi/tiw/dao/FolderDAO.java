@@ -20,7 +20,7 @@ public class FolderDAO {
 	}
 
 	/**
-	 * This method create and return the folderTree
+	 * This method creates and returns the folderTree
 	 * 
 	 * @param userID is the user ID
 	 * @return the folderTree

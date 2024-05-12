@@ -117,9 +117,6 @@ public class CheckSignupCredentials extends HttpServlet {
     			return;
     		}
             
-            Stack<String> pageStack = new Stack<>();
-            req.getSession().setAttribute("pageStack", pageStack);
-            
         } catch (SQLException e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Errore SQL: impossibile ricavare l'utente richiesto");
             return;
