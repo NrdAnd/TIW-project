@@ -47,17 +47,21 @@ public class DeleteFolder extends HttpServlet {
 
 		User utente = (User) session.getAttribute("utente");
 		FolderDAO folderDao = new FolderDAO(connection);
-		DocumentDAO documentDao = new DocumentDAO(connection);
-
-		//DA FIXARE
 		try {
-			documentDao.deleteDocumentsInFolderAndSubfolders(utente.getUserID(), folderID);
-			// folderID);
-			// da aggiungere eliminazione cartelle e sottocartelle
+			folderDao.deleteFolder(utente.getUserID(), folderID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione del documento nel DB");
 		}
 	}
+	
+	@Override
+    public void destroy() {
+        try{
+            ConnectionHandler.closeConnection(connection);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
 
 }
