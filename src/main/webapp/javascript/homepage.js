@@ -2,7 +2,7 @@
     /**
      * This method checks if the user is logged in.
      */
-    if (localStorage.getItem("user") === null) {
+    if (localStorage.getItem("utente") === null) {
         logout();
     }
 
@@ -13,7 +13,7 @@
      */
     window.addEventListener('load', function () {
         pageManager.start();
-        if (localStorage.getItem("user") === null) {
+        if (localStorage.getItem("utente") === null) {
             logout()
         } else {
             start();
@@ -21,7 +21,7 @@
     }, false);
 
     function start() {
-        document.getElementById("userName").textContent = JSON.parse(localStorage.getItem("user"));
+        document.getElementById("userName").textContent = JSON.parse(localStorage.getItem("utente"));
         document.getElementById("Logout").addEventListener("click", function () {
             document.getElementById("Logout").disable = true;
             logout();
