@@ -18,12 +18,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 
-@WebServlet("/OpenDocument") // Filtered
-public class OpenDocument extends HttpServlet {
+@WebServlet("/GetDocument") // Filtered
+public class GetDocument extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection = null;
 
-    public OpenDocument() {
+    public GetDocument() {
         super();
     }
 

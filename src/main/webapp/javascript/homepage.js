@@ -6,7 +6,7 @@
         logout();
     }
 
-    let folderList, documentDetails, createFolder, createDocument, dragAndDropManager,
+    let folderTree, documentDetails, createFolder, createDocument, dragAndDropManager,
         pageManager = new PageManager();
     /**
      * This starts the page if the user is logged in.
@@ -148,7 +148,7 @@
          * This method is called on refresh. Crates the classes by passing them the right elements.
          */
         this.start = function () {
-            folderList = new FolderList(document.getElementById("folderList"));
+            folderTree = new FolderTree(document.getElementById("folderTree"));
             const rightContainer = document.getElementById("rightContainer");
             documentDetails = new ShowDocument({
                 documentName: document.getElementById("documentName"),
@@ -167,7 +167,7 @@
          * This method refreshes the page.
          */
         this.refresh = function () {
-            folderList.show();
+            folderTree.show();
         }
 
         /**
@@ -177,6 +177,33 @@
             documentDetails.hide();
             createFolder.hide();
             createDocument.hide();
+        }
+    }
+    
+    
+    function checkResponse(response) {
+        if (response.readyState === XMLHttpRequest.DONE) {
+            let text = response.responseText;
+            switch (response.status) {
+                case 200:
+                    pageManager.refresh();
+                    break;
+                case 400:
+					alert(text);
+					break;
+                case 401:
+                    alert("You are not logged in.")
+                    logout();
+                    break;
+                case 403:
+					alert("No response from the Server.")
+					break;
+                case 500:
+                    alert(text);
+                    break;
+                default:
+                    alert("Unknown error");
+            }
         }
     }
 }
