@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>Document Manager</title>
@@ -8,80 +8,45 @@
     <link href="css/main.css" rel="stylesheet">
 </head>
 <body>
-	
     <nav class="navbar navbar-dark fixed-top">
         <img src="resources/images/polimi_logo_horizontal_white.png" height="60" width="auto">
         <div class="d-flex flex-row my-1"  style="margin-right:10px">
-        <!--    <p th:text="${session.utente.username}" class="h4 navbar-brand font-weight-normal my-1">USERNAME</p> -->
-            <a th:href="@{/Logout}"><button class="btn btn-outline-light my-1" type="submit">Logout</button></a>
+            <button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
         </div>
     </nav>
-	<div class="scrollable-content">
-        <h1 style="margin-top: 85px; margin-left:13px;">Homepage</h1>
-	<div th:if="${!isMovingAction}">
-		<div style="position: absolute; top: 85px; right: 10px">
-			<a th:href=@{/OpenContentManager}><button
-					class="btn btn-outline-light btn-round my-1 go-page-btn">Content Manager</button></a>
-		</div>
-
-		<div style="position: absolute; top: 140px;">
-			<!-- Chiamata iniziale per stampare l'albero -->
-			<ul>
-				<li th:replace=":: printTree(${folderTree})"></li>
-			</ul>
-		</div>
-
-	</div>
-
-
-	<div th:if="${isMovingAction}">
-		<div class="message-box" style="position: absolute">
-			Stai spostando il documento <span th:text="${documentName}"></span>,
-			dalla cartella <span th:text="${originFolderName}"></span>. Scegli la
-			cartella di destinazione.
-		</div>
-		<div style="position: absolute; margin-top: 180px;">
-			<!-- Chiamata iniziale per stampare l'albero -->
-			<ul>
-				<li th:replace=":: printTree(${folderTree})"></li>
-			</ul>
-		</div>
-	</div>
-
-
-
-	<!-- Definizione della funzione ricorsiva Thymeleaf -->
-	<div th:block th:fragment="printTree(node)">
+    <h1 style="margin-top: 85px; margin-left:13px;">Homepage</h1>
+	<div id="folderList"></div>
+	<div id="documentDetails">
+	    <h3>Document details:</h3>
+    	<h4>Name:</h4>
+    	<p id="documentName"></p>
+    	<h4>Format:</h4>
+    	<p id="documentFormat"></p>
+    	<h4>Summary:</h4>
+    	<p id="documentSummary"></p>
+    	<h4>Creation date:</h4>
+    	<p id="documentDate"></p>
+    	<input type="button" id="hideDetails" value="Hide Details">
+    </div>
 	
-		<div th:if="${node != null}" >
-		<!-- Stampa dell'albero normale; dunque non in fase di spostamento di un documento -->
-		<div
-			th:if="${!isMovingAction and node.folder.depth > folderTree.folder.depth}">
-			<a th:href="@{/GoToFolder(folderID=${node.folder.folderID})}">
-				<button class="folder-btn"><span th:text="${node.folder.folderName}"></span></button>
-			</a>
-		</div>
-		
-		<!-- Stampa dell'albero in fase di spostamento di un documento: evita di mettere il link alla cartella di provenienza del doc -->
-		<div th:if="${isMovingAction and node.folder.folderID == originFolderID and node.folder.depth > folderTree.folder.depth}">
-			<button class="folder-btn" disabled><span th:text="${node.folder.folderName}"></span></button>
-		</div>
-		
-		<!-- Stampa dell'albero in fase di spostamento di un documento: mette i vari link alle altre cartelle -->
-		<div th:if="${isMovingAction and node.folder.folderID != originFolderID and node.folder.depth > folderTree.folder.depth}">
-			<a th:href="@{/MoveDocument(destinationFolderID=${node.folder.folderID}, documentID=${documentID})}">
-			<button class="folder-btn"><span th:text="${node.folder.folderName}"></span></button>
-			</a>
-		</div>
-
-		<ul th:if="${node.children}">
-			<li th:each="child : ${node.children}">
-				<div th:replace=":: printTree(${child})"></div>
-			</li>
-		</ul>
-	</div>
-	</div>
-	</div>
-
+	<form id="createFolder" action="#" class="creation-form">
+    	<h3>Create a Folder</h3>
+    	<label for="folderName">Folder Name:</label>
+    	<input type="text" id="folderName" name="folderName" required> <br>
+    	<input type="submit" id="createFld" value="Create Folder">
+	</form>
+	
+	
+	<form id="createDocument" action="#" class="creation-form">
+    	<h3 id="createDocumentTitle">Create a Document</h3>
+    	<label for="docName">Name:</label>
+    	<input type="text" id="docName" name="docName" maxlength="50" required><br>
+    	<label for="docFormat">Format:</label>
+    	<input type="text" id="docFormat" name="docFormat" maxlength="10" pattern="^[^\s.]{1,10}$" required><br>
+   	 	<label for="docSummary">Summary:</label>
+    	<textarea id="docSummary" name="docSummary" rows="5" maxlength="200" required></textarea><br>
+    	<input type="hidden" id="subfolderId" name="subfolderId" class="hiddenInput">
+    	<input type="submit" id="createDoc" value="Create Document">
+	</form>
 </body>
 </html>
