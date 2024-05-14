@@ -1,55 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Document Manager</title>
+<meta charset="UTF-8">
+<title>Document Manager</title>
 
-  	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">  
-    <link href="css/main.css" rel="stylesheet">
-    <script src="javascript/utils.js" charset="utf-8"></script>
-    <script src="javascript/homepage.js" charset="utf-8" defer></script>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+	crossorigin="anonymous">
+<link href="css/main.css" rel="stylesheet">
+<script src="javascript/utils.js" charset="utf-8"></script>
+<script src="javascript/homepage.js" charset="utf-8" defer></script>
 </head>
 </head>
 <body>
-    <nav class="navbar navbar-dark fixed-top">
-        <img src="resources/images/polimi_logo_horizontal_white.png" height="60" width="auto">
-        <div class="d-flex flex-row my-1"  style="margin-right:10px">
-            <button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
-        </div>
-    </nav>
-    <h1 style="margin-top: 85px; margin-left:13px;">Homepage</h1>
-	<div id="folderList"></div>
+	<nav class="navbar navbar-dark fixed-top">
+		<img src="resources/images/polimi_logo_horizontal_white.png"
+			height="60" width="auto">
+		<div class="d-flex flex-row my-1" style="margin-right: 10px">
+			<button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
+		</div>
+	</nav>
+
+	<div id="rightContainer" class="right-div"></div>
+	
+	<h1 style="margin-top: 85px; margin-left: 13px;">Homepage</h1>
+	<div id="folderTree"></div>
+
 	<div id="documentDetails">
-	    <h3>Document details:</h3>
-    	<h4>Name:</h4>
-    	<p id="documentName"></p>
-    	<h4>Format:</h4>
-    	<p id="documentFormat"></p>
-    	<h4>Summary:</h4>
-    	<p id="documentSummary"></p>
-    	<h4>Creation date:</h4>
-    	<p id="documentDate"></p>
-    	<input type="button" id="hideDetails" value="Hide Details">
-    </div>
-	
+		<h3>Document details:</h3>
+		<h4>Name:</h4>
+		<p id="documentName"></p>
+		<h4>Format:</h4>
+		<p id="documentFormat"></p>
+		<h4>Summary:</h4>
+		<p id="documentSummary"></p>
+		<h4>Creation date:</h4>
+		<p id="documentDate"></p>
+		<input type="button" id="hideDetails" value="Hide Details">
+	</div>
+
 	<form id="createFolder" action="#" class="creation-form">
-    	<h3>Create a Folder</h3>
-    	<label for="folderName">Folder Name:</label>
-    	<input type="text" id="folderName" name="folderName" required> <br>
-    	<input type="submit" id="createFld" value="Create Folder">
+		<h3>Create a Folder</h3>
+		<label for="folderName">Folder Name:</label> <input type="text"
+			id="folderName" name="folderName" required> <br> <input
+			type="submit" id="createFld" value="Create Folder">
 	</form>
-	
-	
+
+
 	<form id="createDocument" action="#" class="creation-form">
-    	<h3 id="createDocumentTitle">Create a Document</h3>
-    	<label for="docName">Name:</label>
-    	<input type="text" id="docName" name="docName" maxlength="50" required><br>
-    	<label for="docFormat">Format:</label>
-    	<input type="text" id="docFormat" name="docFormat" maxlength="10" pattern="^[^\s.]{1,10}$" required><br>
-   	 	<label for="docSummary">Summary:</label>
-    	<textarea id="docSummary" name="docSummary" rows="5" maxlength="200" required></textarea><br>
-    	<input type="hidden" id="subfolderId" name="subfolderId" class="hiddenInput">
-    	<input type="submit" id="createDoc" value="Create Document">
+		<h3 id="createDocumentTitle">Create a Document</h3>
+		<label for="docName">Name:</label> <input type="text" id="docName"
+			name="docName" maxlength="50" required><br> <label
+			for="docFormat">Format:</label> <input type="text" id="docFormat"
+			name="docFormat" maxlength="10" pattern="^[^\s.]{1,10}$" required><br>
+		<label for="docSummary">Summary:</label>
+		<textarea id="docSummary" name="docSummary" rows="5" maxlength="200"
+			required></textarea>
+		<br> <input type="hidden" id="subfolderId" name="subfolderId"
+			class="hiddenInput"> <input type="submit" id="createDoc"
+			value="Create Document">
 	</form>
 </body>
 </html>
