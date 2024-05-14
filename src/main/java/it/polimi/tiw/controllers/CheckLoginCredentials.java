@@ -65,7 +65,7 @@ public class CheckLoginCredentials extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
-            resp.getWriter().println(utente.getEmail());
+            resp.getWriter().println(utente.getUsername());
         }
     }
 

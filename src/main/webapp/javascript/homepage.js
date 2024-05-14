@@ -6,7 +6,7 @@
         logout();
     }
 
-    let folderTree, documentDetails, createFolder, createDocument, dragAndDropManager,
+    let folderTree, documentInfo, createFolder, createDocument, dragAndDropManager,
         pageManager = new PageManager();
     /**
      * This starts the page if the user is logged in.
@@ -34,32 +34,140 @@
      */
     function logout() {
         let loggedOut = false;
-        makeCall("GET", 'logout', function (response) {
+        makeCall("GET", 'Logout', null, function () {
+			
+			console.log(response);
             if (response.readyState === XMLHttpRequest.DONE) {
                 switch (response.status) {
                     case 200:
                         loggedOut = true;
                         localStorage.clear();
-                        window.location.href = "login.html";
+                        window.location.href = "index.html";
                         break;
-                    default :
+                    default:
                         alert("Unknown Error");
                         break;
                 }
             }
         });
+        
         if (!loggedOut) {
             localStorage.clear();
-            window.location.href = "login.html";
+            window.location.href = "index.html";
         }
     }
-    
-    
-    //Da aggiungere codice di stampa e di gestione delle robe
-    
-    
-    
-    
+
+
+    /**
+     * This method permits the dynamic print of the Folder Tree
+     * @param {*} container is the container
+     */
+
+    function FolderTree(container) {
+
+        this.container = container;
+
+        this.show = function () {
+            this.container.innerHTML = "";
+            const self = this;
+            makeCall("GET", "GetTree", null,
+                function (req) {
+                    if (req.readyState === 4) {
+                        let message = req.responseText;
+                        let error = document.getElementById("treeError");
+
+                        if (req.status === 200) {
+                            let folderTree = JSON.parse(req.responseText);
+
+                            if (folderTree) {
+                                error.textContent = "Nessuna Folder presente!";
+                                error.classList.add("alert", "alert-danger");
+                                return;
+                            }
+
+                            self.update(folderTree); // self visible by closure
+                        } else if (req.status === 403) {
+                            window.location.href = req.getResponseHeader("Location");
+                            window.sessionStorage.removeItem('utente');
+                        } else {
+                            errorPar.textContent = message;
+                        }
+                    }
+                }
+            )
+        }
+
+        this.update = function (folderTree) {
+
+            this.container.innerHTML = "";
+            const self = this;
+
+            let treeContainer = document.getElementById('treeContainer');
+            //Ricursive Function to print the Folder Tree
+            traverseTree(tree, treeContainer);
+
+            //Set up the drag and drop
+            dragAndDropManager.setupDragAndDrop();
+        }
+        
+        
+        this.traverseTree = function traverseTree(node, parentElement) {
+
+            let nodeElement = document.createElement('div');
+            if (node.folder.depth > 0) {
+                nodeElement.textContent = node.folder.folderName;
+            }
+            parentElement.appendChild(nodeElement);
+
+            // Document print
+            if (node.documentList && node.documentList.length > 0) {
+
+                let documents = document.createElement('ul');
+
+                node.documentList.forEach(function (doc) {
+
+                    //create the li element that contains the document.
+                    let documentLi = document.createElement("li");
+                    let documentDiv = document.createElement("div");
+
+                    //docElement.style.display = "inline";
+                    documentDiv.classList.add("document");
+                    documentDiv.textContent = doc.documentName + "." + doc.documentType;
+                    documentDiv.setAttribute("documentId", doc.documentID);
+                    documentDiv.setAttribute("subfolderId", doc.folderID);
+                    documentLi.append(documentDiv);
+
+                    let docInfo = document.createElement("button");
+                    docInfo.className = "ShowDocumentInfo";
+                    docInfo.textContent = "Show Document Info";
+
+                    //show details on click
+                    docInfo.addEventListener("click", function () {
+                        documentInfo.openDocument(doc.documentID);
+                    });
+
+                    documentLi.append(docInfo);
+                    documents.append(documentLi);
+
+                });
+
+                nodeElement.appendChild(documents);
+            }
+
+            if (node.children && node.children.length > 0) {
+                let folderUl = document.createElement('ul');
+                folderUl.className = 'treeNode';
+                nodeElement.appendChild(folderUl);
+                node.children.forEach(function (child) {
+                    traverseTree(child, folderUl);
+                });
+            }
+        }
+    }
+
+
+
+
     /**
      * This class is used for creating a new Folder
      * @param container the container element.
@@ -96,14 +204,14 @@
             container.append(form);
         }
     }
-    
-    
+
+
     /**
      * This class is used for creating a new document.
      * @param container the container element.
      */
     function CreateDocument(container) {
-        
+
         const title = document.getElementById("createDocumentTitle");
         const form = document.getElementById("createDocument");
         form.addEventListener("submit", function (e) {
@@ -150,7 +258,7 @@
         this.start = function () {
             folderTree = new FolderTree(document.getElementById("folderTree"));
             const rightContainer = document.getElementById("rightContainer");
-            documentDetails = new ShowDocument({
+            documentInfo = new ShowDocument({
                 documentName: document.getElementById("documentName"),
                 documentDate: document.getElementById("documentDate"),
                 documentFormat: document.getElementById("documentFormat"),
@@ -174,13 +282,13 @@
          * This method hides all the content except the folder list.
          */
         this.hideContent = function () {
-            documentDetails.hide();
+            documentInfo.hide();
             createFolder.hide();
             createDocument.hide();
         }
     }
-    
-    
+
+
     function checkResponse(response) {
         if (response.readyState === XMLHttpRequest.DONE) {
             let text = response.responseText;
@@ -189,15 +297,15 @@
                     pageManager.refresh();
                     break;
                 case 400:
-					alert(text);
-					break;
+                    alert(text);
+                    break;
                 case 401:
                     alert("You are not logged in.")
                     logout();
                     break;
                 case 403:
-					alert("No response from the Server.")
-					break;
+                    alert("No response from the Server.")
+                    break;
                 case 500:
                     alert(text);
                     break;
@@ -207,5 +315,5 @@
         }
     }
 }
-    
-    
+
+
