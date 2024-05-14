@@ -7,7 +7,7 @@
      */
     window.addEventListener('load', function () {
         pageManager.start();
-        if (localStorage.getItem("utente") === null) {
+        if (sessionStorage.getItem("utente") === null) {
             logout()
         } else {
             start();
@@ -15,8 +15,8 @@
     }, false);
 
     function start() {
-		console.log("ciaoo");
-        document.getElementById("userName").textContent = JSON.parse(localStorage.getItem("utente"));
+		
+        //document.getElementById("userName").textContent = JSON.parse(sessionStorage.getItem("utente"));
         document.getElementById("Logout").addEventListener("click", function () {
             document.getElementById("Logout").disable = true;
             logout();
@@ -36,7 +36,7 @@
                 switch (response.status) {
                     case 200:
                         loggedOut = true;
-                        localStorage.clear();
+                        sessionStorage.clear();
                         window.location.href = "index.html";
                         break;
                     default:
@@ -47,7 +47,7 @@
         });
         
         if (!loggedOut) {
-            localStorage.clear();
+            sessionStorage.clear();
             window.location.href = "index.html";
         }
     }
@@ -68,13 +68,17 @@
             makeCall("GET", "GetTree", null,
                 function (req) {
                     if (req.readyState === 4) {
+						
                         let message = req.responseText;
                         let error = document.getElementById("treeError");
+                        console.log(sessionStorage.getItem("utente"));
+                        console.log(req.status);
 
                         if (req.status === 200) {
                             let folderTree = JSON.parse(req.responseText);
+                            console.log(folderTree);
 
-                            if (folderTree) {
+                            if (!folderTree) {
                                 error.textContent = "Nessuna Folder presente!";
                                 error.classList.add("alert", "alert-danger");
                                 return;
@@ -85,7 +89,7 @@
                             window.location.href = req.getResponseHeader("Location");
                             window.sessionStorage.removeItem('utente');
                         } else {
-                            errorPar.textContent = message;
+                            error.textContent = message;
                         }
                     }
                 }
@@ -99,7 +103,7 @@
 
             let treeContainer = document.getElementById('treeContainer');
             //Ricursive Function to print the Folder Tree
-            traverseTree(tree, treeContainer);
+            self.traverseTree(folderTree, treeContainer);
 
             //Set up the drag and drop
             dragAndDropManager.setupDragAndDrop();
@@ -107,6 +111,8 @@
         
         
         this.traverseTree = function traverseTree(node, parentElement) {
+			
+			const self = this;
 
             let nodeElement = document.createElement('div');
             if (node.folder.depth > 0) {
@@ -154,7 +160,7 @@
                 folderUl.className = 'treeNode';
                 nodeElement.appendChild(folderUl);
                 node.children.forEach(function (child) {
-                    traverseTree(child, folderUl);
+                    self.traverseTree(child, folderUl);
                 });
             }
         }
@@ -251,7 +257,7 @@
          * This method is called on refresh. Crates the classes by passing them the right elements.
          */
         this.start = function () {
-            folderTree = new FolderTree(document.getElementById("folderTree"));
+            folderTree = new FolderTree(document.getElementById("treeContainer"));
             const rightContainer = document.getElementById("rightContainer");
             /*documentInfo = new ShowDocument({
                 documentName: document.getElementById("documentName"),

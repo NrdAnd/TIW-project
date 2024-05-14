@@ -42,6 +42,8 @@ public class GetTree extends HttpServlet {
     	
         HttpSession session = req.getSession();
         User utente = (User) session.getAttribute("utente");
+        
+        //System.out.println(utente.getUserID());
         resp.setContentType("text/plain");
         
         FolderDAO folderDao = new FolderDAO(connection);
@@ -56,32 +58,34 @@ public class GetTree extends HttpServlet {
             return;
         }
         
-        
         Stack<TreeNode> stack = new Stack<>();
         stack.push(folderTree);
-        ArrayList<Document> documentList;
 
         while (!stack.isEmpty()) {
         	
             TreeNode currentNode = stack.pop();
            
-            try {
+            if (currentNode.getFolder().getDepth() > 0) {
             	
-            	documentList = documentDao.getAllDocuments(utente.getUserID(), currentNode.getFolder().getFolderID());
-            	currentNode.setDocumentList(documentList);
-            	
-            } catch (SQLException e) {
-            	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.getWriter().println("SQL error: impossibile ricavare l'albero di cartelle");
-                return;
-            }
-            
-            
-            if (currentNode.getChildren().size() == 0) {
-                for (int i = 0; i < currentNode.getChildren().size(); i++) {
-                    stack.push(currentNode.getChildren().get(i));
+            	try {
+                	
+                	ArrayList<Document> documentList = documentDao.getAllDocuments(utente.getUserID(), currentNode.getFolder().getFolderID());
+                	currentNode.setDocumentList(documentList);
+                	
+                } catch (SQLException e) {
+                	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    resp.getWriter().println("SQL error: impossibile ricavare l'albero di cartelle");
+                    return;
+                }
+                
+                
+                if (currentNode.getChildren().size() == 0) {
+                    for (int i = 0; i < currentNode.getChildren().size(); i++) {
+                        stack.push(currentNode.getChildren().get(i));
+                    }
                 }
             }
+            
         }
         
         Gson gson = new Gson();

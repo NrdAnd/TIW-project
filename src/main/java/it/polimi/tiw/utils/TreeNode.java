@@ -8,13 +8,11 @@ public class TreeNode {
 	
     private Folder folder;
     private ArrayList<TreeNode> children;
-    private int childrenListSize;
     private ArrayList<Document> documentList;
 
     public TreeNode(Folder folder) {
         this.folder = folder;
         this.children = new ArrayList<>();
-        this.childrenListSize = 0;
         this.documentList = new ArrayList<>();
     }
     
