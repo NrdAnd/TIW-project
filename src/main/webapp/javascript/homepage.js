@@ -1,10 +1,4 @@
 {
-    /**
-     * This method checks if the user is logged in.
-     */
-    if (localStorage.getItem("utente") === null) {
-        logout();
-    }
 
     let folderTree, documentInfo, createFolder, createDocument, dragAndDropManager,
         pageManager = new PageManager();
@@ -21,6 +15,7 @@
     }, false);
 
     function start() {
+		console.log("ciaoo");
         document.getElementById("userName").textContent = JSON.parse(localStorage.getItem("utente"));
         document.getElementById("Logout").addEventListener("click", function () {
             document.getElementById("Logout").disable = true;
@@ -34,7 +29,7 @@
      */
     function logout() {
         let loggedOut = false;
-        makeCall("GET", 'Logout', null, function () {
+        makeCall("GET", 'Logout', null, function (response) {
 			
 			console.log(response);
             if (response.readyState === XMLHttpRequest.DONE) {
@@ -258,16 +253,16 @@
         this.start = function () {
             folderTree = new FolderTree(document.getElementById("folderTree"));
             const rightContainer = document.getElementById("rightContainer");
-            documentInfo = new ShowDocument({
+            /*documentInfo = new ShowDocument({
                 documentName: document.getElementById("documentName"),
                 documentDate: document.getElementById("documentDate"),
                 documentFormat: document.getElementById("documentFormat"),
                 documentSummary: document.getElementById("documentSummary"),
                 button: document.getElementById("hideDetails")
-            });
+            });*/
             createFolder = new CreateFolder(rightContainer);
             createDocument = new CreateDocument(rightContainer);
-            dragAndDropManager = new DragAndDropManager();
+            //dragAndDropManager = new DragAndDropManager();
             this.hideContent();
         }
 
@@ -282,7 +277,7 @@
          * This method hides all the content except the folder list.
          */
         this.hideContent = function () {
-            documentInfo.hide();
+            //documentInfo.hide();
             createFolder.hide();
             createDocument.hide();
         }

@@ -3,8 +3,6 @@
   document.getElementById("login-button").addEventListener('click', (e) => {
     e.preventDefault()
     
-    console.log("ciaone");
-
     let form = e.target.closest("form");
 
     if (form.checkValidity()) {
@@ -13,7 +11,6 @@
           if (req.readyState === XMLHttpRequest.DONE) {
             let message = req.responseText;
 
-			//console.log(req.status);
             switch (req.status) {
               case 200:
                 sessionStorage.setItem('utente', message);
