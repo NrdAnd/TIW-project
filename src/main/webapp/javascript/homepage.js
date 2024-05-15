@@ -286,7 +286,8 @@
                     //If the request is successful the folder list has to be refreshed.
                     if (self.startElement.classList.contains("document")) {
                         let formData = new FormData();
-                        formData.append("documentID", self.startElement.getAttribute("documentID"));
+                        console.log(self.startElement.getAttribute("documentID"));
+                        formData.append('documentID', self.startElement.getAttribute("documentID"));
                         makeCall("POST", 'DeleteDocument', formData, function (response) {
                             checkResponse(response);
                         });
@@ -328,6 +329,8 @@
                     if (folderID !== self.startElement.getAttribute("folderID")) {
                         let formData = new FormData();
                         formData.append("folderID", folderID);
+                        console.log(folderID);
+                        console.log(self.startElement.getAttribute("documentID"));
                         formData.append("documentID", self.startElement.getAttribute("documentID"));
                         //send the move request to the server. If it's successful the folder list is refreshed.
                         makeCall("POST", 'MoveDocument', formData, function (response) {
