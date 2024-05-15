@@ -63,7 +63,6 @@ public class GetTree extends HttpServlet {
         while (!stack.isEmpty()) {
         	
             TreeNode currentNode = stack.pop();
-            System.out.println("FolderName "+ currentNode.getFolder().getFolderName());
            
             if (currentNode.getFolder().getDepth() > 0) {
             	

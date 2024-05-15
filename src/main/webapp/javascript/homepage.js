@@ -190,7 +190,9 @@
 				folder.setAttribute('draggable', "true");
 				folder.classList.add("droppable");
 			}
+			
 			let wasteBin = document.getElementById("wasteBin");
+			
 			wasteBin.classList.add("droppable");
 
 			self.setDrop();
