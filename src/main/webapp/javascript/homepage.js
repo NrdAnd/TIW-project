@@ -138,7 +138,8 @@
                     documentDiv.setAttribute("subfolderId", doc.folderID);
                     documentLi.append(documentDiv);
 
-                    let docInfo = document.createElement("button");
+                    /*
+                    //let docInfo = document.createElement("button");
                     docInfo.className = "ShowDocumentInfo";
                     docInfo.textContent = "Show Document Info";
 
@@ -146,7 +147,9 @@
                     docInfo.addEventListener("click", function () {
                         documentInfo.openDocument(doc.documentID);
                     });
-
+					
+					*/
+					
                     documentLi.append(docInfo);
                     documents.append(documentLi);
 
