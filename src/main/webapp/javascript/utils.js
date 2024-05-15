@@ -13,7 +13,7 @@ function makeCall(method, url, formElement, cback, reset = true) {
 	} else {
 	  req.send(formElement);
 	}
-	if (formElement !== null && reset === true) {
+	if (formElement !== null && reset === true && method === "GET") {
 	  formElement.reset();
 	}
 }

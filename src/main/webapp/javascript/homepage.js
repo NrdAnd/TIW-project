@@ -287,13 +287,13 @@
                     if (self.startElement.classList.contains("document")) {
                         let formData = new FormData();
                         formData.append("documentID", self.startElement.getAttribute("documentID"));
-                        sendFormData("POST", 'DeleteDocument', formData, function (response) {
+                        makeCall("POST", 'DeleteDocument', formData, function (response) {
                             checkResponse(response);
                         });
                     } else if (self.startElement.classList.contains("folder")) {
                         let formData = new FormData();
                         formData.append("folderID", self.startElement.getAttribute("folderID"));
-                        sendFormData("POST", 'DeleteFolder', formData, function (response) {
+                        makeCall("POST", 'DeleteFolder', formData, function (response) {
                             checkResponse(response);
                         });
                     }
@@ -330,7 +330,7 @@
                         formData.append("folderID", folderID);
                         formData.append("documentID", self.startElement.getAttribute("documentID"));
                         //send the move request to the server. If it's successful the folder list is refreshed.
-                        sendFormData("POST", 'MoveDocument', formData, function (response) {
+                        makeCall("POST", 'MoveDocument', formData, function (response) {
                             checkResponse(response);
                         });
                     }

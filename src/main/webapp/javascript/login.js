@@ -4,12 +4,14 @@
     e.preventDefault()
     
     let form = e.target.closest("form");
+    
     let formData = new FormData();
-    formData.append("username",document.getElementById("username"));
-    formData.append("password",document.getElementById("password"));
+    
+    formData.append("username",document.getElementById("username").value);
+    formData.append("password",document.getElementById("password").value);
 
     if (form.checkValidity()) {
-      makeCall("POST", 'CheckLoginCredentials', form,
+      makeCall("POST", 'CheckLoginCredentials', formData,
         function(req) {
           if (req.readyState === XMLHttpRequest.DONE) {
             let message = req.responseText;

@@ -22,12 +22,12 @@ function passwordMatch() {
 			}
 
 			let formData = new FormData();
-			formData.append("username", document.getElementsByName("username"));
-			formData.append("email", document.getElementsByName("email"));
-			formData.append("password", document.getElementsByName("password"));
-			formData.append("passwordCheck", document.getElementsByName("passwordCheck"));
+			formData.append("username", document.getElementsByName("username").value);
+			formData.append("email", document.getElementsByName("email").value);
+			formData.append("password", pswd1);
+			formData.append("passwordCheck", pswd2);
 
-			makeCall("POST", 'CheckSignupCredentials', form,
+			makeCall("POST", 'CheckSignupCredentials', formData,
 				function(req) {
 					if (req.readyState === XMLHttpRequest.DONE) {
 						let message = req.responseText;
