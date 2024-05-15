@@ -60,7 +60,6 @@ public class GetTree extends HttpServlet {
         
         Stack<TreeNode> stack = new Stack<>();
         stack.push(folderTree);
-
         while (!stack.isEmpty()) {
         	
             TreeNode currentNode = stack.pop();
@@ -70,22 +69,22 @@ public class GetTree extends HttpServlet {
             	try {
                 	
                 	ArrayList<Document> documentList = documentDao.getAllDocuments(utente.getUserID(), currentNode.getFolder().getFolderID());
-                	currentNode.setDocumentList(documentList);
+                	if(documentList!=null) {
+                		currentNode.setDocumentList(documentList);
+                	}
                 	
                 } catch (SQLException e) {
                 	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     resp.getWriter().println("SQL error: impossibile ricavare l'albero di cartelle");
                     return;
                 }
-                
-                
-                if (currentNode.getChildren().size() == 0) {
-                    for (int i = 0; i < currentNode.getChildren().size(); i++) {
-                        stack.push(currentNode.getChildren().get(i));
-                    }
+            }
+            if (currentNode.getChildren().size() > 0) {
+                for (int i = currentNode.getChildren().size()-1; i >=0; i--) {
+                	TreeNode node = currentNode.getChildren().get(i);
+                    stack.push(node);
                 }
             }
-            
         }
         
         Gson gson = new Gson();
