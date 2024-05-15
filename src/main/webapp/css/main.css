@@ -134,3 +134,23 @@ nav.navbar {
 	/* Aggiungi spazio tra il testo e i bordi del menu a tendina */
 	margin-bottom: 5px; /* Aggiungi spazio tra le opzioni */
 }
+
+/* DRAGEDROP*/
+
+.droppable {
+    color: green;
+    background-color: #ddd;
+}
+
+.droppable.dragover {
+    font-weight: bold;
+}
+
+.not-droppable {
+    color: red;
+}
+
+.dragging {
+    opacity: .5;
+}
+

@@ -4,6 +4,9 @@
     e.preventDefault()
     
     let form = e.target.closest("form");
+    let formData = new FormData();
+    formData.append("username",document.getElementById("username"));
+    formData.append("password",document.getElementById("password"));
 
     if (form.checkValidity()) {
       makeCall("POST", 'CheckLoginCredentials', form,
