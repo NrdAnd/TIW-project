@@ -114,6 +114,7 @@
 			if (node.folder.depth > 0) {
 				nodeElement.textContent = node.folder.folderName;
 				nodeElement.classList.add("folder");
+				nodeElement.setAttribute("folderID", node.folder.folderID);
 			}
 			parentElement.appendChild(nodeElement);
 
@@ -184,6 +185,8 @@
 
 			objList = document.getElementsByClassName("folder");
 			for (let folder of objList) {
+				
+				console.log(folder);
 				self.setDelete(folder);
 				self.setMove(folder);
 				folder.setAttribute('draggable', "true");
@@ -206,6 +209,7 @@
 			element.addEventListener("dragstart", function(e) {
 				e.target.classList.add("dragging");
 				self.startElement = e.target;
+				console.log(self.startElement);
 				if (self.findNotDroppable(e.target)) {
 					self.notDroppable.classList.add("not-droppable");
 				}
@@ -314,6 +318,7 @@
 							checkResponse(response);
 						});
 					} else if (self.startElement.classList.contains("folder")) {
+						console.log(self.startElement);
 						let formData = new FormData();
 						formData.append("folderID", self.startElement.getAttribute("folderID"));
 						makeCall("POST", 'DeleteFolder', formData, function(response) {

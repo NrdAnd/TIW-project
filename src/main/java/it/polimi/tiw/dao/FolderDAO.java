@@ -459,8 +459,8 @@ public class FolderDAO {
 			documentStatement.setInt(2, folderID);
 			
 			PreparedStatement folderStatement = connection.prepareStatement(folderDelete);
-			documentStatement.setInt(1, userID);
-			documentStatement.setInt(2, folderID);
+			folderStatement.setInt(1, userID);
+			folderStatement.setInt(2, folderID);
 			
             documentStatement.executeUpdate();
             folderStatement.executeUpdate();
