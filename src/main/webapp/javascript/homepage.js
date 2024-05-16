@@ -136,19 +136,18 @@
 					documentDiv.setAttribute("folderID", doc.folderID);
 					documentLi.append(documentDiv);
 
-					/*
-					//let docInfo = document.createElement("button");
+					let docInfo = document.createElement("button");
 					docInfo.className = "ShowDocumentInfo";
 					docInfo.textContent = "Show Document Info";
 
+					
 					//show details on click
 					docInfo.addEventListener("click", function () {
 						documentInfo.openDocument(doc.documentID);
 					});
 					
-					*/
-
-					//documentLi.append(docInfo);
+					
+					documentLi.append(docInfo);
 					documents.append(documentLi);
 
 				});
@@ -449,6 +448,75 @@
 			container.append(form);
 		}
 	}
+	
+	
+	/**
+     * This class is used to show the document details.
+     * @param options a list of container elements.
+     */
+    function ShowDocument(options) {
+        const documentDetails = document.getElementById("documentDetails");
+        documentDetails.parentNode.removeChild(documentDetails);
+
+        /**
+         * Hides the document details.
+         */
+        this.hide = function () {
+            document.getElementById("rightContainer").style.visibility = "hidden";
+            if (document.getElementById("rightContainer").contains(documentDetails))
+                document.getElementById("rightContainer").removeChild(documentDetails);
+        };
+
+        /**
+         * Shows the document details by calling setDocumentDetail method.
+         * @param documentID the id of the document to show.
+         */
+        this.openDocument = function (documentID) {
+            let self = this;
+            //make a request to the server to get the document details.
+            makeCall("GET", "GetDocument?documentID=" + documentID, null, function (response) {
+                if (response.readyState === XMLHttpRequest.DONE) {
+                    let text = response.responseText;
+                    switch (response.status) {
+                        case 200:
+                            self.setDocumentDetails(JSON.parse(text));
+                            document.getElementById("rightContainer").append(documentDetails);
+                            break;
+                        case 401:
+                            alert("You are not logged in.")
+                            logout();
+                            break;
+                        case 400:
+                        case 500:
+                            alert(text);
+                            break;
+                        default:
+                            alert("Unknown error");
+                            break;
+                    }
+                }
+            });
+
+        }
+
+        /**
+         * Sets up the container with the document details.
+         * @param doc the document to show.
+         */
+        this.setDocumentDetails = function (doc) {
+            pageManager.hideContent();
+            document.getElementById("rightContainer").style.visibility = "visible";
+            options['documentName'].textContent = doc.documentName;
+            options['documentFormat'].textContent = doc.documentType;
+            options['documentSummary'].textContent = doc.summary;
+            options['documentDate'].textContent = doc.creationDate;
+
+            options['button'].addEventListener("click", function () {
+                document.getElementById("rightContainer").style.visibility = "hidden";
+            });
+        }
+    }
+
 
 	/**
 	 * This class is used for setting up the page and passing the right elements to the classes.
@@ -460,13 +528,13 @@
 		this.start = function() {
 			folderTree = new FolderTree(document.getElementById("treeContainer"));
 			const rightContainer = document.getElementById("rightContainer");
-			/*documentInfo = new ShowDocument({
+			documentInfo = new ShowDocument({
 				documentName: document.getElementById("documentName"),
 				documentDate: document.getElementById("documentDate"),
 				documentFormat: document.getElementById("documentFormat"),
 				documentSummary: document.getElementById("documentSummary"),
 				button: document.getElementById("hideDetails")
-			});*/
+			});
 			createFolder = new CreateFolder(rightContainer);
 			createDocument = new CreateDocument(rightContainer);
 			dragAndDropHandler = new DragAndDropHandler();
@@ -484,7 +552,7 @@
 		 * This method hides all the content except the folder list.
 		 */
 		this.hideContent = function() {
-			//documentInfo.hide();
+			documentInfo.hide();
 			createFolder.hide();
 			createDocument.hide();
 		}
