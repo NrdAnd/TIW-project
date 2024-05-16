@@ -110,11 +110,12 @@
 
 			const self = this;
 
-			let nodeElement = document.createElement('div');
+			let nodeElement = document.createElement('ul');
 			if (node.folder.depth > 0) {
 				nodeElement.textContent = node.folder.folderName;
 				nodeElement.classList.add("folder");
 				nodeElement.setAttribute("folderID", node.folder.folderID);
+				nodeElement.className = 'folder';
 			}
 			parentElement.appendChild(nodeElement);
 
@@ -156,11 +157,12 @@
 			}
 
 			if (node.children && node.children.length > 0) {
-				let folderUl = document.createElement('ul');
-				folderUl.className = 'folder';
-				nodeElement.appendChild(folderUl);
+				//let folderUl = document.createElement('ul');
+				//folderUl.className = 'folder';
+				//nodeElement.appendChild(folderUl);
 				node.children.forEach(function(child) {
-					self.traverseTree(child, folderUl);
+					//self.traverseTree(child, folderUl);
+					self.traverseTree(child, nodeElement);
 				});
 			}
 		}
@@ -264,6 +266,7 @@
 		* @param startElement the document element who has been dragged.
 		*/
 		this.findNotDroppable = function(startElement) {
+			
 			let elements = document.getElementsByClassName("folder");
 
 			for (const element of elements) {
@@ -313,12 +316,14 @@
 					formData.append('documentID', self.startElement.getAttribute("documentID"));
 					makeCall("POST", 'DeleteDocument', formData, function(response) {
 						checkResponse(response);
+						pageManager.refresh();
 					});
 				} else if (self.startElement.classList.contains("folder")) {
 					let formData = new FormData();
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
 					makeCall("POST", 'DeleteFolder', formData, function(response) {
 						checkResponse(response);
+						pageManager.refresh();
 					});
 				}
 			}
@@ -358,10 +363,14 @@
 							//send the move request to the server. If it's successful the folder list is refreshed.
 							makeCall("POST", 'MoveDocument', formData, function(response) {
 								checkResponse(response);
+								pageManager.refresh();
 							});
+							self.resetDroppable();
+						} else {
+							self.resetDroppable();
+							pageManager.refresh();
+							//self.setDrop();
 						}
-						self.resetDroppable();
-						//element.removeEventListener("drop", self.moveDocument);
 					}
 				});
 			}
@@ -381,6 +390,7 @@
 				//make a request to the server to create the folder.
 				makeCall("POST", 'CreateFolder', form, function(response) {
 					checkResponse(response);
+					pageManager.refresh();
 				});
 				form.reset();
 			} else form.reportValidity();
@@ -422,6 +432,7 @@
 				//make a request to the server to create the document.
 				makeCall("POST", 'CreateDocument', formData, function(response) {
 					checkResponse(response);
+					pageManager.refresh();
 				});
 				form.reset();
 			} else form.reportValidity();
@@ -564,7 +575,7 @@
 			let text = response.responseText;
 			switch (response.status) {
 				case 200:
-					pageManager.refresh();
+					//pageManager.refresh();
 					break;
 				case 400:
 					alert(text);
