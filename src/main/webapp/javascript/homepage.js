@@ -1,6 +1,6 @@
 {
 
-	let folderTree, documentInfo, createFolder, createDocument, dragAndDropManager,
+	let folderTree, documentInfo, createFolder, createDocument, dragAndDropHandler,
 		pageManager = new PageManager();
 	/**
 	 * This starts the page if the user is logged in.
@@ -31,7 +31,6 @@
 		let loggedOut = false;
 		makeCall("GET", 'Logout', null, function(response) {
 
-			console.log(response);
 			if (response.readyState === XMLHttpRequest.DONE) {
 				switch (response.status) {
 					case 200:
@@ -71,12 +70,9 @@
 
 						let message = req.responseText;
 						let error = document.getElementById("treeError");
-						console.log(sessionStorage.getItem("utente"));
-						console.log(req.status);
 
 						if (req.status === 200) {
 							let folderTree = JSON.parse(req.responseText);
-							console.log(folderTree);
 
 							if (!folderTree) {
 								error.textContent = "Nessuna Folder presente!";
@@ -117,6 +113,7 @@
 			let nodeElement = document.createElement('div');
 			if (node.folder.depth > 0) {
 				nodeElement.textContent = node.folder.folderName;
+				nodeElement.classList.add("folder");
 			}
 			parentElement.appendChild(nodeElement);
 
@@ -134,8 +131,8 @@
 					//docElement.style.display = "inline";
 					documentDiv.classList.add("document");
 					documentDiv.textContent = doc.documentName + "." + doc.documentType;
-					documentDiv.setAttribute("documentId", doc.documentID);
-					documentDiv.setAttribute("subfolderId", doc.folderID);
+					documentDiv.setAttribute("documentID", doc.documentID);
+					documentDiv.setAttribute("folderID", doc.folderID);
 					documentLi.append(documentDiv);
 
 					/*
@@ -160,7 +157,7 @@
 
 			if (node.children && node.children.length > 0) {
 				let folderUl = document.createElement('ul');
-				folderUl.className = 'treeNode';
+				folderUl.className = 'folder';
 				nodeElement.appendChild(folderUl);
 				node.children.forEach(function(child) {
 					self.traverseTree(child, folderUl);
@@ -174,7 +171,8 @@
 	 * 
 	 */
 	function DragAndDropHandler() {
-		let self = this;
+
+		const self = this;
 
 		this.setUp = function() {
 			let objList = document.getElementsByClassName("document");
@@ -186,13 +184,14 @@
 
 			objList = document.getElementsByClassName("folder");
 			for (let folder of objList) {
+				self.setDelete(folder);
 				self.setMove(folder);
 				folder.setAttribute('draggable', "true");
 				folder.classList.add("droppable");
 			}
-			
+
 			let wasteBin = document.getElementById("wasteBin");
-			
+
 			wasteBin.classList.add("droppable");
 
 			self.setDrop();
@@ -218,9 +217,28 @@
 		}
 
 		/**
-   * Reset the droppable elements and the notDroppable element.
-   */
+		 * This method sets up the dragstart for a deletable element (usually a folder or subfolder).
+		 * @param element the element we want to assign the dragstart event to.
+		 */
+		this.setDelete = function(element) {
+			element.addEventListener("dragstart", function(e) {
+				e.target.classList.add("dragging");
+				self.startElement = e.target;
+				let wasteBin = document.getElementById("wasteBin");
+				wasteBin.classList.add("droppable");
+			});
+			element.addEventListener("dragend", function(e) {
+				e.target.classList.remove("dragging");
+				self.resetDroppable();
+			});
+		}
+
+
+		/**
+		* Reset the droppable elements and the notDroppable element.
+		*/
 		this.resetDroppable = function() {
+
 			let elements = Array.from(document.getElementsByClassName("not-droppable"));
 			for (const elem of elements) {
 				elem.classList.remove("not-droppable");
@@ -230,10 +248,15 @@
 			for (const element of elements) {
 				element.classList.remove("droppable");
 			}
+			
+			const wasteBin = document.getElementById("wasteBin");
+			wasteBin.removeEventListener("drop", self.deletionFunction);
+			//self.setWasteBin();
 
 			self.notDroppable = null;
 			self.startElement = null;
 		}
+
 
 		/**
 		* Finds the element that can't be a drop target cause is the subfolder of the startElement.
@@ -251,99 +274,97 @@
 			return false;
 		}
 
-        /**
-         * This method sets up the dragover, dragleave and drop events for the trash can element.
-         * When an element is dragged over the trash can it can be deleted.
-         */
-        this.setWasteBin = function () {
-			
-			let folderList = document.getElementsByClassName("folder");
-			for(let folder of folderList) {
-				folder.addEventListener("dragstart",function(e) {
-					e.target.classList.add("dragging");
-					self.startElement=e.target;
+
+		/**
+		 * This method sets up the dragover, dragleave and drop events for the trash can element.
+		 * When an element is dragged over the trash can it can be deleted.
+		 */
+		this.setWasteBin = function() {
+
+			const wasteBin = document.getElementById("wasteBin");
+			wasteBin.addEventListener("dragover", function(e) {
+				e.preventDefault();
+				wasteBin.classList.add("dragover");
+			});
+
+			wasteBin.addEventListener("dragleave", function() {
+				wasteBin.classList.remove("dragover");
+			});
+
+			wasteBin.addEventListener("drop", self.deletionFunction);
+		}
+		
+		
+		/**
+		 * This function permits to delete the document and the folder that are dropped in the Waste Bin
+		 */
+		this.deletionFunction = function() {
+
+				let decision = confirm("Are you sure you want to delete this item?");
+				if (decision) {
+					//request to delete the element
+					//For the request we have to find the proper servlet
+					//If the request is successful the folder list has to be refreshed
+
+					if (self.startElement.classList.contains("document")) {
+						let formData = new FormData();
+
+						formData.append('documentID', self.startElement.getAttribute("documentID"));
+						makeCall("POST", 'DeleteDocument', formData, function(response) {
+							checkResponse(response);
+						});
+					} else if (self.startElement.classList.contains("folder")) {
+						let formData = new FormData();
+						formData.append("folderID", self.startElement.getAttribute("folderID"));
+						makeCall("POST", 'DeleteFolder', formData, function(response) {
+							checkResponse(response);
+						});
+					}
+				}
+				self.resetDroppable();
+			};
+
+
+		/**
+		 * This method sets the dragover, dragleave and drop for each droppable element.
+		 * The droppable elements are the subfolders.
+		 */
+		this.setDrop = function() {
+			let elements = document.getElementsByClassName("folder");
+
+			for (const element of elements) {
+				element.addEventListener("dragover", function(e) {
+					if (element.classList.contains("droppable")) {
+						e.preventDefault();
+						element.classList.add("dragover");
+					}
 				});
-				folder.addEventListener("dragend",function(e) {
-					e.target.classList.remove("dragging");
+
+				element.addEventListener("dragleave", function() {
+					if (element.classList.contains("droppable")) {
+						element.classList.remove("dragover");
+					}
+				});
+
+				element.addEventListener("drop", function(e) {
+
+					let folderID = e.target.getAttribute("folderID");
+					if (folderID !== self.startElement.getAttribute("folderID")) {
+						let formData = new FormData();
+						formData.append("folderID", folderID);
+						formData.append("documentID", self.startElement.getAttribute("documentID"));
+						//send the move request to the server. If it's successful the folder list is refreshed.
+						makeCall("POST", 'MoveDocument', formData, function(response) {
+							checkResponse(response);
+						});
+					}
 					self.resetDroppable();
+					
 				});
 			}
-			
-            let wasteBin = document.getElementById("wasteBin");
-            wasteBin.addEventListener("dragover", function (e) {
-                    e.preventDefault();
-                    wasteBin.classList.add("dragover");
-                });
-
-            wasteBin.addEventListener("dragleave", function () {
-                wasteBin.classList.remove("dragover");
-            });
-
-            wasteBin.addEventListener("drop", function () {
-                if (confirm("Are you sure you want to delete this item?")) {
-                    //request to delete the element.
-                    //For the request we have to find the proper servlet.
-                    //If the request is successful the folder list has to be refreshed.
-                    if (self.startElement.classList.contains("document")) {
-                        let formData = new FormData();
-                        console.log(self.startElement.getAttribute("documentID"));
-                        formData.append('documentID', self.startElement.getAttribute("documentID"));
-                        makeCall("POST", 'DeleteDocument', formData, function (response) {
-                            checkResponse(response);
-                        });
-                    } else if (self.startElement.classList.contains("folder")) {
-                        let formData = new FormData();
-                        formData.append("folderID", self.startElement.getAttribute("folderID"));
-                        makeCall("POST", 'DeleteFolder', formData, function (response) {
-                            checkResponse(response);
-                        });
-                    }
-                }
-                self.resetDroppable();
-            });
-        }
-        
-        /**
-         * This method sets the dragover, dragleave and drop for each droppable element.
-         * The droppable elements are the subfolders.
-         */
-        this.setDrop = function () {
-            let elements = document.getElementsByClassName("folder");
-
-            for (const element of elements) {
-                element.addEventListener("dragover", function (e) {
-                    if (element.classList.contains("droppable")) {
-                        e.preventDefault();
-                        element.classList.add("dragover");
-                    }
-                });
-
-                element.addEventListener("dragleave", function () {
-                    if (element.classList.contains("droppable")) {
-                        element.classList.remove("dragover");
-                    }
-                });
-
-                element.addEventListener("drop", function (e) {
-                    let folderID = e.target.getAttribute("folderID");
-                    if (folderID !== self.startElement.getAttribute("folderID")) {
-                        let formData = new FormData();
-                        formData.append("folderID", folderID);
-                        console.log(folderID);
-                        console.log(self.startElement.getAttribute("documentID"));
-                        formData.append("documentID", self.startElement.getAttribute("documentID"));
-                        //send the move request to the server. If it's successful the folder list is refreshed.
-                        makeCall("POST", 'MoveDocument', formData, function (response) {
-                            checkResponse(response);
-                        });
-                    }
-                    self.resetDroppable();
-                });
-            }
-        }
+		}
 
 	}
-
 
 
 	/**
