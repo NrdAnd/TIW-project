@@ -185,8 +185,7 @@
 
 			objList = document.getElementsByClassName("folder");
 			for (let folder of objList) {
-				
-				console.log(folder);
+
 				self.setDelete(folder);
 				self.setMove(folder);
 				folder.setAttribute('draggable', "true");
@@ -209,7 +208,6 @@
 			element.addEventListener("dragstart", function(e) {
 				e.target.classList.add("dragging");
 				self.startElement = e.target;
-				console.log(self.startElement);
 				if (self.findNotDroppable(e.target)) {
 					self.notDroppable.classList.add("not-droppable");
 				}
@@ -252,7 +250,7 @@
 			for (const element of elements) {
 				element.classList.remove("droppable");
 			}
-			
+
 			const wasteBin = document.getElementById("wasteBin");
 			wasteBin.removeEventListener("drop", self.deletionFunction);
 			//self.setWasteBin();
@@ -297,37 +295,36 @@
 
 			wasteBin.addEventListener("drop", self.deletionFunction);
 		}
-		
-		
+
+
 		/**
 		 * This function permits to delete the document and the folder that are dropped in the Waste Bin
 		 */
 		this.deletionFunction = function() {
 
-				let decision = confirm("Are you sure you want to delete this item?");
-				if (decision) {
-					//request to delete the element
-					//For the request we have to find the proper servlet
-					//If the request is successful the folder list has to be refreshed
+			let decision = confirm("Are you sure you want to delete this item?");
+			if (decision) {
+				//request to delete the element
+				//For the request we have to find the proper servlet
+				//If the request is successful the folder list has to be refreshed
 
-					if (self.startElement.classList.contains("document")) {
-						let formData = new FormData();
+				if (self.startElement.classList.contains("document")) {
+					let formData = new FormData();
 
-						formData.append('documentID', self.startElement.getAttribute("documentID"));
-						makeCall("POST", 'DeleteDocument', formData, function(response) {
-							checkResponse(response);
-						});
-					} else if (self.startElement.classList.contains("folder")) {
-						console.log(self.startElement);
-						let formData = new FormData();
-						formData.append("folderID", self.startElement.getAttribute("folderID"));
-						makeCall("POST", 'DeleteFolder', formData, function(response) {
-							checkResponse(response);
-						});
-					}
+					formData.append('documentID', self.startElement.getAttribute("documentID"));
+					makeCall("POST", 'DeleteDocument', formData, function(response) {
+						checkResponse(response);
+					});
+				} else if (self.startElement.classList.contains("folder")) {
+					let formData = new FormData();
+					formData.append("folderID", self.startElement.getAttribute("folderID"));
+					makeCall("POST", 'DeleteFolder', formData, function(response) {
+						checkResponse(response);
+					});
 				}
-				self.resetDroppable();
-			};
+			}
+			self.resetDroppable();
+		};
 
 
 		/**
@@ -335,6 +332,7 @@
 		 * The droppable elements are the subfolders.
 		 */
 		this.setDrop = function() {
+
 			let elements = document.getElementsByClassName("folder");
 
 			for (const element of elements) {
@@ -352,23 +350,23 @@
 				});
 
 				element.addEventListener("drop", function(e) {
-
 					let folderID = e.target.getAttribute("folderID");
-					if (folderID !== self.startElement.getAttribute("folderID")) {
-						let formData = new FormData();
-						formData.append("folderID", folderID);
-						formData.append("documentID", self.startElement.getAttribute("documentID"));
-						//send the move request to the server. If it's successful the folder list is refreshed.
-						makeCall("POST", 'MoveDocument', formData, function(response) {
-							checkResponse(response);
-						});
+					if (self.startElement !== null && self.startElement !== undefined) {
+						if (folderID !== self.startElement.getAttribute("folderID")) {
+							let formData = new FormData();
+							formData.append("folderID", folderID);
+							formData.append("documentID", self.startElement.getAttribute("documentID"));
+							//send the move request to the server. If it's successful the folder list is refreshed.
+							makeCall("POST", 'MoveDocument', formData, function(response) {
+								checkResponse(response);
+							});
+						}
+						self.resetDroppable();
+						//element.removeEventListener("drop", self.moveDocument);
 					}
-					self.resetDroppable();
-					
 				});
 			}
 		}
-
 	}
 
 

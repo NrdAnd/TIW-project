@@ -3,6 +3,7 @@ package it.polimi.tiw.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -11,6 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.tomcat.util.http.fileupload.FileItem;
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
@@ -37,24 +42,32 @@ public class MoveDocument extends HttpServlet {
     	HttpSession session = req.getSession();
 		resp.setContentType("text/plain");
 		
+		Integer destinationFolderID = null, documentID = null;
+		String contentType = req.getContentType();
+
+		if (contentType != null && contentType.startsWith("multipart/form-data")) {
+
+			DiskFileItemFactory factory = new DiskFileItemFactory();
+			ServletFileUpload upload = new ServletFileUpload(factory);
+
+			try {
+				
+				ServletRequestContext requestContext = new ServletRequestContext(req);
+
+				// Parses the multipart request data
+				List<FileItem> items = upload.parseRequest(requestContext);
+				// Saves the value of the documentID
+				destinationFolderID = Integer.parseInt(items.get(0).getString());
+				documentID = Integer.parseInt(items.get(1).getString());
+				
+			} catch (NumberFormatException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Folder ID o Document ID non valido");
+				return;
+			}
+		}
 		
 		User utente = (User) session.getAttribute("utente");
-		Integer destinationFolderID,documentID;
-        try {
-        	destinationFolderID = Integer.parseInt(req.getParameter("destinationFolderID"));
-        }catch(NumberFormatException | NullPointerException e) {
-        	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Destination Folder ID non valido");
-            return;
-        }
-        try {
-        	documentID = Integer.parseInt(req.getParameter("documentID"));
-        }catch(NumberFormatException | NullPointerException e) {
-        	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Document ID non valido");
-            return;
-        }
-        
         DocumentDAO documentDAO = new DocumentDAO(connection);
         
         try {
