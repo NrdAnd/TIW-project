@@ -63,6 +63,7 @@
 
 		this.show = function() {
 			this.container.innerHTML = "";
+			document.getElementById("wasteBin").style.visibility = "visible";
 			const self = this;
 			makeCall("GET", "GetTree", null,
 				function(req) {
@@ -354,7 +355,12 @@
 				});
 
 				element.addEventListener("drop", function(e) {
+					
+					document.getElementById("wasteBin").style.visibility = "hidden";
+					
 					let folderID = e.target.getAttribute("folderID");
+					console.log(self.startElement);
+				
 					if (self.startElement !== null && self.startElement !== undefined) {
 						if (folderID !== self.startElement.getAttribute("folderID")) {
 							let formData = new FormData();
@@ -366,10 +372,15 @@
 								pageManager.refresh();
 							});
 							self.resetDroppable();
-						} else {
+						} else if(self.startElement.className = 'document') {
+							alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 							self.resetDroppable();
 							pageManager.refresh();
 							//self.setDrop();
+						} else {
+							alert("Puoi spostare le cartelle solo nel cestino!");
+							self.resetDroppable();
+							pageManager.refresh();
 						}
 					}
 				});
