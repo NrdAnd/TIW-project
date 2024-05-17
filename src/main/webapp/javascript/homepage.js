@@ -111,14 +111,18 @@
 
 			const self = this;
 
-			let nodeElement = document.createElement('ul');
+			let folderUL = document.createElement("ul");
+			let folderIL = document.createElement("li");
+			let folderDiv = document.createElement("div");
 			if (node.folder.depth > 0) {
-				nodeElement.textContent = node.folder.folderName;
-				nodeElement.classList.add("folder");
-				nodeElement.setAttribute("folderID", node.folder.folderID);
-				nodeElement.className = 'folder';
+				folderDiv.textContent = node.folder.folderName;
+				folderDiv.classList.add("folder");
+				folderDiv.setAttribute("folderID", node.folder.folderID);
+				//folderDiv.className = 'folder';
 			}
-			parentElement.appendChild(nodeElement);
+			folderIL.append(folderDiv);
+			folderUL.append(folderIL);
+			parentElement.appendChild(folderUL);
 
 			// Document print
 			if (node.documentList && node.documentList.length > 0) {
@@ -154,7 +158,7 @@
 
 				});
 
-				nodeElement.appendChild(documents);
+				folderUL.appendChild(documents);
 			}
 
 			if (node.children && node.children.length > 0) {
@@ -163,7 +167,7 @@
 				//nodeElement.appendChild(folderUl);
 				node.children.forEach(function(child) {
 					//self.traverseTree(child, folderUl);
-					self.traverseTree(child, nodeElement);
+					self.traverseTree(child, folderUL);
 				});
 			}
 		}
