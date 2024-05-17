@@ -175,11 +175,7 @@
 			}
 
 			if (node.children && node.children.length > 0) {
-				//let folderUl = document.createElement('ul');
-				//folderUl.className = 'folder';
-				//nodeElement.appendChild(folderUl);
 				node.children.forEach(function(child) {
-					//self.traverseTree(child, folderUl);
 					self.traverseTree(child, folderUL);
 				});
 			}
@@ -389,7 +385,7 @@
 								pageManager.refresh();
 							});
 							self.resetDroppable();
-						} else if (self.startElement.className = 'document') {
+						} else if (self.startElement.classList.contains('document')) {
 							alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 							self.resetDroppable();
 							pageManager.refresh();
