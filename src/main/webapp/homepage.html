@@ -15,54 +15,60 @@
 </head>
 </head>
 <body>
-	<nav class="navbar navbar-dark fixed-top">
-		<img src="resources/images/polimi_logo_horizontal_white.png"
-			height="60" width="auto">
-		<div class="d-flex flex-row my-1" style="margin-right: 10px">
-			<button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
+
+	<div id="globalPage">
+		<nav class="navbar navbar-dark fixed-top">
+			<img src="resources/images/polimi_logo_horizontal_white.png"
+				height="60" width="auto">
+			<div class="d-flex flex-row my-1" style="margin-right: 10px">
+				<button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
+			</div>
+		</nav>
+
+		<div id="rightContainer" class="right-div"></div>
+
+		<h1 style="margin-top: 85px; margin-left: 13px;">Homepage</h1>
+		<div id="treeContainer"></div>
+		<p id="treeError"></p>
+
+		<div id="documentDetails">
+			<h3>Document details:</h3>
+			<h4>Name:</h4>
+			<p id="documentName"></p>
+			<h4>Format:</h4>
+			<p id="documentFormat"></p>
+			<h4>Summary:</h4>
+			<p id="documentSummary"></p>
+			<h4>Creation date:</h4>
+			<p id="documentDate"></p>
+			<input type="button" id="hideDetails" value="Hide Details">
 		</div>
-	</nav>
 
-	<div id="rightContainer" class="right-div"></div>
-	
-	<h1 style="margin-top: 85px; margin-left: 13px;">Homepage</h1>
-	<div id="treeContainer"></div>
-	<p id="treeError"></p>
+		<form id="createFolder" action="#" class="creation-form">
+			<h3>Create a Folder</h3>
+			<label for="folderName">Folder Name:</label> <input type="text"
+				id="folderName" name="folderName" required> <br> <input
+				type="submit" id="createFld" value="Create Folder">
+		</form>
 
-	<div id="documentDetails">
-		<h3>Document details:</h3>
-		<h4>Name:</h4>
-		<p id="documentName"></p>
-		<h4>Format:</h4>
-		<p id="documentFormat"></p>
-		<h4>Summary:</h4>
-		<p id="documentSummary"></p>
-		<h4>Creation date:</h4>
-		<p id="documentDate"></p>
-		<input type="button" id="hideDetails" value="Hide Details">
+		<div id="wasteBin">
+			<p>CESTINO</p>
+		</div>
+
+		<form id="createDocument" action="#" class="creation-form">
+			<h3 id="createDocumentTitle">Create a Document</h3>
+			<label for="docName">Name:</label> <input type="text" id="docName"
+				name="docName" maxlength="50" required><br> <label
+				for="docFormat">Format:</label> <input type="text" id="docFormat"
+				name="docFormat" maxlength="10" pattern="^[^\s.]{1,10}$" required><br>
+			<label for="docSummary">Summary:</label>
+			<textarea id="docSummary" name="docSummary" rows="5" maxlength="200"
+				required></textarea>
+			<br> <input type="hidden" id="subfolderId" name="subfolderId"
+				class="hiddenInput"> <input type="submit" id="createDoc"
+				value="Create Document">
+		</form>
+
 	</div>
-
-	<form id="createFolder" action="#" class="creation-form">
-		<h3>Create a Folder</h3>
-		<label for="folderName">Folder Name:</label> <input type="text"
-			id="folderName" name="folderName" required> <br> <input
-			type="submit" id="createFld" value="Create Folder">
-	</form>
-	
-	<div id="wasteBin"><p>CESTINO</p> </div>
-
-	<form id="createDocument" action="#" class="creation-form">
-		<h3 id="createDocumentTitle">Create a Document</h3>
-		<label for="docName">Name:</label> <input type="text" id="docName"
-			name="docName" maxlength="50" required><br> <label
-			for="docFormat">Format:</label> <input type="text" id="docFormat"
-			name="docFormat" maxlength="10" pattern="^[^\s.]{1,10}$" required><br>
-		<label for="docSummary">Summary:</label>
-		<textarea id="docSummary" name="docSummary" rows="5" maxlength="200"
-			required></textarea>
-		<br> <input type="hidden" id="subfolderId" name="subfolderId"
-			class="hiddenInput"> <input type="submit" id="createDoc"
-			value="Create Document">
-	</form>
 </body>
 </html>

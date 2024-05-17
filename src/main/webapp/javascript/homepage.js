@@ -2,6 +2,7 @@
 
 	let folderTree, documentInfo, createFolder, createDocument, dragAndDropHandler,
 		pageManager = new PageManager();
+
 	/**
 	 * This starts the page if the user is logged in.
 	 */
@@ -21,6 +22,18 @@
 			document.getElementById("Logout").disable = true;
 			logout();
 		});
+
+		let globalPage = document.getElementById("globalPage");
+
+		globalPage.addEventListener('dragover', function(event) {
+			event.preventDefault();
+		});
+		
+		globalPage.addEventListener('drop', function(event) {
+			event.preventDefault();
+			pageManager.refresh();
+		})
+		
 		pageManager.refresh();
 	}
 
@@ -146,13 +159,13 @@
 					docInfo.className = "ShowDocumentInfo";
 					docInfo.textContent = "Show Document Info";
 
-					
+
 					//show details on click
-					docInfo.addEventListener("click", function () {
+					docInfo.addEventListener("click", function() {
 						documentInfo.openDocument(doc.documentID);
 					});
-					
-					
+
+
 					documentLi.append(docInfo);
 					documents.append(documentLi);
 
@@ -271,7 +284,7 @@
 		* @param startElement the document element who has been dragged.
 		*/
 		this.findNotDroppable = function(startElement) {
-			
+
 			let elements = document.getElementsByClassName("folder");
 
 			for (const element of elements) {
@@ -359,12 +372,12 @@
 				});
 
 				element.addEventListener("drop", function(e) {
-					
+
 					document.getElementById("wasteBin").style.visibility = "hidden";
-					
+
 					let folderID = e.target.getAttribute("folderID");
 					console.log(self.startElement);
-				
+
 					if (self.startElement !== null && self.startElement !== undefined) {
 						if (folderID !== self.startElement.getAttribute("folderID")) {
 							let formData = new FormData();
@@ -376,7 +389,7 @@
 								pageManager.refresh();
 							});
 							self.resetDroppable();
-						} else if(self.startElement.className = 'document') {
+						} else if (self.startElement.className = 'document') {
 							alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 							self.resetDroppable();
 							pageManager.refresh();
@@ -474,74 +487,74 @@
 			container.append(form);
 		}
 	}
-	
-	
+
+
 	/**
-     * This class is used to show the document details.
-     * @param options a list of container elements.
-     */
-    function ShowDocument(options) {
-        const documentDetails = document.getElementById("documentDetails");
-        documentDetails.parentNode.removeChild(documentDetails);
+	 * This class is used to show the document details.
+	 * @param options a list of container elements.
+	 */
+	function ShowDocument(options) {
+		const documentDetails = document.getElementById("documentDetails");
+		documentDetails.parentNode.removeChild(documentDetails);
 
-        /**
-         * Hides the document details.
-         */
-        this.hide = function () {
-            document.getElementById("rightContainer").style.visibility = "hidden";
-            if (document.getElementById("rightContainer").contains(documentDetails))
-                document.getElementById("rightContainer").removeChild(documentDetails);
-        };
+		/**
+		 * Hides the document details.
+		 */
+		this.hide = function() {
+			document.getElementById("rightContainer").style.visibility = "hidden";
+			if (document.getElementById("rightContainer").contains(documentDetails))
+				document.getElementById("rightContainer").removeChild(documentDetails);
+		};
 
-        /**
-         * Shows the document details by calling setDocumentDetail method.
-         * @param documentID the id of the document to show.
-         */
-        this.openDocument = function (documentID) {
-            let self = this;
-            //make a request to the server to get the document details.
-            makeCall("GET", "GetDocument?documentID=" + documentID, null, function (response) {
-                if (response.readyState === XMLHttpRequest.DONE) {
-                    let text = response.responseText;
-                    switch (response.status) {
-                        case 200:
-                            self.setDocumentDetails(JSON.parse(text));
-                            document.getElementById("rightContainer").append(documentDetails);
-                            break;
-                        case 401:
-                            alert("You are not logged in.")
-                            logout();
-                            break;
-                        case 400:
-                        case 500:
-                            alert(text);
-                            break;
-                        default:
-                            alert("Unknown error");
-                            break;
-                    }
-                }
-            });
+		/**
+		 * Shows the document details by calling setDocumentDetail method.
+		 * @param documentID the id of the document to show.
+		 */
+		this.openDocument = function(documentID) {
+			let self = this;
+			//make a request to the server to get the document details.
+			makeCall("GET", "GetDocument?documentID=" + documentID, null, function(response) {
+				if (response.readyState === XMLHttpRequest.DONE) {
+					let text = response.responseText;
+					switch (response.status) {
+						case 200:
+							self.setDocumentDetails(JSON.parse(text));
+							document.getElementById("rightContainer").append(documentDetails);
+							break;
+						case 401:
+							alert("You are not logged in.")
+							logout();
+							break;
+						case 400:
+						case 500:
+							alert(text);
+							break;
+						default:
+							alert("Unknown error");
+							break;
+					}
+				}
+			});
 
-        }
+		}
 
-        /**
-         * Sets up the container with the document details.
-         * @param doc the document to show.
-         */
-        this.setDocumentDetails = function (doc) {
-            pageManager.hideContent();
-            document.getElementById("rightContainer").style.visibility = "visible";
-            options['documentName'].textContent = doc.documentName;
-            options['documentFormat'].textContent = doc.documentType;
-            options['documentSummary'].textContent = doc.summary;
-            options['documentDate'].textContent = doc.creationDate;
+		/**
+		 * Sets up the container with the document details.
+		 * @param doc the document to show.
+		 */
+		this.setDocumentDetails = function(doc) {
+			pageManager.hideContent();
+			document.getElementById("rightContainer").style.visibility = "visible";
+			options['documentName'].textContent = doc.documentName;
+			options['documentFormat'].textContent = doc.documentType;
+			options['documentSummary'].textContent = doc.summary;
+			options['documentDate'].textContent = doc.creationDate;
 
-            options['button'].addEventListener("click", function () {
-                document.getElementById("rightContainer").style.visibility = "hidden";
-            });
-        }
-    }
+			options['button'].addEventListener("click", function() {
+				document.getElementById("rightContainer").style.visibility = "hidden";
+			});
+		}
+	}
 
 
 	/**
