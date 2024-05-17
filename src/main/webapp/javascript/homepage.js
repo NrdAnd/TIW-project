@@ -28,12 +28,12 @@
 		globalPage.addEventListener('dragover', function(event) {
 			event.preventDefault();
 		});
-		
+
 		globalPage.addEventListener('drop', function(event) {
 			event.preventDefault();
 			pageManager.refresh();
-		})
-		
+		});
+
 		pageManager.refresh();
 	}
 
@@ -124,60 +124,71 @@
 
 			const self = this;
 
-			let folderUL = document.createElement("ul");
-			let folderIL = document.createElement("li");
-			let folderDiv = document.createElement("div");
 			if (node.folder.depth > 0) {
-				folderDiv.textContent = node.folder.folderName;
-				folderDiv.classList.add("folder");
-				folderDiv.setAttribute("folderID", node.folder.folderID);
-				//folderDiv.className = 'folder';
-			}
-			folderIL.append(folderDiv);
-			folderUL.append(folderIL);
-			parentElement.appendChild(folderUL);
 
-			// Document print
-			if (node.documentList && node.documentList.length > 0) {
+				let folderUL = document.createElement("ul");
+				let folderIL = document.createElement("li");
+				let folderDiv = document.createElement("div");
+				if (node.folder.depth > 0) {
+					folderDiv.textContent = node.folder.folderName;
+					folderDiv.classList.add("folder");
+					folderDiv.setAttribute("folderID", node.folder.folderID);
+					//folderDiv.className = 'folder';
+				}
+				folderIL.append(folderDiv);
+				folderUL.append(folderIL);
+				parentElement.appendChild(folderUL);
 
-				let documents = document.createElement('ul');
+				// Document print
+				if (node.documentList && node.documentList.length > 0) {
 
-				node.documentList.forEach(function(doc) {
+					let documents = document.createElement('ul');
 
-					//create the li element that contains the document.
-					let documentLi = document.createElement("li");
-					let documentDiv = document.createElement("div");
+					node.documentList.forEach(function(doc) {
 
-					//docElement.style.display = "inline";
-					documentDiv.classList.add("document");
-					documentDiv.textContent = doc.documentName + "." + doc.documentType;
-					documentDiv.setAttribute("documentID", doc.documentID);
-					documentDiv.setAttribute("folderID", doc.folderID);
-					documentLi.append(documentDiv);
+						//create the li element that contains the document.
+						let documentLi = document.createElement("li");
+						let documentDiv = document.createElement("div");
 
-					let docInfo = document.createElement("button");
-					docInfo.className = "ShowDocumentInfo";
-					docInfo.textContent = "Show Document Info";
+						//docElement.style.display = "inline";
+						documentDiv.classList.add("document");
+						documentDiv.textContent = doc.documentName + "." + doc.documentType;
+						documentDiv.setAttribute("documentID", doc.documentID);
+						documentDiv.setAttribute("folderID", doc.folderID);
+						documentLi.append(documentDiv);
+
+						let docInfo = document.createElement("button");
+						docInfo.className = "ShowDocumentInfo";
+						docInfo.textContent = "Show Document Info";
 
 
-					//show details on click
-					docInfo.addEventListener("click", function() {
-						documentInfo.openDocument(doc.documentID);
+						//show details on click
+						docInfo.addEventListener("click", function() {
+							documentInfo.openDocument(doc.documentID);
+						});
+
+
+						documentLi.append(docInfo);
+						documents.append(documentLi);
+
 					});
 
+					folderUL.appendChild(documents);
+				}
 
-					documentLi.append(docInfo);
-					documents.append(documentLi);
+				if (node.children && node.children.length > 0) {
+					node.children.forEach(function(child) {
+						self.traverseTree(child, folderUL);
+					});
+				}
+				
+			} else {
 
-				});
-
-				folderUL.appendChild(documents);
-			}
-
-			if (node.children && node.children.length > 0) {
-				node.children.forEach(function(child) {
-					self.traverseTree(child, folderUL);
-				});
+				if (node.children && node.children.length > 0) {
+					node.children.forEach(function(child) {
+						self.traverseTree(child, parentElement);
+					});
+				}
 			}
 		}
 	}
@@ -372,25 +383,32 @@
 					document.getElementById("wasteBin").style.visibility = "hidden";
 
 					let folderID = e.target.getAttribute("folderID");
-					console.log(self.startElement);
+					//console.log(self.startElement);
+
 
 					if (self.startElement !== null && self.startElement !== undefined) {
-						if (folderID !== self.startElement.getAttribute("folderID")) {
-							let formData = new FormData();
-							formData.append("folderID", folderID);
-							formData.append("documentID", self.startElement.getAttribute("documentID"));
-							//send the move request to the server. If it's successful the folder list is refreshed.
-							makeCall("POST", 'MoveDocument', formData, function(response) {
-								checkResponse(response);
+
+						if (self.startElement.classList.contains('document')) {
+							if (folderID !== self.startElement.getAttribute("folderID")) {
+								let formData = new FormData();
+								formData.append("folderID", folderID);
+								formData.append("documentID", self.startElement.getAttribute("documentID"));
+								//send the move request to the server. If it's successful the folder list is refreshed.
+								makeCall("POST", 'MoveDocument', formData, function(response) {
+									checkResponse(response);
+									pageManager.refresh();
+								});
+								self.resetDroppable();
+							} else {
+								
+								//console.log("bububu");
+								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
+								self.resetDroppable();
 								pageManager.refresh();
-							});
-							self.resetDroppable();
-						} else if (self.startElement.classList.contains('document')) {
-							alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
-							self.resetDroppable();
-							pageManager.refresh();
-							//self.setDrop();
+								//self.setDrop();
+							}
 						} else {
+							
 							alert("Puoi spostare le cartelle solo nel cestino!");
 							self.resetDroppable();
 							pageManager.refresh();
