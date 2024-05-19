@@ -73,6 +73,7 @@
 	function FolderTree(container) {
 
 		this.container = container;
+		this.editConfig = false;
 
 		this.show = function() {
 			this.container.innerHTML = "";
@@ -106,10 +107,74 @@
 			)
 		}
 
+
+		/**
+		 * This method changes the value of the EditButton and then show the edit buttons fo adding new content.
+		 */
+		this.edit = function() {
+			const self = this;
+			let editButton = document.getElementById("EditButton");
+			editButton.textContent = "UNDO";
+			editButton.onclick = function() {
+				self.undo();
+				pageManager.hideContent();
+			};
+
+			let showDetails = document.getElementsByClassName("ShowDocumentInfo");
+			for (const btnDetail of showDetails) {
+				btnDetail.style.visibility = "hidden";
+			}
+
+
+			/*let editButtons = document.getElementsByClassName("mngBtn");
+			for (const editBtn of editButtons) {
+				editBtn.style.visibility = "visible";
+			}*/
+
+			self.editConfig = true;
+
+		}
+
+		/**
+		 * This method hides the edit buttons and sets the value of the EditButton to "EDIT".
+		 */
+		this.undo = function() {
+
+			pageManager.hideContent();
+			const self = this;
+			let editButton = document.getElementById("EditButton");
+			editButton.textContent = "EDIT";
+			editButton.onclick = function() {
+				self.edit();
+			};
+
+			/*let showDetails = document.getElementsByClassName("ShowDocumentInfo");
+			for (const btnDetail of showDetails) {
+				btnDetail.style.visibility = "visible";
+			}*/
+
+			let editButtons = document.getElementsByClassName("mngBtn");
+			for (const editBtn of editButtons) {
+				editBtn.style.visibility = "hidden";
+			}
+
+			self.editConfig = false;
+		}
+
+
 		this.update = function(folderTree) {
 
 			this.container.innerHTML = "";
 			const self = this;
+
+
+			//get edit button and set up onclick event.
+			let editButton = document.getElementById("EditButton");
+			editButton.textContent = "EDIT";
+			editButton.onclick = function() {
+				self.edit();
+			};
+
 
 			let treeContainer = document.getElementById('treeContainer');
 			//Ricursive Function to print the Folder Tree
@@ -117,6 +182,8 @@
 
 			//Set up the drag and drop
 			dragAndDropHandler.setUp();
+			self.undo();
+
 		}
 
 
@@ -127,17 +194,66 @@
 			if (node.folder.depth > 0) {
 
 				let folderUL = document.createElement("ul");
-				let folderIL = document.createElement("li");
+				let folderLI = document.createElement("li");
 				let folderDiv = document.createElement("div");
-				if (node.folder.depth > 0) {
-					folderDiv.textContent = node.folder.folderName;
-					folderDiv.classList.add("folder");
-					folderDiv.setAttribute("folderID", node.folder.folderID);
-					//folderDiv.className = 'folder';
-				}
-				folderIL.append(folderDiv);
-				folderUL.append(folderIL);
+				//if (node.folder.depth > 0) {
+				folderDiv.textContent = node.folder.folderName;
+				folderDiv.classList.add("folder");
+				folderDiv.setAttribute("folderID", node.folder.folderID);
+				//folderDiv.className = 'folder';
+
+				//creates new folder button.
+				let folderButton = document.createElement("button");
+				folderButton.className = "mngBtn";
+				folderButton.textContent = "Create Folder";
+				folderButton.addEventListener("click", function() {
+					createFolder.enableForm(node.folder.folderID, node.folder.folderName);
+				});
+
+				//create new folder button.
+				let docButton = document.createElement("button");
+				docButton.className = "mngBtn";
+				docButton.textContent = "Create Document";
+				docButton.addEventListener("click", function() {
+					createDocument.enableForm(node.folder.folderID, node.folder.folderName);
+				});
+
+				let internalContainer = document.createElement("div");
+				internalContainer.append(folderDiv);
+				internalContainer.append(folderButton);
+				internalContainer.append(docButton);
+
+				//It permits the dynamic visual of the mngButton when the editConfig is active
+				folderLI.addEventListener("mouseenter", function() {
+					if (self.editConfig) {
+						folderButton.style.visibility = "visible";
+						docButton.style.visibility = "visible";
+					}
+				});
+
+				folderLI.addEventListener("mouseleave", function() {
+					if (self.editConfig) {
+						folderButton.style.visibility = "hidden";
+						docButton.style.visibility = "hidden";
+					}
+				});
+
+
+				//console.log(node.folder.folderID);
+
+				//folderLI.append(folderDiv);
+
+				//folderLI.append(folderButton);
+				//folderLI.append(docButton);
+
+				folderLI.append(internalContainer);
+
+					//}
+
+				folderUL.append(folderLI);
 				parentElement.appendChild(folderUL);
+
+
 
 				// Document print
 				if (node.documentList && node.documentList.length > 0) {
@@ -146,7 +262,7 @@
 
 					node.documentList.forEach(function(doc) {
 
-						//create the li element that contains the document.
+						//creates the li element that contains the document.
 						let documentLi = document.createElement("li");
 						let documentDiv = document.createElement("div");
 
@@ -155,20 +271,37 @@
 						documentDiv.textContent = doc.documentName + "." + doc.documentType;
 						documentDiv.setAttribute("documentID", doc.documentID);
 						documentDiv.setAttribute("folderID", doc.folderID);
-						documentLi.append(documentDiv);
 
 						let docInfo = document.createElement("button");
 						docInfo.className = "ShowDocumentInfo";
 						docInfo.textContent = "Show Document Info";
+						docInfo.style.visibility = "hidden";
 
+
+						let docAndButton = document.createElement("div");
+						docAndButton.append(documentDiv);
+						docAndButton.append(docInfo);
 
 						//show details on click
 						docInfo.addEventListener("click", function() {
 							documentInfo.openDocument(doc.documentID);
 						});
 
+						//It permits the DocInfoButton Dynamic Visual when the editConfig is inactive
+						docAndButton.addEventListener("mouseenter", function() {
+							if (!self.editConfig) {
+								docInfo.style.visibility = "visible";
+							}
+						});
 
-						documentLi.append(docInfo);
+						docAndButton.addEventListener("mouseleave", function() {
+							if (!self.editConfig) {
+								docInfo.style.visibility = "hidden";
+							}
+						});
+
+
+						documentLi.append(docAndButton);
 						documents.append(documentLi);
 
 					});
@@ -176,12 +309,14 @@
 					folderUL.appendChild(documents);
 				}
 
+
 				if (node.children && node.children.length > 0) {
 					node.children.forEach(function(child) {
 						self.traverseTree(child, folderUL);
 					});
 				}
-				
+
+
 			} else {
 
 				if (node.children && node.children.length > 0) {
@@ -400,7 +535,7 @@
 								});
 								self.resetDroppable();
 							} else {
-								
+
 								//console.log("bububu");
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 								self.resetDroppable();
@@ -408,10 +543,11 @@
 								//self.setDrop();
 							}
 						} else {
-							
+
 							alert("Puoi spostare le cartelle solo nel cestino!");
 							self.resetDroppable();
 							pageManager.refresh();
+
 						}
 					}
 				});
@@ -425,12 +561,15 @@
 	 * @param container the container element.
 	 */
 	function CreateFolder(container) {
+
 		const form = document.getElementById("createFolder");
+		const title = document.getElementById("createFolderFormTitle");
 		form.addEventListener("submit", function(e) {
 			e.preventDefault();
 			if (form.checkValidity()) {
+				const formData = new FormData(form);
 				//make a request to the server to create the folder.
-				makeCall("POST", 'CreateFolder', form, function(response) {
+				makeCall("POST", 'CreateFolder', formData, function(response) {
 					checkResponse(response);
 					pageManager.refresh();
 				});
@@ -448,13 +587,19 @@
 				container.removeChild(form);
 		}
 
+
 		/**
 		 * This method sets the create folder form visible and the event on the submit button.
 		 */
-		this.enableForm = function() {
+		this.enableForm = function(folderID, folderName) {
+
 			pageManager.hideContent();
 			container.style.visibility = "visible";
+			form.getElementsByClassName("hiddenInput")[0].value = folderID;
+			title.textContent = "Create subfolder inside folder " + folderName;
 			container.append(form);
+			console.log(document.getElementById('parentFolderID').value);
+			console.log(document.getElementsByName('destinationID')[0].value);
 		}
 	}
 
@@ -510,6 +655,7 @@
 	function ShowDocument(options) {
 		const documentDetails = document.getElementById("documentDetails");
 		documentDetails.parentNode.removeChild(documentDetails);
+
 
 		/**
 		 * Hides the document details.

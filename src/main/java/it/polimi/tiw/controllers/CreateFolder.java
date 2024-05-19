@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -16,6 +17,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.tomcat.util.http.fileupload.FileItem;
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
@@ -39,32 +44,56 @@ public class CreateFolder extends HttpServlet {
 		connection = ConnectionHandler.getConnection(getServletContext());
 	}
 
-
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
 		HttpSession session = req.getSession();
 		resp.setContentType("text/plain");
 
-		Integer destinationID;
-		String newFolderName;
-		try {
-			destinationID = Integer.parseInt(req.getParameter("destinationID"));
-		} catch (NumberFormatException | NullPointerException e) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: DestinationID non valido");
-            return;
+		Integer destinationID = null;
+		String newFolderName = null;
+		String contentType = req.getContentType();
+
+		if (contentType != null && contentType.startsWith("multipart/form-data")) {
+
+			DiskFileItemFactory factory = new DiskFileItemFactory();
+			ServletFileUpload upload = new ServletFileUpload(factory);
+			List<FileItem> items = null;
+			try {
+
+				ServletRequestContext requestContext = new ServletRequestContext(req);
+
+				// Parses the multipart request data
+				items = upload.parseRequest(requestContext);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			
+			try {
+
+				newFolderName = items.get(0).getString();
+
+			} catch (IllegalStateException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: New Folder Name non valido");
+				return;
+			}
+			
+			try {
+
+				// Saves the value of the documentID
+				destinationID = Integer.parseInt(items.get(1).getString());
+
+			} catch (NumberFormatException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Destination ID non valido");
+				return;
+			}
+
 		}
 
-		try {
-			newFolderName = req.getParameter("newFolderName");
-		} catch (IllegalArgumentException | NullPointerException e) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: New Folder Name non valido");
-            return;
-		}
-
-		
 		FolderDAO folderDao = new FolderDAO(connection);
 		User utente = (User) session.getAttribute("utente");
 		int parentFolderDepth;
@@ -73,16 +102,16 @@ public class CreateFolder extends HttpServlet {
 			parentFolderDepth = folderDao.getDepthByID(utente.getUserID(), destinationID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("Errore SQL: impossibile estrarre la profondità della cartella padre");
-            return;
+			resp.getWriter().println("Errore SQL: impossibile estrarre la profondità della cartella padre");
+			return;
 		}
 
 		if (parentFolderDepth < 0) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Profondità negativa");
-            return;
+			resp.getWriter().println("Errore: Profondità negativa");
+			return;
 		}
-		
+
 		boolean newFolderIsRoot;
 		if (parentFolderDepth == 0) {
 			newFolderIsRoot = true;
@@ -90,30 +119,29 @@ public class CreateFolder extends HttpServlet {
 			newFolderIsRoot = false;
 		}
 
-		
 		try {
-			
+
 			int code;
-			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID, newFolderIsRoot, parentFolderDepth + 1);
+			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID, newFolderIsRoot,
+					parentFolderDepth + 1);
 			if (code != 1) {
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-	            resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in ");
+				resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in ");
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in rubrica");
+			resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in rubrica");
 		}
-	
-		
+
 	}
-	
+
 	@Override
-    public void destroy() {
-        try{
-            ConnectionHandler.closeConnection(connection);
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-    }
+	public void destroy() {
+		try {
+			ConnectionHandler.closeConnection(connection);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 }

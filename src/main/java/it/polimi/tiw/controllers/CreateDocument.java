@@ -3,6 +3,7 @@ package it.polimi.tiw.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -10,6 +11,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.apache.tomcat.util.http.fileupload.FileItem;
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
@@ -35,41 +41,63 @@ public class CreateDocument extends HttpServlet {
 
 		HttpSession session = req.getSession();
 		resp.setContentType("text/plain");
+		
+		
+		Integer destinationID = null;
+		String newDocumentName = null, summary = null, documentType = null;
+		String contentType = req.getContentType();
 
-		Integer destinationID;
-		String newDocumentName, summary, documentType;
-		try {
-			destinationID = Integer.parseInt(req.getParameter("destinationID"));
-		} catch (NumberFormatException | NullPointerException e) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: DestinationID non valido");
-            return;
+		if (contentType != null && contentType.startsWith("multipart/form-data")) {
+
+			DiskFileItemFactory factory = new DiskFileItemFactory();
+			ServletFileUpload upload = new ServletFileUpload(factory);
+			List<FileItem> items = null;
+			try {
+
+				ServletRequestContext requestContext = new ServletRequestContext(req);
+
+				// Parses the multipart request data
+				items = upload.parseRequest(requestContext);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			
+			try {
+				destinationID = Integer.parseInt(items.get(3).getString());
+			} catch (NumberFormatException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	            resp.getWriter().println("Errore: DestinationID non valido");
+	            return;
+			}
+
+			try {
+				newDocumentName = items.get(0).getString();
+			} catch (IllegalArgumentException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	            resp.getWriter().println("Errore: New Document Name non valido");
+	            return;
+			}
+			
+			try {
+				summary = items.get(2).getString();
+			} catch (IllegalArgumentException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	            resp.getWriter().println("Errore: Summary non valido");
+	            return;
+			}
+			
+			try {
+				documentType = items.get(1).getString();
+			} catch (IllegalArgumentException | NullPointerException e) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	            resp.getWriter().println("Errore: Document Type non valido");
+	            return;
+			}
+
 		}
 
-		try {
-			newDocumentName = req.getParameter("newDocumentName");
-		} catch (IllegalArgumentException | NullPointerException e) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: New Document Name non valido");
-            return;
-		}
-		
-		try {
-			summary = req.getParameter("summary");
-		} catch (IllegalArgumentException | NullPointerException e) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Summary non valido");
-            return;
-		}
-		
-		try {
-			documentType = req.getParameter("documentType");
-		} catch (IllegalArgumentException | NullPointerException e) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Document Type non valido");
-            return;
-		}
-		
 		
 		User utente = (User) session.getAttribute("utente");
 		DocumentDAO documentDao = new DocumentDAO(connection);

@@ -22,6 +22,7 @@
 				height="60" width="auto">
 			<div class="d-flex flex-row my-1" style="margin-right: 10px">
 				<button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
+				<button id="EditButton" type="button" style="float: left">Edit</button>
 			</div>
 		</nav>
 
@@ -45,10 +46,11 @@
 		</div>
 
 		<form id="createFolder" action="#" class="creation-form">
-			<h3>Create a Folder</h3>
-			<label for="folderName">Folder Name:</label> <input type="text"
-				id="folderName" name="folderName" required> <br> <input
-				type="submit" id="createFld" value="Create Folder">
+			<h3 id="createFolderFormTitle">Create a Folder</h3>
+			<label for="folderName">Folder Name:</label> 
+			<input type="text" id="folderName" name="newFolderName" required> <br> 
+			<input type="hidden" id="parentFolderID" name="destinationID" class="hiddenInput"> 
+			<input type="submit" id="createFld" value="Create Folder">
 		</form>
 
 		<div id="wasteBin">
@@ -57,16 +59,18 @@
 
 		<form id="createDocument" action="#" class="creation-form">
 			<h3 id="createDocumentTitle">Create a Document</h3>
-			<label for="docName">Name:</label> <input type="text" id="docName"
-				name="docName" maxlength="50" required><br> <label
-				for="docFormat">Format:</label> <input type="text" id="docFormat"
+			<label for="docName">Name:</label> 
+			<input type="text" id="docName"
+				name="docName" maxlength="50" required><br> 
+			<label for="docFormat">Format:</label> 
+			<input type="text" id="docFormat"
 				name="docFormat" maxlength="10" pattern="^[^\s.]{1,10}$" required><br>
 			<label for="docSummary">Summary:</label>
 			<textarea id="docSummary" name="docSummary" rows="5" maxlength="200"
 				required></textarea>
-			<br> <input type="hidden" id="subfolderId" name="subfolderId"
-				class="hiddenInput"> <input type="submit" id="createDoc"
-				value="Create Document">
+			<br> 
+			<input type="hidden" id="folderID" name="folderID" class="hiddenInput"> 
+			<input type="submit" id="createDoc" value="Create Document">
 		</form>
 
 	</div>
