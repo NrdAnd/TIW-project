@@ -75,6 +75,7 @@
 
 		this.container = container;
 		this.editConfig = false;
+		this.rootConfig = false;
 
 		this.show = function() {
 			this.container.innerHTML = "";
@@ -165,14 +166,42 @@
 				self.edit();
 			};
 
-
 			let treeContainer = document.getElementById('treeContainer');
 			//Ricursive Function to print the Folder Tree
 			self.traverseTree(folderTree, treeContainer);
 
 			//Set up the drag and drop
 			dragAndDropHandler.setUp();
+			//Set up Button Dynamic Visual
 			self.undo();
+			
+			//Button to create Root Folders
+			let rootButton = document.getElementById("RootButton");
+			rootButton.textContent = "Create a Root Folder";
+			rootButton.addEventListener("click", function() {
+
+				self.rootConfig = true;
+				let editButtons = document.getElementsByClassName("mngBtn");
+				for (const editBtn of editButtons) {
+					editBtn.style.visibility = "hidden";
+				}
+
+				let showDetails = document.getElementsByClassName("ShowDocumentInfo");
+				for (const btnDetail of showDetails) {
+					btnDetail.style.visibility = "visible";
+					btnDetail.style.visibility = "hidden";
+				}
+
+				createFolder.enableForm(folderTree.folder.folderID, "HomePage");
+				
+				let editButton = document.getElementById("EditButton");
+				editButton.onclick = null;
+				editButton.style.visibility = "hidden";
+				
+			});
+						
+			self.rootConfig = false;
+			editButton.style.visibility = "visible";
 
 		}
 
@@ -268,13 +297,13 @@
 
 						//It permits the DocInfoButton Dynamic Visual when the editConfig is inactive
 						docAndButton.addEventListener("mouseenter", function() {
-							if (!self.editConfig) {
+							if (!self.editConfig && !self.rootConfig) {
 								docInfo.style.visibility = "visible";
 							}
 						});
 
 						docAndButton.addEventListener("mouseleave", function() {
-							if (!self.editConfig) {
+							if (!self.editConfig && !self.rootConfig) {
 								docInfo.style.visibility = "hidden";
 							}
 						});
@@ -535,14 +564,14 @@
 
 		const form = document.getElementById("createFolder");
 		const title = document.getElementById("createFolderFormTitle");
-		
+
 		//It creates and sets the back button in the form
 		let backButton = document.createElement("button");
 		backButton.className = "BackButton";
 		backButton.textContent = "Cancel";
 		backButton.style.visibility = "visible";
 		form.append(backButton);
-		
+
 		backButton.addEventListener("click", function() {
 			pageManager.refresh();
 		});
@@ -592,18 +621,18 @@
 
 		const title = document.getElementById("createDocumentTitle");
 		const form = document.getElementById("createDocument");
-		
+
 		//It creates and sets the back button in the form
 		let backButton = document.createElement("button");
 		backButton.className = "BackButton";
 		backButton.textContent = "Cancel";
 		backButton.style.visibility = "visible";
 		form.append(backButton);
-		
+
 		backButton.addEventListener("click", function() {
 			pageManager.refresh();
 		});
-		
+
 		form.addEventListener("submit", function(e) {
 			e.preventDefault();
 			if (form.checkValidity()) {
@@ -712,6 +741,7 @@
 	 * This class is used for setting up the page and passing the right elements to the classes.
 	 */
 	function PageManager() {
+
 		/**
 		 * This method is called on refresh. Crates the classes by passing them the right elements.
 		 */
