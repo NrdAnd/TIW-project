@@ -37,6 +37,7 @@
 		pageManager.refresh();
 	}
 
+
 	/**
 	 * This method logs out the user and goes to the login page.
 	 */
@@ -125,12 +126,6 @@
 				btnDetail.style.visibility = "hidden";
 			}
 
-
-			/*let editButtons = document.getElementsByClassName("mngBtn");
-			for (const editBtn of editButtons) {
-				editBtn.style.visibility = "visible";
-			}*/
-
 			self.editConfig = true;
 
 		}
@@ -147,11 +142,6 @@
 			editButton.onclick = function() {
 				self.edit();
 			};
-
-			/*let showDetails = document.getElementsByClassName("ShowDocumentInfo");
-			for (const btnDetail of showDetails) {
-				btnDetail.style.visibility = "visible";
-			}*/
 
 			let editButtons = document.getElementsByClassName("mngBtn");
 			for (const editBtn of editButtons) {
@@ -196,11 +186,10 @@
 				let folderUL = document.createElement("ul");
 				let folderLI = document.createElement("li");
 				let folderDiv = document.createElement("div");
-				//if (node.folder.depth > 0) {
+
 				folderDiv.textContent = node.folder.folderName;
 				folderDiv.classList.add("folder");
 				folderDiv.setAttribute("folderID", node.folder.folderID);
-				//folderDiv.className = 'folder';
 
 				//creates new folder button.
 				let folderButton = document.createElement("button");
@@ -238,17 +227,7 @@
 					}
 				});
 
-
-				//console.log(node.folder.folderID);
-
-				//folderLI.append(folderDiv);
-
-				//folderLI.append(folderButton);
-				//folderLI.append(docButton);
-
 				folderLI.append(internalContainer);
-
-					//}
 
 				folderUL.append(folderLI);
 				parentElement.appendChild(folderUL);
@@ -414,7 +393,6 @@
 
 			const wasteBin = document.getElementById("wasteBin");
 			wasteBin.removeEventListener("drop", self.deletionFunction);
-			//self.setWasteBin();
 
 			self.notDroppable = null;
 			self.startElement = null;
@@ -476,14 +454,12 @@
 					formData.append('documentID', self.startElement.getAttribute("documentID"));
 					makeCall("POST", 'DeleteDocument', formData, function(response) {
 						checkResponse(response);
-						pageManager.refresh();
 					});
 				} else if (self.startElement.classList.contains("folder")) {
 					let formData = new FormData();
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
 					makeCall("POST", 'DeleteFolder', formData, function(response) {
 						checkResponse(response);
-						pageManager.refresh();
 					});
 				}
 			}
@@ -518,8 +494,6 @@
 					document.getElementById("wasteBin").style.visibility = "hidden";
 
 					let folderID = e.target.getAttribute("folderID");
-					//console.log(self.startElement);
-
 
 					if (self.startElement !== null && self.startElement !== undefined) {
 
@@ -531,16 +505,13 @@
 								//send the move request to the server. If it's successful the folder list is refreshed.
 								makeCall("POST", 'MoveDocument', formData, function(response) {
 									checkResponse(response);
-									pageManager.refresh();
 								});
 								self.resetDroppable();
 							} else {
 
-								//console.log("bububu");
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 								self.resetDroppable();
 								pageManager.refresh();
-								//self.setDrop();
 							}
 						} else {
 
@@ -564,6 +535,18 @@
 
 		const form = document.getElementById("createFolder");
 		const title = document.getElementById("createFolderFormTitle");
+		
+		//It creates and sets the back button in the form
+		let backButton = document.createElement("button");
+		backButton.className = "BackButton";
+		backButton.textContent = "Cancel";
+		backButton.style.visibility = "visible";
+		form.append(backButton);
+		
+		backButton.addEventListener("click", function() {
+			pageManager.refresh();
+		});
+
 		form.addEventListener("submit", function(e) {
 			e.preventDefault();
 			if (form.checkValidity()) {
@@ -571,7 +554,6 @@
 				//make a request to the server to create the folder.
 				makeCall("POST", 'CreateFolder', formData, function(response) {
 					checkResponse(response);
-					pageManager.refresh();
 				});
 				form.reset();
 			} else form.reportValidity();
@@ -598,8 +580,6 @@
 			form.getElementsByClassName("hiddenInput")[0].value = folderID;
 			title.textContent = "Create subfolder inside folder " + folderName;
 			container.append(form);
-			console.log(document.getElementById('parentFolderID').value);
-			console.log(document.getElementsByName('destinationID')[0].value);
 		}
 	}
 
@@ -612,6 +592,18 @@
 
 		const title = document.getElementById("createDocumentTitle");
 		const form = document.getElementById("createDocument");
+		
+		//It creates and sets the back button in the form
+		let backButton = document.createElement("button");
+		backButton.className = "BackButton";
+		backButton.textContent = "Cancel";
+		backButton.style.visibility = "visible";
+		form.append(backButton);
+		
+		backButton.addEventListener("click", function() {
+			pageManager.refresh();
+		});
+		
 		form.addEventListener("submit", function(e) {
 			e.preventDefault();
 			if (form.checkValidity()) {
@@ -619,7 +611,6 @@
 				//make a request to the server to create the document.
 				makeCall("POST", 'CreateDocument', formData, function(response) {
 					checkResponse(response);
-					pageManager.refresh();
 				});
 				form.reset();
 			} else form.reportValidity();
@@ -763,7 +754,7 @@
 			let text = response.responseText;
 			switch (response.status) {
 				case 200:
-					//pageManager.refresh();
+					pageManager.refresh();
 					break;
 				case 400:
 					alert(text);
