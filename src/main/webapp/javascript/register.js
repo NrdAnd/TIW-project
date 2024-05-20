@@ -22,10 +22,11 @@ function passwordMatch() {
 			}
 
 			let formData = new FormData();
-			formData.append("username", document.getElementsByName("username").value);
-			formData.append("email", document.getElementsByName("email").value);
-			formData.append("password", pswd1);
-			formData.append("passwordCheck", pswd2);
+			formData.append("username", document.getElementById("username").value);
+			formData.append("email", document.getElementById("email").value);
+			console.log(pswd1);
+			formData.append("password", document.getElementById("pswd1").value);
+			formData.append("passwordCheck", document.getElementById("pswd2").value);
 
 			makeCall("POST", 'CheckSignupCredentials', formData,
 				function(req) {

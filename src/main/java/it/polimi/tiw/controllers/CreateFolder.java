@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Queue;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -91,7 +92,6 @@ public class CreateFolder extends HttpServlet {
 				resp.getWriter().println("Errore: Destination ID non valido");
 				return;
 			}
-
 		}
 
 		FolderDAO folderDao = new FolderDAO(connection);
@@ -125,14 +125,39 @@ public class CreateFolder extends HttpServlet {
 			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID, newFolderIsRoot,
 					parentFolderDepth + 1);
 			if (code != 1) {
-				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in ");
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: impossibile la creazione della Folder nel DB");
+				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in rubrica");
+			resp.getWriter().println("Errore SQL: impossibile la creazione della Folder nel DB");
 		}
+		
+		
+		String folderName;		
+		try {
+			folderName = folderDao.getFolderName(utente.getUserID(), destinationID);
+			if (folderName == null) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Folder Name non valido");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
+			return;
+		}
+		
+		String operationString = "CREATE_FOLDER >> NAME: " + newFolderName + "; PARENT_FOLDER: " + folderName;
 
+		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		if (versionQueue.size() < 10) {
+			versionQueue.add(operationString);
+		} else {
+			versionQueue.poll();
+			versionQueue.add(operationString);
+		}
 	}
 
 	@Override

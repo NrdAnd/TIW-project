@@ -66,25 +66,25 @@ public class FolderDAO {
 		return rootNode;
 	}
 
-	
 	/**
 	 * This method permits to extract the subFolderTree of a specific Folder
-	 * @param userID is the user ID
+	 * 
+	 * @param userID   is the user ID
 	 * @param folderID is the folder ID
 	 * @return the subFolderTree
 	 * @throws SQLException is there's an exception
 	 */
-	
+
 	public TreeNode getSubTreeFolder(int userID, int folderID) throws SQLException {
-		
+
 		String query = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) SELECT * FROM FolderHierarchy ORDER BY depth ASC";
-		
+
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
 		statement.setInt(2, folderID);
 
 		ResultSet result = statement.executeQuery();
-		
+
 		result.next();
 
 		Folder initialFolder = new Folder();
@@ -112,26 +112,26 @@ public class FolderDAO {
 			allFolders.add(folder);
 
 		}
-		
 
 		TreeNode rootNode = treeFolderCreation(initialFolder, allFolders);
 		return rootNode;
-		
-		
+
 	}
-	
-	
+
 	/**
-	 * It's a private method used to create the tree, taking as input the root folder from which to create the folder tree
+	 * It's a private method used to create the tree, taking as input the root
+	 * folder from which to create the folder tree
+	 * 
 	 * @param initialFolder is the root folder
-	 * @param folderList is the list that contains the other folders to add to the folder tree
+	 * @param folderList    is the list that contains the other folders to add to
+	 *                      the folder tree
 	 * @return the folder tree
 	 */
 	private TreeNode treeFolderCreation(Folder initialFolder, ArrayList<Folder> folderList) {
 
 		// Create the first Node of the tree: it contains the HomePageFolder
 		TreeNode rootNode = new TreeNode(initialFolder);
-		
+
 		// Map to connect FolderID and a TreeNode with that FolderID
 		HashMap<Integer, TreeNode> nodeMap = new HashMap<>();
 		nodeMap.put(initialFolder.getFolderID(), rootNode);
@@ -140,17 +140,16 @@ public class FolderDAO {
 		for (int i = 0; i < folderList.size(); i++) {
 
 			Folder folder = folderList.get(i);
-			
+
 			TreeNode node = new TreeNode(folder);
 			nodeMap.put(folder.getFolderID(), node);
-			
-			
+
 			TreeNode parentNode = nodeMap.get(folder.getParentFolderID());
-			
+
 			parentNode.addChild(node);
-			
+
 		}
-		
+
 		return rootNode;
 
 	}
@@ -413,64 +412,110 @@ public class FolderDAO {
 		}
 		return folderList;
 	}
-	
+
 	/**
 	 * 
-	 * @param userID is the user ID
+	 * @param userID   is the user ID
 	 * @param folderID is the folder ID
 	 * @return the name of the Folder
 	 * @throws SQLException if there is an exception
 	 */
-	
+
 	public String getFolderName(int userID, int folderID) throws SQLException {
 		String query = "SELECT folder_name FROM Folder WHERE owner_id = ? AND folder_id = ?";
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
 		statement.setInt(2, folderID);
-		
+
 		ResultSet result = statement.executeQuery();
+
+		if (!result.isBeforeFirst())
+			return null;
+
+		result.next();
+
+		return result.getString("folder_name");
+	}
+
+	/**
+	 * This method deletes a specific folder with its subfolders and its documents
+	 * 
+	 * @param userID   is the user ID
+	 * @param folderID is the folder ID
+	 * @throws SQLException if ther's an exception
+	 */
+
+	public void deleteFolder(int userID, int folderID) throws SQLException {
+
+		String folderDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT folder_id FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.folder_id FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Folder WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy) ORDER BY folder_id DESC";
+		String docDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Document WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy);";
+
+		connection.setAutoCommit(false);
+
+		try {
+			PreparedStatement documentStatement = connection.prepareStatement(docDelete);
+			documentStatement.setInt(1, userID);
+			documentStatement.setInt(2, folderID);
+
+			PreparedStatement folderStatement = connection.prepareStatement(folderDelete);
+			folderStatement.setInt(1, userID);
+			folderStatement.setInt(2, folderID);
+
+			documentStatement.executeUpdate();
+			folderStatement.executeUpdate();
+			connection.commit();
+		} catch (SQLException e) {
+			connection.rollback();
+			throw e;
+		} finally {
+			connection.setAutoCommit(true);
+		}
+	}
+
+	/**
+	 * This method returns the maximum folder id
+	 * 
+	 * @param userID is the user id
+	 * @return the maximum folder id, otherwhise if the result is empty it returns -1
+	 * @throws SQLException if there's an exception
+	 */
+
+	public int getLastFolderID(int userID) throws SQLException {
+
+		String query = "SELECT MAX(folder_id) AS max_folder_id FROM Folder WHERE owner_id = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setInt(1, userID);
+		ResultSet result = statement.executeQuery();
+
+		if (!result.isBeforeFirst())
+			return -1;
 		
-		if(!result.isBeforeFirst())
+		result.next();
+
+		return result.getInt("max_folder_id");
+
+	}
+
+	/**
+	 * This method extracts the parent folder name by the folder id
+	 * @param userID     is the user id
+	 * @param folderId is the folder id
+	 * @return the folder id if it exists, otherwhise null
+	 */
+	public String getParentFolderName(int userID, int folderId) throws SQLException {
+
+		String query = "SELECT parent_folder_id FROM Folder WHERE owner_id = ? AND folder_id = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setInt(1, userID);
+		statement.setInt(2, folderId);
+		ResultSet result = statement.executeQuery();
+
+		if (!result.isBeforeFirst())
 			return null;
 		
 		result.next();
 		
-		return result.getString("folder_name");
+		return this.getFolderName(userID, result.getInt("parent_folder_id"));
+
 	}
-	
-	
-	/**
-	 * This method deletes a specific folder with its subfolders and its documents
-	 * @param userID is the user ID
-	 * @param folderID is the folder ID
-	 * @throws SQLException if ther's an exception
-	 */
-	
-	public void deleteFolder (int userID, int folderID) throws SQLException {
-		
-		String folderDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT folder_id FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.folder_id FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Folder WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy) ORDER BY folder_id DESC";
-		String docDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Document WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy);";
-		
-		connection.setAutoCommit(false);
-		
-		try {
-			PreparedStatement documentStatement = connection.prepareStatement(docDelete);
-	    	documentStatement.setInt(1, userID);
-			documentStatement.setInt(2, folderID);
-			
-			PreparedStatement folderStatement = connection.prepareStatement(folderDelete);
-			folderStatement.setInt(1, userID);
-			folderStatement.setInt(2, folderID);
-			
-            documentStatement.executeUpdate();
-            folderStatement.executeUpdate();
-            connection.commit();
-		}catch(SQLException e) {
-			connection.rollback();
-			throw e;
-		}finally {
-			connection.setAutoCommit(true);
-		}
-	}
-		
 }

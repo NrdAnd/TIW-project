@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.Queue;
 
 @WebServlet("/CheckLoginCredentials")
 @MultipartConfig
@@ -58,6 +60,7 @@ public class CheckLoginCredentials extends HttpServlet {
         if(utente == null){
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             resp.getWriter().println("Username o password errati");
+            return;
         }else{
             req.getSession().setMaxInactiveInterval(300);
             req.getSession().setAttribute("utente", utente);
@@ -66,6 +69,10 @@ public class CheckLoginCredentials extends HttpServlet {
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
             resp.getWriter().println(utente.getUsername());
+            
+            Queue<String> versionQueue = new LinkedList<>();
+            req.getSession().setAttribute("versionQueue", versionQueue);
+            return;
         }
     }
 

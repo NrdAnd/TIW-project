@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
@@ -122,6 +124,8 @@ public class CheckSignupCredentials extends HttpServlet {
             return;
         }
         
+        Queue<String> versionQueue = new LinkedList<>();
+        req.getSession().setAttribute("versionQueue", versionQueue);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package it.polimi.tiw.dao;
 
-import java.sql.Timestamp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -167,4 +166,85 @@ public class DocumentDAO {
 		
 		statement.executeUpdate();
     }
+    
+    
+    /**
+     * This method returns the maximum document id
+     * @param userID is the user id
+     * @return the maximum document id, otherwhise if the result is empty it returns -1
+     * @throws SQLException if there's an exception
+     */
+    
+    public int getLastDocumentID(int userID) throws SQLException {
+    	
+    	String query = "SELECT MAX(document_id) AS max_document_id FROM Document WHERE owner_id = ?";
+    	PreparedStatement statement = connection.prepareStatement(query);
+    	statement.setInt(1, userID);
+    	ResultSet result= statement.executeQuery();
+    	
+    	if(!result.isBeforeFirst())
+        	return -1;
+    	
+    	result.next();
+    	
+    	return result.getInt("max_document_id");
+       			
+    }
+    
+    
+    /**
+	 * This method extracts the document id by the folder Name
+	 * @param userID     is the user id
+	 * @param documentName is the document name
+	 * @return the document id if it exists, otherwhise -1
+	 */
+	public int getDocumentIDByDocumentName(int userID, String documentName) throws SQLException {
+
+		String query = "SELECT document_id FROM Document WHERE owner_id = ? AND document_name = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setInt(1, userID);
+		statement.setString(2, documentName);
+		ResultSet result = statement.executeQuery();
+
+		if (!result.isBeforeFirst())
+			return -1;
+		
+		result.next();
+
+		return result.getInt("document_id");
+
+	}
+	
+	
+	/**
+	 * This method returns the document name
+	 * @param userID is the user id
+	 * @param documentID is the document id
+	 * @return the document name if it exists, otherwhise null
+	 * @throws SQLException if there's an exception
+	 */
+	public String getDocumentNameByDocumentID(int userID, int documentID) throws SQLException {
+		String query = "SELECT document_name FROM Document WHERE owner_id = ? AND document_id = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setInt(1, userID);
+		statement.setInt(2, documentID);
+		ResultSet result = statement.executeQuery();
+
+		if (!result.isBeforeFirst())
+			return null;
+		
+		result.next();
+
+		return result.getString("document_name");
+	}
 }
+
+
+
+
+
+
+
+
+
+

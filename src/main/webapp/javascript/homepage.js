@@ -1,6 +1,6 @@
 {
 
-	let folderTree, documentInfo, createFolder, createDocument, dragAndDropHandler,
+	let folderTree, documentInfo, createFolder, createDocument, dragAndDropHandler, versionHistoryHandler,
 		pageManager = new PageManager();
 
 	/**
@@ -174,7 +174,7 @@
 			dragAndDropHandler.setUp();
 			//Set up Button Dynamic Visual
 			self.undo();
-			
+
 			//Button to create Root Folders
 			let rootButton = document.getElementById("RootButton");
 			rootButton.textContent = "Create a Root Folder";
@@ -193,13 +193,13 @@
 				}
 
 				createFolder.enableForm(folderTree.folder.folderID, "HomePage");
-				
+
 				let editButton = document.getElementById("EditButton");
 				editButton.onclick = null;
 				editButton.style.visibility = "hidden";
-				
+
 			});
-						
+
 			self.rootConfig = false;
 			editButton.style.visibility = "visible";
 
@@ -242,14 +242,14 @@
 				internalContainer.append(docButton);
 
 				//It permits the dynamic visual of the mngButton when the editConfig is active
-				folderLI.addEventListener("mouseenter", function() {
+				internalContainer.addEventListener("mouseenter", function() {
 					if (self.editConfig) {
 						folderButton.style.visibility = "visible";
 						docButton.style.visibility = "visible";
 					}
 				});
 
-				folderLI.addEventListener("mouseleave", function() {
+				internalContainer.addEventListener("mouseleave", function() {
 					if (self.editConfig) {
 						folderButton.style.visibility = "hidden";
 						docButton.style.visibility = "hidden";
@@ -511,7 +511,7 @@
 						element.classList.add("dragover");
 					}
 				});
-				
+
 				element.classList.add("folder-btn");
 				element.addEventListener("dragleave", function() {
 					if (element.classList.contains("droppable")) {
@@ -606,6 +606,7 @@
 		this.enableForm = function(folderID, folderName) {
 
 			pageManager.hideContent();
+			versionHistoryHandler.clear();
 			container.style.visibility = "visible";
 			form.getElementsByClassName("hiddenInput")[0].value = folderID;
 			title.textContent = "Create subfolder inside folder " + folderName;
@@ -661,6 +662,7 @@
 		 */
 		this.enableForm = function(folderID, folderName) {
 			pageManager.hideContent();
+			versionHistoryHandler.clear();
 			container.style.visibility = "visible";
 			form.getElementsByClassName("hiddenInput")[0].value = folderID;
 			title.textContent = "Create document inside folder: " + folderName;
@@ -688,7 +690,7 @@
 		};
 
 		/**
-		 * Shows the document details by calling setDocumentDetail method.
+		 * Shows the document details
 		 * @param documentID the id of the document to show.
 		 */
 		this.openDocument = function(documentID) {
@@ -738,6 +740,102 @@
 	}
 
 
+	function ShowVersionHistory(container) {
+
+		const self = this;
+
+		/**
+		 * Hides the Version History.
+		 */
+		this.clear = function() {
+			
+			document.getElementById("rightContainer").innerHTML = "";
+			document.getElementById("rightContainer").style.visibility = "hidden";
+		};
+
+		/**
+		 * Take the Version History details.
+		 */
+		this.getVersionHistory = function() {
+			let self = this;
+			//make a request to the server to get the version history datas.
+			makeCall("GET", "GetVersionHistory", null, function(response) {
+				if (response.readyState === XMLHttpRequest.DONE) {
+					let text = response.responseText;
+					switch (response.status) {
+						case 200:
+							self.versionHistoryData = JSON.parse(text);
+							self.setVersionHistoryData();
+							break;
+						case 401:
+							alert("You are not logged in.")
+							logout();
+							break;
+						case 400:
+						case 500:
+							alert(text);
+							break;
+						default:
+							alert("Unknown error");
+							break;
+					}
+				}
+			});
+		}
+
+		this.setVersionHistoryData = function() {
+
+			pageManager.hideContent();
+			const rightContainer = document.getElementById("rightContainer");
+			rightContainer.style.visibility = "visible";
+			
+			let title = document.createElement("h2");
+				title.textContent = "History Log";
+				title.style.visibility = "visible";
+				
+			rightContainer.append(title);
+				
+			let datasUl = document.createElement('ul');
+
+			self.versionHistoryData.forEach(function(element) {
+
+				let backVersionButton = document.createElement('button');
+				backVersionButton.className = "backVersionButton";
+				backVersionButton.textContent = "Revert";
+				backVersionButton.addEventListener("click", function() {
+					if (confirm("Are you sure to go back to this version?")) {
+						//da fare, chiamata alla servlet di gestione e richiamata alla stampa del Tree
+					}
+				});
+
+				let elementDiv = document.createElement("div");
+				let elementLI = document.createElement("li");
+				let divContainer = document.createElement("div");
+
+				elementDiv.classList.add("historyDatas");
+				elementDiv.textContent = element;
+				elementDiv.style.visibility = "visible";
+				divContainer.append(elementDiv);
+				divContainer.append(backVersionButton);
+
+				divContainer.addEventListener("mouseenter", function() {
+					backVersionButton.style.visibility = "visible";
+				});
+
+				divContainer.addEventListener("mouseleave", function() {
+					backVersionButton.style.visibility = "hidden";
+				});
+
+				elementLI.append(divContainer);
+				datasUl.append(elementLI);
+			});
+			
+			rightContainer.append(datasUl);
+
+		}
+	}
+
+
 	/**
 	 * This class is used for setting up the page and passing the right elements to the classes.
 	 */
@@ -759,6 +857,7 @@
 			createFolder = new CreateFolder(rightContainer);
 			createDocument = new CreateDocument(rightContainer);
 			dragAndDropHandler = new DragAndDropHandler();
+			versionHistoryHandler = new ShowVersionHistory(rightContainer);
 			this.hideContent();
 		}
 
@@ -767,6 +866,7 @@
 		 */
 		this.refresh = function() {
 			folderTree.show();
+			versionHistoryHandler.getVersionHistory();
 		}
 
 		/**

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Queue;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -19,6 +20,7 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
+import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
 
 @WebServlet("/CreateDocument") // Filtered
@@ -35,14 +37,12 @@ public class CreateDocument extends HttpServlet {
 		connection = ConnectionHandler.getConnection(getServletContext());
 	}
 
-
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
 		HttpSession session = req.getSession();
 		resp.setContentType("text/plain");
-		
-		
+
 		Integer destinationID = null;
 		String newDocumentName = null, summary = null, documentType = null;
 		String contentType = req.getContentType();
@@ -63,66 +63,109 @@ public class CreateDocument extends HttpServlet {
 				e.printStackTrace();
 			}
 
-			
 			try {
 				destinationID = Integer.parseInt(items.get(3).getString());
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-	            resp.getWriter().println("Errore: DestinationID non valido");
-	            return;
+				resp.getWriter().println("Errore: DestinationID non valido");
+				return;
 			}
 
 			try {
 				newDocumentName = items.get(0).getString();
 			} catch (IllegalArgumentException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-	            resp.getWriter().println("Errore: New Document Name non valido");
-	            return;
+				resp.getWriter().println("Errore: New Document Name non valido");
+				return;
 			}
-			
+
 			try {
 				summary = items.get(2).getString();
 			} catch (IllegalArgumentException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-	            resp.getWriter().println("Errore: Summary non valido");
-	            return;
+				resp.getWriter().println("Errore: Summary non valido");
+				return;
 			}
-			
+
 			try {
 				documentType = items.get(1).getString();
 			} catch (IllegalArgumentException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-	            resp.getWriter().println("Errore: Document Type non valido");
-	            return;
+				resp.getWriter().println("Errore: Document Type non valido");
+				return;
 			}
 
 		}
 
-		
+		int code;
 		User utente = (User) session.getAttribute("utente");
 		DocumentDAO documentDao = new DocumentDAO(connection);
-
-		int code;
+		
 		try {
 
-			code = documentDao.createDocument(utente.getUserID(), newDocumentName, summary, documentType, destinationID);
-			
+			code = documentDao.createDocument(utente.getUserID(), newDocumentName, summary, documentType,
+					destinationID);
+
 			if (code != 1) {
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-	            resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio in rubrica");
+				resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio del documento nel DB");
+				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio del documento nel DB");
+			resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio del documento nel DB");
+			return;
+		}
+		
+		
+		String folderName;
+		FolderDAO folderDao = new FolderDAO(connection);
+		
+		try {
+			folderName = folderDao.getFolderName(utente.getUserID(), destinationID);
+			if (folderName == null) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Folder Name non valido");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
+			return;
+		}
+		
+		String parentFolderName;
+		try {
+			parentFolderName = folderDao.getParentFolderName(utente.getUserID(), destinationID);
+			if (parentFolderName == null) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Parent Folder Name non valido");
+				return;
+			}
+			
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Parent Folder ID dal DB");
+			return;
+		}
+		
+		String operationString = "CREATE_DOCUMENT >> NAME: " + newDocumentName + "; FOLDER: " + folderName + " (PF: " + parentFolderName + ")";
+
+		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		if (versionQueue.size() < 10) {
+			versionQueue.add(operationString);
+		} else {
+			versionQueue.poll();
+			versionQueue.add(operationString);
 		}
 	}
-	
+
 	@Override
-    public void destroy() {
-        try{
-            ConnectionHandler.closeConnection(connection);
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-    }
+	public void destroy() {
+		try {
+			ConnectionHandler.closeConnection(connection);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 }

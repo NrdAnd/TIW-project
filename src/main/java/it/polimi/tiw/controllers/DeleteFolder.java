@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Queue;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,7 +19,6 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
 import it.polimi.tiw.beans.User;
-import it.polimi.tiw.dao.DocumentDAO;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
 
@@ -49,16 +49,22 @@ public class DeleteFolder extends HttpServlet {
 
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 			ServletFileUpload upload = new ServletFileUpload(factory);
+			List<FileItem> items = null;
 
 			try {
 				
 				ServletRequestContext requestContext = new ServletRequestContext(req);
 
 				// Parses the multipart request data
-				List<FileItem> items = upload.parseRequest(requestContext);
-				// Saves the value of the documentID
-				folderID = Integer.parseInt(items.get(0).getString());
+				items = upload.parseRequest(requestContext);
 				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			try {
+				// Saves the value of the folderID
+				folderID = Integer.parseInt(items.get(0).getString());
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				resp.getWriter().println("Errore: Folder ID non valido");
@@ -68,12 +74,47 @@ public class DeleteFolder extends HttpServlet {
 
 		User utente = (User) session.getAttribute("utente");
 		FolderDAO folderDao = new FolderDAO(connection);
+		
+		
+		String folderName;
+		try {
+			folderName = folderDao.getFolderName(utente.getUserID(), folderID);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il nome della cartella");
+			return;
+		}
 				
 		try {
 			folderDao.deleteFolder(utente.getUserID(), folderID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione della Folder nel DB");
+			return;
+		}
+		
+		
+		
+		String parentFolderName;
+		try {
+			parentFolderName = folderDao.getParentFolderName(utente.getUserID(), folderID);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile effettuare l'estrazione del parent folder name dal DB");
+			return;
+		}
+		
+		
+		
+		String operationString;
+		operationString = "DELETE_FOLDER >> FOLDER: " + folderName + " (PF: " + parentFolderName + ")";
+		
+		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		if (versionQueue.size() < 10) {
+			versionQueue.add(operationString);
+		} else {
+			versionQueue.poll();
+			versionQueue.add(operationString);
 		}
 	}
 	

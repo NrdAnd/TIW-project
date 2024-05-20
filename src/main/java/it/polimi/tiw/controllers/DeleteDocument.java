@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Queue;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -39,7 +40,7 @@ public class DeleteDocument extends HttpServlet {
 
 		HttpSession session = req.getSession();
 		resp.setContentType("text/plain");
-		
+
 		Integer documentID = null;
 		String contentType = req.getContentType();
 
@@ -47,16 +48,21 @@ public class DeleteDocument extends HttpServlet {
 
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 			ServletFileUpload upload = new ServletFileUpload(factory);
+			List<FileItem> items = null;
 
 			try {
-				
-				ServletRequestContext requestContext = new ServletRequestContext(req);
 
+				ServletRequestContext requestContext = new ServletRequestContext(req);
 				// Parses the multipart request data
-				List<FileItem> items = upload.parseRequest(requestContext);
+				items = upload.parseRequest(requestContext);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			try {
 				// Saves the value of the documentID
 				documentID = Integer.parseInt(items.get(0).getString());
-				
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				resp.getWriter().println("Errore: Document ID non valido");
@@ -66,6 +72,21 @@ public class DeleteDocument extends HttpServlet {
 
 		User utente = (User) session.getAttribute("utente");
 		DocumentDAO documentDao = new DocumentDAO(connection);
+		
+		String documentName;
+		
+		try {
+			documentName = documentDao.getDocumentNameByDocumentID(utente.getUserID(), documentID);
+			if (documentName == null) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Document Name non valido");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il nome del documento");
+			return;
+		}
 
 		try {
 			documentDao.deleteDocument(utente.getUserID(), documentID);
@@ -73,6 +94,19 @@ public class DeleteDocument extends HttpServlet {
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione del documento nel DB");
+			return;
+		}
+		
+		
+		String operationString;
+		operationString = "DELETE_DOCUMENT >> DOCUMENT: " + documentName;
+
+		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		if (versionQueue.size() < 10) {
+			versionQueue.add(operationString);
+		} else {
+			versionQueue.poll();
+			versionQueue.add(operationString);
 		}
 	}
 
