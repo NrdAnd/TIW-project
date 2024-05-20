@@ -511,7 +511,8 @@
 						element.classList.add("dragover");
 					}
 				});
-
+				
+				element.classList.add("folder-btn");
 				element.addEventListener("dragleave", function() {
 					if (element.classList.contains("droppable")) {
 						element.classList.remove("dragover");
