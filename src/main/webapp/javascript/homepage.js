@@ -489,6 +489,7 @@
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
 					makeCall("POST", 'DeleteFolder', formData, function(response) {
 						checkResponse(response);
+						versionHistoryHandler.clear();
 					});
 				}
 			}
@@ -542,6 +543,7 @@
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 								self.resetDroppable();
 								pageManager.refresh();
+								
 							}
 						} else {
 
@@ -550,6 +552,8 @@
 							pageManager.refresh();
 
 						}
+						
+						versionHistoryHandler.clear();
 					}
 				});
 			}
