@@ -3,6 +3,7 @@ package it.polimi.tiw.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
@@ -21,6 +22,7 @@ import org.apache.tomcat.util.http.fileupload.FileItem;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
+import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/DeleteDocument")
 public class DeleteDocument extends HttpServlet {
@@ -88,6 +90,8 @@ public class DeleteDocument extends HttpServlet {
 			return;
 		}
 
+		VersionHandler.saveDeletionDatas(utente.getUserID(), resp, documentID, 0);
+		
 		try {
 			documentDao.deleteDocument(utente.getUserID(), documentID);
 			resp.setStatus(HttpServletResponse.SC_OK);
@@ -101,13 +105,24 @@ public class DeleteDocument extends HttpServlet {
 		String operationString;
 		operationString = "DELETE_DOCUMENT >> DOCUMENT: " + documentName;
 
-		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
 			versionQueue.add(operationString);
 		} else {
-			versionQueue.poll();
+			versionQueue.remove(0);
 			versionQueue.add(operationString);
 		}
+		
+		
+		String privateOperationString = "DD_" + documentID;
+		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
+		if (privateVersionQueue.size() < 10) {
+			privateVersionQueue.add(privateOperationString);
+		} else {
+			privateVersionQueue.remove(0);
+			privateVersionQueue.add(privateOperationString);
+		}
+		
 	}
 
 	@Override

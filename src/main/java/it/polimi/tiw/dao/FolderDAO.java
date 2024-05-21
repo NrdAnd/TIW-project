@@ -476,7 +476,8 @@ public class FolderDAO {
 	 * This method returns the maximum folder id
 	 * 
 	 * @param userID is the user id
-	 * @return the maximum folder id, otherwhise if the result is empty it returns -1
+	 * @return the maximum folder id, otherwhise if the result is empty it returns
+	 *         -1
 	 * @throws SQLException if there's an exception
 	 */
 
@@ -489,7 +490,7 @@ public class FolderDAO {
 
 		if (!result.isBeforeFirst())
 			return -1;
-		
+
 		result.next();
 
 		return result.getInt("max_folder_id");
@@ -498,7 +499,8 @@ public class FolderDAO {
 
 	/**
 	 * This method extracts the parent folder name by the folder id
-	 * @param userID     is the user id
+	 * 
+	 * @param userID   is the user id
 	 * @param folderId is the folder id
 	 * @return the folder id if it exists, otherwhise null
 	 */
@@ -512,10 +514,78 @@ public class FolderDAO {
 
 		if (!result.isBeforeFirst())
 			return null;
-		
+
 		result.next();
-		
+
 		return this.getFolderName(userID, result.getInt("parent_folder_id"));
 
 	}
+
+	
+ 
+	/**
+	 * This method take the datas before deleting a specific folder with its
+	 * subfolders and its documents
+	 * 
+	 * @param userID   is the user ID
+	 * @param folderID is the folder ID
+	 * @throws SQLException if ther's an exception
+	 */
+
+	/*public ArrayList<Object> takeDatasBeforeDelete(int userID, int folderID) throws SQLException {
+
+		String folderDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) SELECT FROM Folder WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy) ORDER BY folder_id DESC";
+		String docDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) SELECT FROM Document WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy);";
+
+		PreparedStatement documentStatement = connection.prepareStatement(docDelete);
+		documentStatement.setInt(1, userID);
+		documentStatement.setInt(2, folderID);
+
+		PreparedStatement folderStatement = connection.prepareStatement(folderDelete);
+		folderStatement.setInt(1, userID);
+		folderStatement.setInt(2, folderID);
+
+		ResultSet documentResult = documentStatement.executeQuery();
+		ResultSet folderResult = folderStatement.executeQuery();
+		
+		if (!documentResult.isBeforeFirst() && !folderResult.isBeforeFirst())
+			return null;
+		
+		ArrayList<Object> docAndFolderList = new ArrayList<>();
+
+		while (documentResult.next()) {
+
+			Document document = new Document();
+			document.setDocumentID(documentResult.getInt("document_id"));
+			document.setOwnerID(userID);
+			document.setDocumentName(documentResult.getString("folder_name"));
+			document.setCreationDate(documentResult.getTimestamp("creation_date"));
+			document.setDocumentType(documentResult.getString("document_type"));
+			document.setSummary(documentResult.getString("summary"));
+			document.setFolderID(documentResult.getInt("folder_id"));
+			
+			docAndFolderList.add(document);
+			
+		}
+		
+		
+		while (folderResult.next()) {
+
+			Folder folder = new Folder();
+			folder.setFolderID(folderResult.getInt("folder_id"));
+			folder.setOwnerID(userID);
+			folder.setFolderName(folderResult.getString("folder_name"));
+			folder.setCreationDate(folderResult.getTimestamp("creation_date"));
+			folder.setParentFolderID(folderResult.getInt("parent_folder_id"));
+			folder.setRoot(folderResult.getBoolean("is_root"));
+			folder.setDepth(folderResult.getInt("depth"));
+
+			docAndFolderList.add(folder);
+		}
+		
+		return docAndFolderList;
+	}
+	
+	*/
+
 }

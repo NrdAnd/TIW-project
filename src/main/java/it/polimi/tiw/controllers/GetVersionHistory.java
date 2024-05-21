@@ -1,6 +1,7 @@
 package it.polimi.tiw.controllers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Queue;
 
 import javax.servlet.ServletException;
@@ -26,7 +27,7 @@ public class GetVersionHistory extends HttpServlet {
 		HttpSession session = req.getSession();        
         resp.setContentType("text/plain");
         
-        Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+        ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		
 		Gson gson = new Gson();
         String json = gson.toJson(versionQueue);

@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
@@ -151,12 +152,36 @@ public class CreateFolder extends HttpServlet {
 		
 		String operationString = "CREATE_FOLDER >> NAME: " + newFolderName + "; PARENT_FOLDER: " + folderName;
 
-		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
 			versionQueue.add(operationString);
 		} else {
-			versionQueue.poll();
+			versionQueue.remove(0);
 			versionQueue.add(operationString);
+		}
+		
+		
+		int folderID;
+		try {
+			folderID = folderDao.getLastFolderID(utente.getUserID());
+			if (folderID == -1) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Folder ID non valido");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il Max Folder ID dal DB");
+			return;
+		}
+		
+		String privateOperationString = "CF_" + folderID;
+		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
+		if (privateVersionQueue.size() < 10) {
+			privateVersionQueue.add(privateOperationString);
+		} else {
+			privateVersionQueue.remove(0);
+			privateVersionQueue.add(privateOperationString);
 		}
 	}
 

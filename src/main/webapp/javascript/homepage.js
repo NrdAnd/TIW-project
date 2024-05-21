@@ -489,7 +489,7 @@
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
 					makeCall("POST", 'DeleteFolder', formData, function(response) {
 						checkResponse(response);
-						versionHistoryHandler.clear();
+						//versionHistoryHandler.clear();
 					});
 				}
 			}
@@ -543,7 +543,7 @@
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 								self.resetDroppable();
 								pageManager.refresh();
-								
+
 							}
 						} else {
 
@@ -552,8 +552,8 @@
 							pageManager.refresh();
 
 						}
-						
-						versionHistoryHandler.clear();
+
+						//versionHistoryHandler.clear();
 					}
 				});
 			}
@@ -752,7 +752,7 @@
 		 * Hides the Version History.
 		 */
 		this.clear = function() {
-			
+
 			document.getElementById("rightContainer").innerHTML = "";
 			document.getElementById("rightContainer").style.visibility = "hidden";
 		};
@@ -792,23 +792,34 @@
 			pageManager.hideContent();
 			const rightContainer = document.getElementById("rightContainer");
 			rightContainer.style.visibility = "visible";
-			
+
 			let title = document.createElement("h2");
-				title.textContent = "History Log";
-				title.style.visibility = "visible";
-				
+			title.textContent = "History Log";
+			title.style.visibility = "visible";
+
 			rightContainer.append(title);
-				
+
 			let datasUl = document.createElement('ul');
+			
+			let operationNumber = 0;
 
 			self.versionHistoryData.forEach(function(element) {
 
 				let backVersionButton = document.createElement('button');
 				backVersionButton.className = "backVersionButton";
 				backVersionButton.textContent = "Revert";
+				backVersionButton.setAttribute("operationNumber", operationNumber);
+				
 				backVersionButton.addEventListener("click", function() {
 					if (confirm("Are you sure to go back to this version?")) {
-						//da fare, chiamata alla servlet di gestione e richiamata alla stampa del Tree
+
+			
+						let formData = new FormData();
+						formData.append("operationNumber", backVersionButton.getAttribute("operationNumber"));
+						//make a request to the server to get the document details.
+						makeCall("POST", "SetRevertAction", formData, function(response) {
+							checkResponse(response);
+						});
 					}
 				});
 
@@ -832,8 +843,10 @@
 
 				elementLI.append(divContainer);
 				datasUl.append(elementLI);
+				
+				operationNumber = operationNumber + 1;
 			});
-			
+
 			rightContainer.append(datasUl);
 
 		}
@@ -870,6 +883,7 @@
 		 */
 		this.refresh = function() {
 			folderTree.show();
+			versionHistoryHandler.clear();
 			versionHistoryHandler.getVersionHistory();
 		}
 

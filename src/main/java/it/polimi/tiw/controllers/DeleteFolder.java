@@ -3,6 +3,7 @@ package it.polimi.tiw.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
@@ -21,6 +22,7 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
+import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/DeleteFolder")
 public class DeleteFolder extends HttpServlet {
@@ -85,6 +87,8 @@ public class DeleteFolder extends HttpServlet {
 			return;
 		}
 				
+		VersionHandler.saveDeletionDatas(utente.getUserID(), resp, folderID, 1);
+		
 		try {
 			folderDao.deleteFolder(utente.getUserID(), folderID);
 		} catch (SQLException e) {
@@ -109,12 +113,22 @@ public class DeleteFolder extends HttpServlet {
 		String operationString;
 		operationString = "DELETE_FOLDER >> FOLDER: " + folderName + " (PF: " + parentFolderName + ")";
 		
-		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
 			versionQueue.add(operationString);
 		} else {
-			versionQueue.poll();
+			versionQueue.remove(0);
 			versionQueue.add(operationString);
+		}
+		
+		
+		String privateOperationString = "DF_" + folderID;
+		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
+		if (privateVersionQueue.size() < 10) {
+			privateVersionQueue.add(privateOperationString);
+		} else {
+			privateVersionQueue.remove(0);
+			privateVersionQueue.add(privateOperationString);
 		}
 	}
 	

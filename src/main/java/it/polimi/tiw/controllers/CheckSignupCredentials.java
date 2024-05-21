@@ -11,9 +11,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
@@ -22,118 +25,135 @@ import java.util.regex.Pattern;
 @WebServlet("/CheckSignupCredentials")
 @MultipartConfig
 public class CheckSignupCredentials extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-    private Connection connection = null;
+	private static final long serialVersionUID = 1L;
+	private Connection connection = null;
 
-    public CheckSignupCredentials(){
-        super();
-    }
+	public CheckSignupCredentials() {
+		super();
+	}
 
-    @Override
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
+	@Override
+	public void init() throws ServletException {
+		connection = ConnectionHandler.getConnection(getServletContext());
+	}
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	
-        String email = req.getParameter("email");
-        String password = req.getParameter("password");
-        String passwordCheck = req.getParameter("passwordCheck");
-        String username = req.getParameter("username");
-        
-        resp.setContentType("text/plain");
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        // checking credentials are not null or empty
-        if(email == null || password == null || passwordCheck == null || username == null ||
-            email.isEmpty() || password.isEmpty() || username.isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Credenziali mancanti o nulle");
-            return;
-        }
+		String email = req.getParameter("email");
+		String password = req.getParameter("password");
+		String passwordCheck = req.getParameter("passwordCheck");
+		String username = req.getParameter("username");
 
-        // Validate email
-        Pattern emailPattern = Pattern.compile("^.+@.+\\..+$");
-        if(!emailPattern.matcher(email).matches()){
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Errore: Email non valida");
-            return;
-        }
+		resp.setContentType("text/plain");
 
-        // check that the entered passwords match
-        if(!passwordCheck.equals(password)) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Le password inserite non corrispondono!");
-            return;
-        }
+		// checking credentials are not null or empty
+		if (email == null || password == null || passwordCheck == null || username == null || email.isEmpty()
+				|| password.isEmpty() || username.isEmpty()) {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().println("Errore: Credenziali mancanti o nulle");
+			return;
+		}
 
-        UserDAO userDao = new UserDAO(connection);
+		// Validate email
+		Pattern emailPattern = Pattern.compile("^.+@.+\\..+$");
+		if (!emailPattern.matcher(email).matches()) {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().println("Errore: Email non valida");
+			return;
+		}
 
-        // checks the uniqueness of the username
-        boolean isDuplicate;
+		// check that the entered passwords match
+		if (!passwordCheck.equals(password)) {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().println("Le password inserite non corrispondono!");
+			return;
+		}
+
+		UserDAO userDao = new UserDAO(connection);
+
+		// checks the uniqueness of the username
+		boolean isDuplicate;
+		try {
+			isDuplicate = userDao.checkRegister(username);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("SQL error: impossibile controllare unicità dello username");
+			return;
+		}
+
+		if (isDuplicate) {
+			resp.setStatus(HttpServletResponse.SC_CONFLICT);
+			resp.getWriter().println("L'email specificata è già in uso!");
+			return;
+		}
+
+		// adds the user to the db
+		try {
+			userDao.registerUser(email, password, username);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("SQL error: impossibile registrare l'utente");
+			return;
+		}
+
+		// Extracts the user in the DB
+		User utente;
+		try {
+			utente = userDao.getUtenteByUsername(username);
+			req.getSession().setMaxInactiveInterval(300);
+			req.getSession().setAttribute("utente", utente);
+			resp.setStatus(HttpServletResponse.SC_OK);
+			resp.setContentType("application/json");
+			resp.setCharacterEncoding("UTF-8");
+			resp.getWriter().println(utente.getEmail());
+
+			FolderDAO folderDao = new FolderDAO(connection);
+			try {
+
+				int code;
+				code = folderDao.createHomePageFolder(utente.getUserID());
+				if (code != 1) {
+					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+							"SQL error: query non andata a buon fine");
+					return;
+				}
+			} catch (SQLException e) {
+				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
+				return;
+			}
+
+		} catch (SQLException e) {
+			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+					"Errore SQL: impossibile ricavare l'utente richiesto");
+			return;
+		}
+
+		ArrayList<String> versionQueue = new ArrayList<>();
+		req.getSession().setAttribute("versionQueue", versionQueue);
+
+		ArrayList<String> privateVersionQueue = new ArrayList<>();
+		req.getSession().setAttribute("privateVersionQueue", privateVersionQueue);
+
+		//Crea il file di salvataggio per il reverting in fase di eliminazione
         try {
-            isDuplicate = userDao.checkRegister(username);
-        } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("SQL error: impossibile controllare unicità dello username");
-            return;
-        }
-
-        if(isDuplicate){
-            resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            resp.getWriter().println("L'email specificata è già in uso!");
-            return;
-        }
-
-        // adds the user to the db
-        try {
-            userDao.registerUser(email, password, username);
-        } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("SQL error: impossibile registrare l'utente");
-            return;
-        }
-        
-        
-        // Extracts the user in the DB
-        try {
-            User utente = userDao.getUtenteByUsername(username);   
-            req.getSession().setMaxInactiveInterval(300);
-            req.getSession().setAttribute("utente", utente);
-            resp.setStatus(HttpServletResponse.SC_OK);
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
-            resp.getWriter().println(utente.getEmail());
             
-            FolderDAO folderDao = new FolderDAO(connection);
-            try {
-    			
-    			int code;
-    			code = folderDao.createHomePageFolder(utente.getUserID());
-    			if (code != 1) {
-    				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
-    				return;
-    			}
-    		} catch (SQLException e) {
-    			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
-    			return;
-    		}
-            
-        } catch (SQLException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Errore SQL: impossibile ricavare l'utente richiesto");
+            String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_" + utente.getUserID() + ".json";
+            File saveDatasFile = new File(filePath);
+            saveDatasFile.createNewFile();
+       
+        } catch (Exception e) {
+            System.err.println("Si è verificato un errore durante la creazione del file: " + e.getMessage());
             return;
         }
-        
-        Queue<String> versionQueue = new LinkedList<>();
-        req.getSession().setAttribute("versionQueue", versionQueue);
-    }
+	}
 
-    @Override
-    public void destroy() {
-        try{
-            ConnectionHandler.closeConnection(connection);
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-    }
+	@Override
+	public void destroy() {
+		try {
+			ConnectionHandler.closeConnection(connection);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 }

@@ -10,9 +10,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -70,10 +73,29 @@ public class CheckLoginCredentials extends HttpServlet {
             resp.setCharacterEncoding("UTF-8");
             resp.getWriter().println(utente.getUsername());
             
-            Queue<String> versionQueue = new LinkedList<>();
+            ArrayList<String> versionQueue = new ArrayList<>();
             req.getSession().setAttribute("versionQueue", versionQueue);
+            
+            ArrayList<String> privateVersionQueue = new ArrayList<>();
+            req.getSession().setAttribute("privateVersionQueue", privateVersionQueue);
+            
+            
+            
+            //Crea il file di salvataggio per il reverting in fase di eliminazione
+            try {
+                
+                String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_" + utente.getUserID() + ".json"; 
+                File saveDatasFile = new File(filePath);
+                saveDatasFile.createNewFile();
+           
+            } catch (Exception e) {
+                System.err.println("Si è verificato un errore durante la creazione del file: " + e.getMessage());
+                return;
+            }
+         
             return;
         }
+               
     }
 
     @Override

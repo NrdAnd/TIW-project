@@ -237,6 +237,40 @@ public class DocumentDAO {
 
 		return result.getString("document_name");
 	}
+	
+	
+	/**
+	 * It takes the document datas before it is deleted
+	 * @param userID is the user id
+	 * @param documentID the document id
+	 * @return the document object
+	 */
+	public Document takeDatasBeforeDelete(int userID, int documentID) throws SQLException {
+		
+		String query = "SELECT * FROM Document WHERE owner_id = ? AND document_id = ?";
+    	PreparedStatement statement = connection.prepareStatement(query);
+    	statement.setInt(1, userID);
+		statement.setInt(2, documentID);
+	
+		ResultSet result = statement.executeQuery();
+		
+		if (!result.isBeforeFirst())
+			return null;
+		
+		result.next();
+		
+		Document document = new Document();
+		document.setDocumentID(result.getInt("document_id"));
+		document.setOwnerID(userID);
+		document.setDocumentName(result.getString("folder_name"));
+		document.setCreationDate(result.getTimestamp("creation_date"));
+		document.setDocumentType(result.getString("document_type"));
+		document.setSummary(result.getString("summary"));
+		document.setFolderID(result.getInt("folder_id"));
+		
+		return document;
+		
+	}
 }
 
 

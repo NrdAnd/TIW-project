@@ -3,6 +3,7 @@ package it.polimi.tiw.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
@@ -167,14 +168,23 @@ public class MoveDocument extends HttpServlet {
 		
 		String operationString = null;
 		operationString = "MOVE_DOCUMENT >> FROM: " + initialFolderName + " (PF: " + initialParentFolderName + ") TO: " + postFolderName + 
-				" (PF: " + postParentFolderName + ")" ;
+				" (PF: " + postParentFolderName + ")";
 
-		Queue<String> versionQueue = (Queue<String>) session.getAttribute("versionQueue");
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
 			versionQueue.add(operationString);
 		} else {
-			versionQueue.poll();
+			versionQueue.remove(0);
 			versionQueue.add(operationString);
+		}
+		
+		String privateOperationString = "MD_" + documentID + "_" + initialFolderID + "_" + postFolderID;
+		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
+		if (privateVersionQueue.size() < 10) {
+			privateVersionQueue.add(privateOperationString);
+		} else {
+			privateVersionQueue.remove(0);
+			privateVersionQueue.add(privateOperationString);
 		}
 		
 	}
