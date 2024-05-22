@@ -730,6 +730,8 @@
 		 * @param doc the document to show.
 		 */
 		this.setDocumentDetails = function(doc) {
+			
+			versionHistoryHandler.clear();
 			pageManager.hideContent();
 			document.getElementById("rightContainer").style.visibility = "visible";
 			options['documentName'].textContent = doc.documentName;
@@ -739,6 +741,7 @@
 
 			options['button'].addEventListener("click", function() {
 				document.getElementById("rightContainer").style.visibility = "hidden";
+				versionHistoryHandler.getVersionHistory();
 			});
 		}
 	}
