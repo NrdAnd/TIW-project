@@ -152,6 +152,11 @@ public class VersionHandler {
 		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
 				+ userID + ".json";
 		HashMap<Integer, TreeNode> dataMap = extractDeletionDatas(userID, resp, dataID);
+		
+		if(dataMap == null) {
+			dataMap = new HashMap<Integer, TreeNode>();
+		}
+		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 		if (optionValue == 1) {
@@ -229,7 +234,7 @@ public class VersionHandler {
 			TreeNode node = new TreeNode(null);
 
 			try {
-
+				
 				document.add(documentDao.takeDatasBeforeDelete(userID, dataID));
 				node.setDocumentList(document);
 
@@ -290,7 +295,7 @@ public class VersionHandler {
 			closeConnection();
 			return;
 		}
-
+		
 		closeConnection();
 	}
 
@@ -373,6 +378,8 @@ public class VersionHandler {
 		FolderDAO folderDao = new FolderDAO(connection);
 		DocumentDAO documentDao = new DocumentDAO(connection);
 		HashMap<Integer, TreeNode> dataMap = extractDeletionDatas(userID, resp, folderID);
+		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
+				+ userID + ".json";
 
 		
 		TreeNode root = dataMap.get(folderID);
@@ -398,9 +405,10 @@ public class VersionHandler {
 			Folder folder = current.getFolder();
 			
 			try {
-				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(), folder.isRoot(), folder.getDepth());
+				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(), folder.isRoot(), folder.getDepth(), current.getFolder().getFolderID());
 			} catch (SQLException e) {
 				
+				e.printStackTrace();
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				try {
 					resp.getWriter().println("Errore SQL: impossibile eseguire la query di ri-creazione della cartella");
@@ -434,6 +442,15 @@ public class VersionHandler {
 			}
 		}
 		
+		dataMap.remove(folderID);
+		try (FileWriter writer = new FileWriter(filePath)) {
+			gson.toJson(dataMap, writer);
+		} catch (IOException e) {
+			closeConnection();
+			e.printStackTrace();
+			return;
+		}
+		
 		closeConnection();
 	}
 
@@ -449,6 +466,8 @@ public class VersionHandler {
 		initDB();
 		DocumentDAO documentDao = new DocumentDAO(connection);
 		HashMap<Integer, TreeNode> dataMap = extractDeletionDatas(userID, resp, documentID);
+		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
+				+ userID + ".json";
 
 		
 		TreeNode root = dataMap.get(documentID);
@@ -479,6 +498,15 @@ public class VersionHandler {
 			}
 
 			closeConnection();
+			return;
+		}
+		
+		dataMap.remove(documentID);
+		try (FileWriter writer = new FileWriter(filePath)) {
+			gson.toJson(dataMap, writer);
+		} catch (IOException e) {
+			closeConnection();
+			e.printStackTrace();
 			return;
 		}
 		

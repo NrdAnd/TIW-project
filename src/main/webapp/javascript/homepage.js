@@ -811,7 +811,7 @@
 				backVersionButton.setAttribute("operationNumber", operationNumber);
 				
 				backVersionButton.addEventListener("click", function() {
-					if (confirm("Are you sure to go back to this version?")) {
+					if (confirm("Are you sure to revert this operation?")) {
 
 			
 						let formData = new FormData();

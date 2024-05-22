@@ -237,27 +237,51 @@ public class FolderDAO {
 	 * @param isRoot         it permits to indicate if the folder is root or not
 	 * @param depth          is the parameters that represents the depth of the
 	 *                       current folder
+	 * @param previousID	 is the previous id of the folder, it is used for the revert action creating an other time the same folder with
+	 * 						 the same previous id if it is null is a simple creation with the autoincremental id in the DB, otherwhise the folder
+	 * 						 id is inserted manually
 	 * @return a code, that it is equal to 1 if the query was successfull
 	 * @throws SQLException
 	 */
 
-	public int createFolder(int userID, String folderName, int parentFolderID, boolean isRoot, int depth)
+	public int createFolder(int userID, String folderName, int parentFolderID, boolean isRoot, int depth, Integer previousID)
 			throws SQLException {
 
-		String query = "INSERT INTO Folder(owner_id, folder_name, parent_folder_id, is_root, depth) VALUES (?,?,?,?,?)";
-		PreparedStatement statement = connection.prepareStatement(query);
-		statement.setInt(1, userID);
-		statement.setString(2, folderName);
-		statement.setInt(3, parentFolderID);
-		statement.setBoolean(4, isRoot);
-		statement.setInt(5, depth);
+		if (previousID == null) {
+			String query = "INSERT INTO Folder(owner_id, folder_name, parent_folder_id, is_root, depth) VALUES (?,?,?,?,?)";
+			PreparedStatement statement = connection.prepareStatement(query);
+			statement.setInt(1, userID);
+			statement.setString(2, folderName);
+			statement.setInt(3, parentFolderID);
+			statement.setBoolean(4, isRoot);
+			statement.setInt(5, depth);
 
-		int code = statement.executeUpdate();
+			int code = statement.executeUpdate();
 
-		if (code == 0)
-			throw new SQLException("Registration failed, no rows affected");
+			if (code == 0)
+				throw new SQLException("Registration failed, no rows affected");
 
-		return code;
+			return code;
+			
+		} else {
+			
+			String query = "INSERT INTO Folder(folder_id, owner_id, folder_name, parent_folder_id, is_root, depth) VALUES (?,?,?,?,?,?)";
+			PreparedStatement statement = connection.prepareStatement(query);
+			statement.setInt(1, previousID.intValue());
+			statement.setInt(2, userID);
+			statement.setString(3, folderName);
+			statement.setInt(4, parentFolderID);
+			statement.setBoolean(5, isRoot);
+			statement.setInt(6, depth);
+
+			int code = statement.executeUpdate();
+
+			if (code == 0)
+				throw new SQLException("Registration failed, no rows affected");
+
+			return code;
+		}
+		
 
 	}
 

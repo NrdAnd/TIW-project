@@ -262,7 +262,7 @@ public class DocumentDAO {
 		Document document = new Document();
 		document.setDocumentID(result.getInt("document_id"));
 		document.setOwnerID(userID);
-		document.setDocumentName(result.getString("folder_name"));
+		document.setDocumentName(result.getString("document_name"));
 		document.setCreationDate(result.getTimestamp("creation_date"));
 		document.setDocumentType(result.getString("document_type"));
 		document.setSummary(result.getString("summary"));
