@@ -524,7 +524,9 @@ public class VersionHandler {
 		HashMap<Integer, TreeNode> datasMap = extractDeletionDatas(userID, resp, dataID);
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
-
+		
+		ArrayList<String> privateVersionQueueCopy = new ArrayList<String>();
+		privateVersionQueueCopy.addAll(privateVersionQueue);
 		
 		TreeNode currentDeleteFolder = datasMap.get(dataID);
 
@@ -533,20 +535,18 @@ public class VersionHandler {
 		while (!stack.isEmpty()) {
 
 			TreeNode currentNode = stack.pop();
-			Set<Integer> keySet = datasMap.keySet();
-			int saveKey;
 
-			for (Integer key : keySet) {
+			//for (Integer key : keySet) {
 
-				if (key.intValue() == currentNode.getFolder().getFolderID()) {
+				//if (key.intValue() == currentNode.getFolder().getFolderID()) {
 					
-					saveKey = key.intValue();
-					datasMap.remove(key);
+					//saveKey = key.intValue();
+					//datasMap.remove(key);
 
-					for (int i = 0; i < privateVersionQueue.size(); i++) {
+			
+					for (String s : privateVersionQueue) {
 
-						String currentString = privateVersionQueue.get(i);
-						String[] stringVector = currentString.split("_");
+						String[] stringVector = s.split("_");
 
 						switch (stringVector[0]) {
 
@@ -557,22 +557,85 @@ public class VersionHandler {
 
 							for (Document doc : currentNode.getDocumentList()) {
 								if (doc.getDocumentID() == documentID) {
-									privateVersionQueue.remove(i);
-									versionQueue.remove(i);
+									
+									int cont = -1;
+									for(int j=0; j < privateVersionQueueCopy.size(); j++) {
+										if(privateVersionQueueCopy.get(j).equals(s)) {
+											cont = j;
+											break;
+										}
+									}
+									
+									privateVersionQueueCopy.remove(cont);
+									
+									for(int j=0; j < versionQueue.size(); j++) {
+										if(versionQueue.get(j).equals(s)) {
+											cont = j;
+											break;
+										}
+									}
+									
+									versionQueue.remove(cont);
+									
 								}
 							}
 
 							break;
 						}
 
-						case "CF":
+						case "CF": {
+							
+							int folderID = Integer.parseInt(stringVector[1]);
+
+							if (folderID == currentNode.getFolder().getFolderID()) {
+								
+								int cont = -1;
+								for(int j=0; j < privateVersionQueueCopy.size(); j++) {
+									if(privateVersionQueueCopy.get(j).equals(s)) {
+										cont = j;
+										break;
+									}
+								}
+								
+								privateVersionQueueCopy.remove(cont);
+								
+								for(int j=0; j < versionQueue.size(); j++) {
+									if(versionQueue.get(j).equals(s)) {
+										cont = j;
+										break;
+									}
+								}
+								
+								versionQueue.remove(cont);
+							}
+
+							break;
+						}
+						
 						case "DF": {
 
 							int folderID = Integer.parseInt(stringVector[1]);
 
-							if (folderID == saveKey) {
-								privateVersionQueue.remove(i);
-								versionQueue.remove(i);
+							if (folderID != dataID && folderID == currentNode.getFolder().getFolderID()) {
+								
+								int cont = -1;
+								for(int j=0; j < privateVersionQueueCopy.size(); j++) {
+									if(privateVersionQueueCopy.get(j).equals(s)) {
+										cont = j;
+										break;
+									}
+								}
+								
+								privateVersionQueueCopy.remove(cont);
+								
+								for(int j=0; j < versionQueue.size(); j++) {
+									if(versionQueue.get(j).equals(s)) {
+										cont = j;
+										break;
+									}
+								}
+								
+								versionQueue.remove(cont);
 							}
 
 							break;
@@ -585,38 +648,74 @@ public class VersionHandler {
 							int initialFolderID = Integer.parseInt(stringVector[2]);
 							int postFolderID = Integer.parseInt(stringVector[3]);
 
-							if (initialFolderID == saveKey || postFolderID == saveKey) {
-								privateVersionQueue.remove(i);
-								versionQueue.remove(i);
+							if (initialFolderID == currentNode.getFolder().getFolderID() || postFolderID == currentNode.getFolder().getFolderID()) {
+								
+								int cont = -1;
+								for(int j=0; j < privateVersionQueueCopy.size(); j++) {
+									if(privateVersionQueueCopy.get(j).equals(s)) {
+										cont = j;
+										break;
+									}
+								}
+								
+								privateVersionQueueCopy.remove(cont);
+								
+								for(int j=0; j < versionQueue.size(); j++) {
+									if(versionQueue.get(j).equals(s)) {
+										cont = j;
+										break;
+									}
+								}
+								
+								versionQueue.remove(cont);
+								break;
+								
 							}
 
 							for (Document doc : currentNode.getDocumentList()) {
 								if (doc.getDocumentID() == documentID) {
-									privateVersionQueue.remove(i);
-									versionQueue.remove(i);
+									
+									int cont = -1;
+									for(int j=0; j < privateVersionQueueCopy.size(); j++) {
+										if(privateVersionQueueCopy.get(j).equals(s)) {
+											cont = j;
+											break;
+										}
+									}
+									
+									privateVersionQueueCopy.remove(cont);
+									
+
+									for(int j=0; j < versionQueue.size(); j++) {
+										if(versionQueue.get(j).equals(s)) {
+											cont = j;
+											break;
+										}
+									}
+									
+									versionQueue.remove(cont);
 								}
 							}
 
 							break;
 						}
-
+						
 						}
-
 					}
 
-				}
+				//}
 
-				if (currentNode.getChildren().size() > 0) {
-					for (int i = currentNode.getChildren().size() - 1; i >= 0; i--) {
-						TreeNode node = currentNode.getChildren().get(i);
-						stack.push(node);
-					}
+			//}
+			
+			if (currentNode.getChildren().size() > 0) {
+				for (int i = currentNode.getChildren().size() - 1; i >= 0; i--) {
+					TreeNode node = currentNode.getChildren().get(i);
+					stack.push(node);
 				}
-
 			}
 		}
 		
-		session.setAttribute("privateVersionQueue", privateVersionQueue);
+		session.setAttribute("privateVersionQueue", privateVersionQueueCopy);
 		session.setAttribute("versionQueue", versionQueue);
 	}
 }

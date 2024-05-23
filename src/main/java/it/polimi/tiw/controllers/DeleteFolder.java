@@ -131,6 +131,10 @@ public class DeleteFolder extends HttpServlet {
 			privateVersionQueue.add(privateOperationString);
 		}
 		
+		session.setAttribute("privateVersionQueue", privateVersionQueue);
+		session.setAttribute("versionQueue", versionQueue);
+		
+		
 		VersionHandler.changeVersionHistory(utente.getUserID(), resp, folderID, session);
 		
 	}
