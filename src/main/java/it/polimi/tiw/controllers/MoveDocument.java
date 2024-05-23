@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -181,6 +183,21 @@ public class MoveDocument extends HttpServlet {
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
 			if(!versionQueue.contains(operationString)) {
+				
+				for (int i=0; i < versionQueue.size(); i++) {
+					
+					if (versionQueue.get(i).startsWith("MOVE_DOCUMENT")) {
+						
+						String[] parts = versionQueue.get(i).split("NAME: ");
+						String currentDocName = parts[1].split(" FROM:")[0];
+						
+				        if (currentDocName.equals(documentName)) {
+				        	versionQueue.remove(i);
+				        }
+					}
+			        
+				}
+				
 				versionQueue.add(operationString);
 			}
 		} else {
@@ -192,9 +209,20 @@ public class MoveDocument extends HttpServlet {
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		if (privateVersionQueue.size() < 10) {
 			if(!privateVersionQueue.contains(privateOperationString)) {
+				
+				for (int i=0; i < privateVersionQueue.size(); i++) {
+					
+					String[] stringVector = privateVersionQueue.get(i).split("_");
+					if (stringVector[0].equals("MD") && Integer.parseInt(stringVector[1]) == documentID) {
+						privateVersionQueue.remove(i);
+					}
+				}
+				
 				privateVersionQueue.add(privateOperationString);
 			}
+			
 		} else {
+			
 			privateVersionQueue.remove(0);
 			privateVersionQueue.add(privateOperationString);
 		}
