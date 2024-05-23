@@ -164,15 +164,25 @@ public class MoveDocument extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella padre finale nel DB");
 			return;
 		}
+		
+		String documentName;
+		try {
+			documentName = documentDAO.getDocumentNameByDocumentID(utente.getUserID(), documentID);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella padre finale nel DB");
+			return;
+		}
 
 		
-		String operationString = null;
-		operationString = "MOVE_DOCUMENT >> FROM: " + initialFolderName + " (PF: " + initialParentFolderName + ") TO: " + postFolderName + 
+		String operationString = "MOVE_DOCUMENT >> NAME: " + documentName + " FROM: " + initialFolderName + " (PF: " + initialParentFolderName + ") TO: " + postFolderName + 
 				" (PF: " + postParentFolderName + ")";
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
-			versionQueue.add(operationString);
+			if(!versionQueue.contains(operationString)) {
+				versionQueue.add(operationString);
+			}
 		} else {
 			versionQueue.remove(0);
 			versionQueue.add(operationString);
@@ -181,7 +191,9 @@ public class MoveDocument extends HttpServlet {
 		String privateOperationString = "MD_" + documentID + "_" + initialFolderID + "_" + postFolderID;
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		if (privateVersionQueue.size() < 10) {
-			privateVersionQueue.add(privateOperationString);
+			if(!privateVersionQueue.contains(privateOperationString)) {
+				privateVersionQueue.add(privateOperationString);
+			}
 		} else {
 			privateVersionQueue.remove(0);
 			privateVersionQueue.add(privateOperationString);

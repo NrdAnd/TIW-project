@@ -271,6 +271,31 @@ public class DocumentDAO {
 		return document;
 		
 	}
+	
+	
+	/**
+	 * This method return the document name by the document id
+	 * @param userID is the user id
+	 * @param documentID is the document id
+	 * @return the document name
+	 * @throws SQLException if there's an exception
+	 */
+	public String getDocumentNameByID(int userID, int documentID) throws SQLException {
+		
+		String query = "SELECT document_name FROM Document WHERE owner_id = ? AND document_id = ?";
+    	PreparedStatement statement = connection.prepareStatement(query);
+    	statement.setInt(1, userID);
+		statement.setInt(2, documentID);
+	
+		ResultSet result = statement.executeQuery();
+		
+		if (!result.isBeforeFirst())
+			return null;
+		
+		result.next();
+		
+		return result.getString("document_name");
+	}
 }
 
 

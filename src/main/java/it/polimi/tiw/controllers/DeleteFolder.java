@@ -87,16 +87,8 @@ public class DeleteFolder extends HttpServlet {
 			return;
 		}
 				
+		
 		VersionHandler.saveDeletionDatas(utente.getUserID(), resp, folderID, 1);
-		
-		try {
-			folderDao.deleteFolder(utente.getUserID(), folderID);
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione della Folder nel DB");
-			return;
-		}
-		
 		
 		
 		String parentFolderName;
@@ -108,8 +100,15 @@ public class DeleteFolder extends HttpServlet {
 			return;
 		}
 		
+		try {
+			folderDao.deleteFolder(utente.getUserID(), folderID);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione della Folder nel DB");
+			return;
+		}
 		
-		
+
 		String operationString;
 		operationString = "DELETE_FOLDER >> FOLDER: " + folderName + " (PF: " + parentFolderName + ")";
 		

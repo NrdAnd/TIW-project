@@ -31,7 +31,6 @@
 
 		globalPage.addEventListener('drop', function(event) {
 			event.preventDefault();
-			pageManager.refresh();
 		});
 
 		pageManager.refresh();
@@ -542,6 +541,7 @@
 
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
 								self.resetDroppable();
+								versionHistoryHandler.clear();
 								pageManager.refresh();
 
 							}
@@ -549,6 +549,7 @@
 
 							alert("Puoi spostare le cartelle solo nel cestino!");
 							self.resetDroppable();
+							versionHistoryHandler.clear();
 							pageManager.refresh();
 
 						}
@@ -739,10 +740,12 @@
 			options['documentSummary'].textContent = doc.summary;
 			options['documentDate'].textContent = doc.creationDate;
 
-			options['button'].addEventListener("click", function() {
-				document.getElementById("rightContainer").style.visibility = "hidden";
+			options['button'].onclick = function() {
+				versionHistoryHandler.clear();
 				versionHistoryHandler.getVersionHistory();
-			});
+				document.getElementById("rightContainer").style.visibility = "hidden";
+			};
+			
 		}
 	}
 
