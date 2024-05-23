@@ -517,17 +517,15 @@ public class VersionHandler {
 
 	}
 
-	
-	
 	public static void changeVersionHistory(int userID, HttpServletResponse resp, int dataID, HttpSession session) {
 
 		HashMap<Integer, TreeNode> datasMap = extractDeletionDatas(userID, resp, dataID);
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
-		
+
 		ArrayList<String> privateVersionQueueCopy = new ArrayList<String>();
 		privateVersionQueueCopy.addAll(privateVersionQueue);
-		
+
 		TreeNode currentDeleteFolder = datasMap.get(dataID);
 
 		Stack<TreeNode> stack = new Stack<>();
@@ -536,177 +534,165 @@ public class VersionHandler {
 
 			TreeNode currentNode = stack.pop();
 
-			//for (Integer key : keySet) {
+			for (String s : privateVersionQueue) {
 
-				//if (key.intValue() == currentNode.getFolder().getFolderID()) {
-					
-					//saveKey = key.intValue();
-					//datasMap.remove(key);
+				String[] stringVector = s.split("_");
 
-			
-					for (String s : privateVersionQueue) {
+				switch (stringVector[0]) {
 
-						String[] stringVector = s.split("_");
+				case "CD":
+				case "DD": {
 
-						switch (stringVector[0]) {
+					int documentID = Integer.parseInt(stringVector[1]);
 
-						case "CD":
-						case "DD": {
+					for (Document doc : currentNode.getDocumentList()) {
+						if (doc.getDocumentID() == documentID) {
 
-							int documentID = Integer.parseInt(stringVector[1]);
-
-							for (Document doc : currentNode.getDocumentList()) {
-								if (doc.getDocumentID() == documentID) {
-									
-									int cont = -1;
-									for(int j=0; j < privateVersionQueueCopy.size(); j++) {
-										if(privateVersionQueueCopy.get(j).equals(s)) {
-											cont = j;
-											break;
-										}
-									}
-									
-									privateVersionQueueCopy.remove(cont);
-									
-									for(int j=0; j < versionQueue.size(); j++) {
-										if(versionQueue.get(j).equals(s)) {
-											cont = j;
-											break;
-										}
-									}
-									
-									versionQueue.remove(cont);
-									
+							int cont = -1;
+							for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+								if (privateVersionQueueCopy.get(j).equals(s)) {
+									cont = j;
+									break;
 								}
 							}
 
-							break;
-						}
+							privateVersionQueueCopy.remove(cont);
 
-						case "CF": {
-							
-							int folderID = Integer.parseInt(stringVector[1]);
-
-							if (folderID == currentNode.getFolder().getFolderID()) {
-								
-								int cont = -1;
-								for(int j=0; j < privateVersionQueueCopy.size(); j++) {
-									if(privateVersionQueueCopy.get(j).equals(s)) {
-										cont = j;
-										break;
-									}
-								}
-								
-								privateVersionQueueCopy.remove(cont);
-								
-								for(int j=0; j < versionQueue.size(); j++) {
-									if(versionQueue.get(j).equals(s)) {
-										cont = j;
-										break;
-									}
-								}
-								
-								versionQueue.remove(cont);
-							}
-
-							break;
-						}
-						
-						case "DF": {
-
-							int folderID = Integer.parseInt(stringVector[1]);
-
-							if (folderID != dataID && folderID == currentNode.getFolder().getFolderID()) {
-								
-								int cont = -1;
-								for(int j=0; j < privateVersionQueueCopy.size(); j++) {
-									if(privateVersionQueueCopy.get(j).equals(s)) {
-										cont = j;
-										break;
-									}
-								}
-								
-								privateVersionQueueCopy.remove(cont);
-								
-								for(int j=0; j < versionQueue.size(); j++) {
-									if(versionQueue.get(j).equals(s)) {
-										cont = j;
-										break;
-									}
-								}
-								
-								versionQueue.remove(cont);
-							}
-
-							break;
-
-						}
-
-						case "MD": {
-
-							int documentID = Integer.parseInt(stringVector[1]);
-							int initialFolderID = Integer.parseInt(stringVector[2]);
-							int postFolderID = Integer.parseInt(stringVector[3]);
-
-							if (initialFolderID == currentNode.getFolder().getFolderID() || postFolderID == currentNode.getFolder().getFolderID()) {
-								
-								int cont = -1;
-								for(int j=0; j < privateVersionQueueCopy.size(); j++) {
-									if(privateVersionQueueCopy.get(j).equals(s)) {
-										cont = j;
-										break;
-									}
-								}
-								
-								privateVersionQueueCopy.remove(cont);
-								
-								for(int j=0; j < versionQueue.size(); j++) {
-									if(versionQueue.get(j).equals(s)) {
-										cont = j;
-										break;
-									}
-								}
-								
-								versionQueue.remove(cont);
-								break;
-								
-							}
-
-							for (Document doc : currentNode.getDocumentList()) {
-								if (doc.getDocumentID() == documentID) {
-									
-									int cont = -1;
-									for(int j=0; j < privateVersionQueueCopy.size(); j++) {
-										if(privateVersionQueueCopy.get(j).equals(s)) {
-											cont = j;
-											break;
-										}
-									}
-									
-									privateVersionQueueCopy.remove(cont);
-									
-
-									for(int j=0; j < versionQueue.size(); j++) {
-										if(versionQueue.get(j).equals(s)) {
-											cont = j;
-											break;
-										}
-									}
-									
-									versionQueue.remove(cont);
+							for (int j = 0; j < versionQueue.size(); j++) {
+								if (versionQueue.get(j).equals(s)) {
+									cont = j;
+									break;
 								}
 							}
 
-							break;
-						}
-						
+							versionQueue.remove(cont);
+
 						}
 					}
 
-				//}
+					break;
+				}
 
-			//}
-			
+				case "CF": {
+
+					int folderID = Integer.parseInt(stringVector[1]);
+
+					if (folderID == currentNode.getFolder().getFolderID()) {
+
+						int cont = -1;
+						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+							if (privateVersionQueueCopy.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						privateVersionQueueCopy.remove(cont);
+
+						for (int j = 0; j < versionQueue.size(); j++) {
+							if (versionQueue.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						versionQueue.remove(cont);
+					}
+
+					break;
+				}
+
+				case "DF": {
+
+					int folderID = Integer.parseInt(stringVector[1]);
+
+					if (folderID != dataID && folderID == currentNode.getFolder().getFolderID()) {
+
+						int cont = -1;
+						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+							if (privateVersionQueueCopy.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						privateVersionQueueCopy.remove(cont);
+
+						for (int j = 0; j < versionQueue.size(); j++) {
+							if (versionQueue.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						versionQueue.remove(cont);
+					}
+
+					break;
+
+				}
+
+				case "MD": {
+
+					int documentID = Integer.parseInt(stringVector[1]);
+					int initialFolderID = Integer.parseInt(stringVector[2]);
+					int postFolderID = Integer.parseInt(stringVector[3]);
+
+					if (initialFolderID == currentNode.getFolder().getFolderID()
+							|| postFolderID == currentNode.getFolder().getFolderID()) {
+
+						int cont = -1;
+						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+							if (privateVersionQueueCopy.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						privateVersionQueueCopy.remove(cont);
+
+						for (int j = 0; j < versionQueue.size(); j++) {
+							if (versionQueue.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						versionQueue.remove(cont);
+						break;
+
+					}
+
+					for (Document doc : currentNode.getDocumentList()) {
+						if (doc.getDocumentID() == documentID) {
+
+							int cont = -1;
+							for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+								if (privateVersionQueueCopy.get(j).equals(s)) {
+									cont = j;
+									break;
+								}
+							}
+
+							privateVersionQueueCopy.remove(cont);
+
+							for (int j = 0; j < versionQueue.size(); j++) {
+								if (versionQueue.get(j).equals(s)) {
+									cont = j;
+									break;
+								}
+							}
+
+							versionQueue.remove(cont);
+						}
+					}
+
+					break;
+				}
+
+				}
+			}
+
 			if (currentNode.getChildren().size() > 0) {
 				for (int i = currentNode.getChildren().size() - 1; i >= 0; i--) {
 					TreeNode node = currentNode.getChildren().get(i);
@@ -714,7 +700,7 @@ public class VersionHandler {
 				}
 			}
 		}
-		
+
 		session.setAttribute("privateVersionQueue", privateVersionQueueCopy);
 		session.setAttribute("versionQueue", versionQueue);
 	}
