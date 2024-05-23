@@ -183,6 +183,9 @@ public class CreateFolder extends HttpServlet {
 			privateVersionQueue.remove(0);
 			privateVersionQueue.add(privateOperationString);
 		}
+		
+		session.setAttribute("privateVersionQueue", privateVersionQueue);
+		session.setAttribute("versionQueue", versionQueue);
 	}
 
 	@Override

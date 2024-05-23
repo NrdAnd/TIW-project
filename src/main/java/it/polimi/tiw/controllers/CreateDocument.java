@@ -183,6 +183,9 @@ public class CreateDocument extends HttpServlet {
 			privateVersionQueue.add(privateOperationString);
 		}
 		
+		session.setAttribute("privateVersionQueue", privateVersionQueue);
+		session.setAttribute("versionQueue", versionQueue);
+		
 	}
 
 	@Override

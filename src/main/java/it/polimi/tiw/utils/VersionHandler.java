@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -152,11 +154,11 @@ public class VersionHandler {
 		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
 				+ userID + ".json";
 		HashMap<Integer, TreeNode> dataMap = extractDeletionDatas(userID, resp, dataID);
-		
-		if(dataMap == null) {
+
+		if (dataMap == null) {
 			dataMap = new HashMap<Integer, TreeNode>();
 		}
-		
+
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 		if (optionValue == 1) {
@@ -234,7 +236,7 @@ public class VersionHandler {
 			TreeNode node = new TreeNode(null);
 
 			try {
-				
+
 				document.add(documentDao.takeDatasBeforeDelete(userID, dataID));
 				node.setDocumentList(document);
 
@@ -295,7 +297,7 @@ public class VersionHandler {
 			closeConnection();
 			return;
 		}
-		
+
 		closeConnection();
 	}
 
@@ -381,7 +383,6 @@ public class VersionHandler {
 		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
 				+ userID + ".json";
 
-		
 		TreeNode root = dataMap.get(folderID);
 
 		if (root == null) {
@@ -400,18 +401,20 @@ public class VersionHandler {
 		queue.add(root);
 
 		while (!queue.isEmpty()) {
-			
+
 			TreeNode current = queue.poll();
 			Folder folder = current.getFolder();
-			
+
 			try {
-				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(), folder.isRoot(), folder.getDepth(), current.getFolder().getFolderID());
+				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(), folder.isRoot(),
+						folder.getDepth(), current.getFolder().getFolderID());
 			} catch (SQLException e) {
-				
+
 				e.printStackTrace();
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				try {
-					resp.getWriter().println("Errore SQL: impossibile eseguire la query di ri-creazione della cartella");
+					resp.getWriter()
+							.println("Errore SQL: impossibile eseguire la query di ri-creazione della cartella");
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -419,15 +422,16 @@ public class VersionHandler {
 				closeConnection();
 				return;
 			}
-		
-			
+
 			for (Document document : current.getDocumentList()) {
 				try {
-					documentDao.createDocument(userID, document.getDocumentName(), document.getSummary(), document.getDocumentType(), document.getFolderID());
+					documentDao.createDocument(userID, document.getDocumentName(), document.getSummary(),
+							document.getDocumentType(), document.getFolderID());
 				} catch (SQLException e) {
 					resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 					try {
-						resp.getWriter().println("Errore SQL: impossibile eseguire la query di ri-creazione del documento");
+						resp.getWriter()
+								.println("Errore SQL: impossibile eseguire la query di ri-creazione del documento");
 					} catch (IOException ex) {
 						ex.printStackTrace();
 					}
@@ -441,7 +445,7 @@ public class VersionHandler {
 				queue.add(child);
 			}
 		}
-		
+
 		dataMap.remove(folderID);
 		try (FileWriter writer = new FileWriter(filePath)) {
 			gson.toJson(dataMap, writer);
@@ -450,10 +454,9 @@ public class VersionHandler {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		closeConnection();
 	}
-
 
 	/**
 	 * 
@@ -469,7 +472,6 @@ public class VersionHandler {
 		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
 				+ userID + ".json";
 
-		
 		TreeNode root = dataMap.get(documentID);
 
 		if (root == null) {
@@ -483,13 +485,14 @@ public class VersionHandler {
 			closeConnection();
 			return;
 		}
-		
+
 		Document document = root.getDocumentList().get(0);
-		
+
 		try {
-			documentDao.createDocument(userID, document.getDocumentName(), document.getSummary(), document.getDocumentType(), document.getFolderID());
+			documentDao.createDocument(userID, document.getDocumentName(), document.getSummary(),
+					document.getDocumentType(), document.getFolderID());
 		} catch (SQLException e) {
-			
+
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			try {
 				resp.getWriter().println("Errore SQL: impossibile eseguire la query di ri-creazione del documento");
@@ -500,7 +503,7 @@ public class VersionHandler {
 			closeConnection();
 			return;
 		}
-		
+
 		dataMap.remove(documentID);
 		try (FileWriter writer = new FileWriter(filePath)) {
 			gson.toJson(dataMap, writer);
@@ -509,9 +512,111 @@ public class VersionHandler {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		closeConnection();
-		
+
 	}
 
+	
+	
+	public static void changeVersionHistory(int userID, HttpServletResponse resp, int dataID, HttpSession session) {
+
+		HashMap<Integer, TreeNode> datasMap = extractDeletionDatas(userID, resp, dataID);
+		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
+
+		
+		TreeNode currentDeleteFolder = datasMap.get(dataID);
+
+		Stack<TreeNode> stack = new Stack<>();
+		stack.push(currentDeleteFolder);
+		while (!stack.isEmpty()) {
+
+			TreeNode currentNode = stack.pop();
+			Set<Integer> keySet = datasMap.keySet();
+			int saveKey;
+
+			for (Integer key : keySet) {
+
+				if (key.intValue() == currentNode.getFolder().getFolderID()) {
+					
+					saveKey = key.intValue();
+					datasMap.remove(key);
+
+					for (int i = 0; i < privateVersionQueue.size(); i++) {
+
+						String currentString = privateVersionQueue.get(i);
+						String[] stringVector = currentString.split("_");
+
+						switch (stringVector[0]) {
+
+						case "CD":
+						case "DD": {
+
+							int documentID = Integer.parseInt(stringVector[1]);
+
+							for (Document doc : currentNode.getDocumentList()) {
+								if (doc.getDocumentID() == documentID) {
+									privateVersionQueue.remove(i);
+									versionQueue.remove(i);
+								}
+							}
+
+							break;
+						}
+
+						case "CF":
+						case "DF": {
+
+							int folderID = Integer.parseInt(stringVector[1]);
+
+							if (folderID == saveKey) {
+								privateVersionQueue.remove(i);
+								versionQueue.remove(i);
+							}
+
+							break;
+
+						}
+
+						case "MD": {
+
+							int documentID = Integer.parseInt(stringVector[1]);
+							int initialFolderID = Integer.parseInt(stringVector[2]);
+							int postFolderID = Integer.parseInt(stringVector[3]);
+
+							if (initialFolderID == saveKey || postFolderID == saveKey) {
+								privateVersionQueue.remove(i);
+								versionQueue.remove(i);
+							}
+
+							for (Document doc : currentNode.getDocumentList()) {
+								if (doc.getDocumentID() == documentID) {
+									privateVersionQueue.remove(i);
+									versionQueue.remove(i);
+								}
+							}
+
+							break;
+						}
+
+						}
+
+					}
+
+				}
+
+				if (currentNode.getChildren().size() > 0) {
+					for (int i = currentNode.getChildren().size() - 1; i >= 0; i--) {
+						TreeNode node = currentNode.getChildren().get(i);
+						stack.push(node);
+					}
+				}
+
+			}
+		}
+		
+		session.setAttribute("privateVersionQueue", privateVersionQueue);
+		session.setAttribute("versionQueue", versionQueue);
+	}
 }
