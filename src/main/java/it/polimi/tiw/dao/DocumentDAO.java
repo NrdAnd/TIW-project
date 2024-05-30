@@ -296,6 +296,24 @@ public class DocumentDAO {
 		
 		return result.getString("document_name");
 	}
+	
+    public boolean checkUniqueName(int ownerID, String docName) throws SQLException {
+    	String query = "SELECT document_name FROM Document WHERE owner_id = ?";
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setInt(1, ownerID);
+        
+        ResultSet resultSet = statement.executeQuery();
+        
+        
+        String lowerCaseDocName = docName.toLowerCase();
+        while(resultSet.next()) {
+        	String docNameQuery = resultSet.getString("document_name");
+        	if(docNameQuery.equalsIgnoreCase(lowerCaseDocName)) {
+        		return false;
+        	}
+        }
+        return true;
+    }
 }
 
 

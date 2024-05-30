@@ -95,12 +95,30 @@ public class CreateDocument extends HttpServlet {
 				resp.getWriter().println("Errore: Document Type non valido");
 				return;
 			}
+			
+			if(newDocumentName.isBlank() || summary.isBlank() || documentType.isBlank()) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Errore: Parametri non validi");
+				return;
+			}
 
 		}
 
 		int code;
 		User utente = (User) session.getAttribute("utente");
 		DocumentDAO documentDao = new DocumentDAO(connection);
+		
+		try {
+			if(!documentDao.checkUniqueName(utente.getUserID(), newDocumentName)){
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				resp.getWriter().println("Possiedi un documento con questo nome");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: Query non andata a buon fine");
+			return;
+		}
 		
 		try {
 

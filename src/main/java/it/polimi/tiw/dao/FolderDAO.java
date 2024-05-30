@@ -544,4 +544,23 @@ public class FolderDAO {
 		return this.getFolderName(userID, result.getInt("parent_folder_id"));
 
 	}
+	
+	public boolean checkUniqueName(int userID, int parentFolderID, String folderName) throws SQLException {
+		String query = "SELECT folder_name FROM Folder WHERE owner_id = ? AND parent_folder_id = ?";
+		try (PreparedStatement statement = connection.prepareStatement(query)) {
+			statement.setInt(1, userID);
+			statement.setInt(2, parentFolderID);
+
+			try (ResultSet result = statement.executeQuery()) {
+				String lowerCaseFolderName = folderName.toLowerCase();
+				while (result.next()) {
+					String folderNameQuery = result.getString("folder_name");
+					if (folderNameQuery.equalsIgnoreCase(lowerCaseFolderName)) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
 }

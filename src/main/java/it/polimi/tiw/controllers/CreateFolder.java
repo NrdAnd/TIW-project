@@ -70,9 +70,9 @@ public class CreateFolder extends HttpServlet {
 
 			} catch (Exception e) {
 				e.printStackTrace();
+				return;
 			}
 
-			
 			try {
 
 				newFolderName = items.get(0).getString();
@@ -82,7 +82,7 @@ public class CreateFolder extends HttpServlet {
 				resp.getWriter().println("Errore: New Folder Name non valido");
 				return;
 			}
-			
+
 			try {
 
 				// Saves the value of the documentID
@@ -93,6 +93,18 @@ public class CreateFolder extends HttpServlet {
 				resp.getWriter().println("Errore: Destination ID non valido");
 				return;
 			}
+		} 
+		
+		else {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().println("FormData null o non accettabile");
+			return;
+		}
+
+		if (destinationID == 0 || newFolderName.isBlank()) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("FolderName mancante");
+			return;
 		}
 
 		FolderDAO folderDao = new FolderDAO(connection);
@@ -110,6 +122,17 @@ public class CreateFolder extends HttpServlet {
 		if (parentFolderDepth < 0) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			resp.getWriter().println("Errore: Cartella padre non esistente");
+			return;
+		}
+		try {
+			if (!folderDao.checkUniqueName(utente.getUserID(), destinationID, newFolderName)) {
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				resp.getWriter().println("Nome già presente nella cartella di destinazione");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("SQL error; query non andata a buon fine");
 			return;
 		}
 
@@ -134,9 +157,8 @@ public class CreateFolder extends HttpServlet {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			resp.getWriter().println("Errore SQL: impossibile la creazione della Folder nel DB");
 		}
-		
-		
-		String folderName;		
+
+		String folderName;
 		try {
 			folderName = folderDao.getFolderName(utente.getUserID(), destinationID);
 			if (folderName == null) {
@@ -149,7 +171,7 @@ public class CreateFolder extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
 			return;
 		}
-		
+
 		String operationString = "CREATE_FOLDER >> NAME: " + newFolderName + "; PARENT_FOLDER: " + folderName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
@@ -159,8 +181,7 @@ public class CreateFolder extends HttpServlet {
 			versionQueue.remove(0);
 			versionQueue.add(operationString);
 		}
-		
-		
+
 		int folderID;
 		try {
 			folderID = folderDao.getLastFolderID(utente.getUserID());
@@ -174,7 +195,7 @@ public class CreateFolder extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile estrarre il Max Folder ID dal DB");
 			return;
 		}
-		
+
 		String privateOperationString = "CF_" + folderID;
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		if (privateVersionQueue.size() < 10) {
@@ -183,7 +204,7 @@ public class CreateFolder extends HttpServlet {
 			privateVersionQueue.remove(0);
 			privateVersionQueue.add(privateOperationString);
 		}
-		
+
 		session.setAttribute("privateVersionQueue", privateVersionQueue);
 		session.setAttribute("versionQueue", versionQueue);
 	}
