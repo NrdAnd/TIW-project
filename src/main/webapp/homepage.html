@@ -63,7 +63,7 @@
 		<form id="createFolder" action="#" class="creation-form">
 			<h3 id="createFolderFormTitle">Create a Folder</h3>
 			<label for="folderName"></label> <input type="text"
-				id="folderName" name="newFolderName" placeholder="Folder Name" required> <br> 
+				id="folderName" name="newFolderName" placeholder="Folder Name" maxlength="25" required> <br> 
 				<input type="submit" id="createFld"
 				value="Create Folder"
 				class="btn btn-outline-light btn-round my-1 go-page-btn">
@@ -72,11 +72,11 @@
 		<form id="createDocument" action="#" class="creation-form">
 			<h3 id="createDocumentTitle">Create a Document</h3>
 			<label for="docName"></label> <input type="text" id="docName"
-				name="docName" maxlength="50" placeholder="Document Name" required><br> <label
+				name="docName" maxlength="25" placeholder="Document Name" required><br> <label
 				for="docFormat"></label> <input type="text" id="docFormat"
-				name="docFormat" maxlength="10" placeholder="Format" pattern="^[^\s.]{1,10}$" required><br>
+				name="docFormat" maxlength="5" placeholder="Format" pattern="^[^\s.]{1,10}$" required><br>
 			<label for="docSummary"></label>
-			<textarea id="docSummary" name="docSummary" rows="5" maxlength="200" placeholder="Summary"
+			<textarea id="docSummary" name="docSummary" rows="5" maxlength="250" placeholder="Summary"
 				required></textarea>
 			<br> <input type="submit" id="createDoc"
 				value="Create Document"

@@ -101,9 +101,9 @@ public class CreateFolder extends HttpServlet {
 			return;
 		}
 
-		if (destinationID == 0 || newFolderName.isBlank()) {
+		if (destinationID == 0 || newFolderName.isBlank() || newFolderName.length()>25) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("FolderName mancante");
+			resp.getWriter().println("Parametri non validi (FolderName)");
 			return;
 		}
 

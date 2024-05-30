@@ -96,7 +96,7 @@ public class CreateDocument extends HttpServlet {
 				return;
 			}
 			
-			if(newDocumentName.isBlank() || summary.isBlank() || documentType.isBlank()) {
+			if(newDocumentName.isBlank() || summary.isBlank() || documentType.isBlank() || newDocumentName.length()>25 || summary.length()>250 || documentType.length()>5) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				resp.getWriter().println("Errore: Parametri non validi");
 				return;
