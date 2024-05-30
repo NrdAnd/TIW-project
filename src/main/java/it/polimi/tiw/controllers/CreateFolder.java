@@ -109,7 +109,7 @@ public class CreateFolder extends HttpServlet {
 
 		if (parentFolderDepth < 0) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Errore: Profondità negativa");
+			resp.getWriter().println("Errore: Cartella padre non esistente");
 			return;
 		}
 

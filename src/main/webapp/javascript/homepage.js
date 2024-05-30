@@ -570,6 +570,7 @@
 
 		const form = document.getElementById("createFolder");
 		const title = document.getElementById("createFolderFormTitle");
+		let destinationID;
 
 		//It creates and sets the back button in the form
 		let backButton = document.createElement("button");
@@ -586,6 +587,7 @@
 			e.preventDefault();
 			if (form.checkValidity()) {
 				const formData = new FormData(form);
+				formData.append("destinationID", destinationID);
 				//make a request to the server to create the folder.
 				makeCall("POST", 'CreateFolder', formData, function(response) {
 					checkResponse(response);
@@ -610,10 +612,10 @@
 		 */
 		this.enableForm = function(folderID, folderName) {
 
+			destinationID = folderID;
 			pageManager.hideContent();
 			versionHistoryHandler.clear();
 			container.style.visibility = "visible";
-			form.getElementsByClassName("hiddenInput")[0].value = folderID;
 			title.textContent = "Create subfolder inside folder " + folderName;
 			container.append(form);
 		}
@@ -628,6 +630,7 @@
 
 		const title = document.getElementById("createDocumentTitle");
 		const form = document.getElementById("createDocument");
+		let destinationID;
 
 		//It creates and sets the back button in the form
 		let backButton = document.createElement("button");
@@ -644,6 +647,7 @@
 			e.preventDefault();
 			if (form.checkValidity()) {
 				const formData = new FormData(form);
+				formData.append("destinationID", destinationID);
 				//make a request to the server to create the document.
 				makeCall("POST", 'CreateDocument', formData, function(response) {
 					checkResponse(response);
@@ -666,10 +670,11 @@
 		 * This method sets the create document form visible and the event on the submit button.
 		 */
 		this.enableForm = function(folderID, folderName) {
+			
+			destinationID = folderID;
 			pageManager.hideContent();
 			versionHistoryHandler.clear();
 			container.style.visibility = "visible";
-			form.getElementsByClassName("hiddenInput")[0].value = folderID;
 			title.textContent = "Create document inside folder: " + folderName;
 			container.append(form);
 		}
