@@ -519,20 +519,33 @@ public class VersionHandler {
 
 	public static void changeVersionHistory(int userID, HttpServletResponse resp, int dataID, HttpSession session) {
 
+		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
+				+ userID + ".json";
 		HashMap<Integer, TreeNode> datasMap = extractDeletionDatas(userID, resp, dataID);
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 
 		ArrayList<String> privateVersionQueueCopy = new ArrayList<String>();
-		privateVersionQueueCopy.addAll(privateVersionQueue);
+		privateVersionQueueCopy.addAll(privateVersionQueue);	
 
 		TreeNode currentDeleteFolder = datasMap.get(dataID);
-
+		int storeID = -1;
+		
 		Stack<TreeNode> stack = new Stack<>();
 		stack.push(currentDeleteFolder);
 		while (!stack.isEmpty()) {
 
 			TreeNode currentNode = stack.pop();
+			
+			for (Integer key : datasMap.keySet()) {
+	            if (!key.equals(currentNode.getFolder().getFolderID())) {
+	            	TreeNode value = datasMap.get(key);
+	            	if (value.getFolder().getParentFolderID() == currentDeleteFolder.getFolder().getFolderID()) {
+	            		storeID = key;
+	            		datasMap.remove(key);
+	            	}
+	            }
+	        }
 
 			for (String s : privateVersionQueue) {
 
@@ -606,7 +619,7 @@ public class VersionHandler {
 
 					int folderID = Integer.parseInt(stringVector[1]);
 
-					if (folderID != dataID && folderID == currentNode.getFolder().getFolderID()) {
+					if ((folderID != dataID && folderID == currentNode.getFolder().getFolderID()) || folderID == storeID) {
 
 						int cont = -1;
 						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
@@ -701,6 +714,14 @@ public class VersionHandler {
 			}
 		}
 
+		try (FileWriter writer = new FileWriter(filePath)) {
+			gson.toJson(datasMap, writer);
+		} catch (IOException e) {
+			closeConnection();
+			e.printStackTrace();
+			return;
+		}
+		
 		session.setAttribute("privateVersionQueue", privateVersionQueueCopy);
 		session.setAttribute("versionQueue", versionQueue);
 	}
