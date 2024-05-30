@@ -419,8 +419,8 @@
 				element.classList.remove("droppable");
 			}
 
-			const wasteBin = document.getElementById("wasteBin");
-			wasteBin.removeEventListener("drop", self.deletionFunction);
+			//const wasteBin = document.getElementById("wasteBin");
+			//wasteBin.removeEventListener("drop", self.deletionFunction);
 
 			self.notDroppable = null;
 			self.startElement = null;
@@ -483,6 +483,7 @@
 					makeCall("POST", 'DeleteDocument', formData, function(response) {
 						checkResponse(response);
 					});
+					
 				} else if (self.startElement.classList.contains("folder")) {
 					let formData = new FormData();
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
@@ -490,9 +491,12 @@
 						checkResponse(response);
 						//versionHistoryHandler.clear();
 					});
+			
 				}
 			}
+			
 			self.resetDroppable();
+			pageManager.refresh();
 		};
 
 
@@ -537,6 +541,7 @@
 									checkResponse(response);
 								});
 								self.resetDroppable();
+								
 							} else {
 
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");

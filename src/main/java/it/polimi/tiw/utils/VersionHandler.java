@@ -538,7 +538,7 @@ public class VersionHandler {
 			TreeNode currentNode = stack.pop();
 			
 			for (Integer key : datasMap.keySet()) {
-	            if (!key.equals(currentNode.getFolder().getFolderID())) {
+	            if (datasMap.get(key).getFolder() != null && !key.equals(currentNode.getFolder().getFolderID())) {
 	            	TreeNode value = datasMap.get(key);
 	            	if (value.getFolder().getParentFolderID() == currentDeleteFolder.getFolder().getFolderID()) {
 	            		storeID = key;
