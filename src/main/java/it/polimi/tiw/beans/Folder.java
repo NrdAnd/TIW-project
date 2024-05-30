@@ -8,7 +8,6 @@ public class Folder {
 	private String folderName;
 	private Timestamp creationDate;
 	private int parentFolderID;
-	private boolean isRoot;
 	private int depth;
 	
 	
@@ -50,15 +49,6 @@ public class Folder {
 
 	public void setParentFolderID(int parentFolderID) {
 		this.parentFolderID = parentFolderID;
-	}
-
-	
-	public boolean isRoot() {
-		return isRoot;
-	}
-
-	public void setRoot(boolean isRoot) {
-		this.isRoot = isRoot;
 	}
 
 	public int getDepth() {

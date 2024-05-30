@@ -28,7 +28,7 @@ public class FolderDAO {
 	 */
 	public TreeNode getFolderTree(int userID) throws SQLException {
 
-		String query = "SELECT folder_id, folder_name, creation_date, parent_folder_id, is_root, depth FROM Folder WHERE owner_id = ? ORDER BY depth ASC";
+		String query = "SELECT folder_id, folder_name, creation_date, parent_folder_id, depth FROM Folder WHERE owner_id = ? ORDER BY depth ASC";
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
 
@@ -42,7 +42,6 @@ public class FolderDAO {
 		initialFolder.setFolderName(result.getString("folder_name"));
 		initialFolder.setCreationDate(result.getTimestamp("creation_date"));
 		initialFolder.setParentFolderID(result.getInt("parent_folder_id"));
-		initialFolder.setRoot(result.getBoolean("is_root"));
 		initialFolder.setDepth(result.getInt("depth"));
 
 		ArrayList<Folder> allFolders = new ArrayList<>();
@@ -55,7 +54,6 @@ public class FolderDAO {
 			folder.setFolderName(result.getString("folder_name"));
 			folder.setCreationDate(result.getTimestamp("creation_date"));
 			folder.setParentFolderID(result.getInt("parent_folder_id"));
-			folder.setRoot(result.getBoolean("is_root"));
 			folder.setDepth(result.getInt("depth"));
 
 			allFolders.add(folder);
@@ -93,7 +91,6 @@ public class FolderDAO {
 		initialFolder.setFolderName(result.getString("folder_name"));
 		initialFolder.setCreationDate(result.getTimestamp("creation_date"));
 		initialFolder.setParentFolderID(result.getInt("parent_folder_id"));
-		initialFolder.setRoot(result.getBoolean("is_root"));
 		initialFolder.setDepth(result.getInt("depth"));
 
 		ArrayList<Folder> allFolders = new ArrayList<>();
@@ -106,7 +103,6 @@ public class FolderDAO {
 			folder.setFolderName(result.getString("folder_name"));
 			folder.setCreationDate(result.getTimestamp("creation_date"));
 			folder.setParentFolderID(result.getInt("parent_folder_id"));
-			folder.setRoot(result.getBoolean("is_root"));
 			folder.setDepth(result.getInt("depth"));
 
 			allFolders.add(folder);
@@ -164,7 +160,7 @@ public class FolderDAO {
 	 */
 	public Folder findFolderByID(int userID, int folderID) throws SQLException {
 
-		String query = "SELECT folder_name, creation_date, parent_folder_id, is_root, depth FROM Folder WHERE owner_id = ? AND folder_id = ? ORDER BY depth ASC";
+		String query = "SELECT folder_name, creation_date, parent_folder_id, depth FROM Folder WHERE owner_id = ? AND folder_id = ? ORDER BY depth ASC";
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
 		statement.setInt(2, folderID);
@@ -182,7 +178,6 @@ public class FolderDAO {
 		folder.setFolderName(result.getString("folder_name"));
 		folder.setCreationDate(result.getTimestamp("creation_date"));
 		folder.setParentFolderID(result.getInt("parent_folder_id"));
-		folder.setRoot(result.getBoolean("is_root"));
 		folder.setDepth(result.getInt("depth"));
 
 		return folder;
@@ -199,7 +194,7 @@ public class FolderDAO {
 
 	public ArrayList<Folder> getSubFoldersByFolderID(int userID, int parentFolderID) throws SQLException {
 
-		String query = "SELECT folder_id, folder_name, creation_date, is_root, depth FROM Folder WHERE owner_id = ? AND parent_folder_id = ?";
+		String query = "SELECT folder_id, folder_name, creation_date, depth FROM Folder WHERE owner_id = ? AND parent_folder_id = ?";
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
 		statement.setInt(2, parentFolderID);
@@ -216,7 +211,6 @@ public class FolderDAO {
 			folder.setFolderName(result.getString("folder_name"));
 			folder.setCreationDate(result.getTimestamp("creation_date"));
 			folder.setParentFolderID(parentFolderID);
-			folder.setRoot(result.getBoolean("is_root"));
 			folder.setDepth(result.getInt("depth"));
 
 			subFolders.add(folder);
@@ -234,7 +228,6 @@ public class FolderDAO {
 	 * @param creationDate   is the creation Date
 	 * @param parentFolderID is the ID of the parent folder of the current new
 	 *                       folder
-	 * @param isRoot         it permits to indicate if the folder is root or not
 	 * @param depth          is the parameters that represents the depth of the
 	 *                       current folder
 	 * @param previousID	 is the previous id of the folder, it is used for the revert action creating an other time the same folder with
@@ -244,17 +237,16 @@ public class FolderDAO {
 	 * @throws SQLException
 	 */
 
-	public int createFolder(int userID, String folderName, int parentFolderID, boolean isRoot, int depth, Integer previousID)
+	public int createFolder(int userID, String folderName, int parentFolderID, int depth, Integer previousID)
 			throws SQLException {
 
 		if (previousID == null) {
-			String query = "INSERT INTO Folder(owner_id, folder_name, parent_folder_id, is_root, depth) VALUES (?,?,?,?,?)";
+			String query = "INSERT INTO Folder(owner_id, folder_name, parent_folder_id, depth) VALUES (?,?,?,?)";
 			PreparedStatement statement = connection.prepareStatement(query);
 			statement.setInt(1, userID);
 			statement.setString(2, folderName);
 			statement.setInt(3, parentFolderID);
-			statement.setBoolean(4, isRoot);
-			statement.setInt(5, depth);
+			statement.setInt(4, depth);
 
 			int code = statement.executeUpdate();
 
@@ -265,14 +257,13 @@ public class FolderDAO {
 			
 		} else {
 			
-			String query = "INSERT INTO Folder(folder_id, owner_id, folder_name, parent_folder_id, is_root, depth) VALUES (?,?,?,?,?,?)";
+			String query = "INSERT INTO Folder(folder_id, owner_id, folder_name, parent_folder_id, depth) VALUES (?,?,?,?,?)";
 			PreparedStatement statement = connection.prepareStatement(query);
 			statement.setInt(1, previousID.intValue());
 			statement.setInt(2, userID);
 			statement.setString(3, folderName);
 			statement.setInt(4, parentFolderID);
-			statement.setBoolean(5, isRoot);
-			statement.setInt(6, depth);
+			statement.setInt(5, depth);
 
 			int code = statement.executeUpdate();
 
@@ -285,39 +276,6 @@ public class FolderDAO {
 
 	}
 
-	/**
-	 * This method permits to understand if a folder is a root folder or not
-	 * 
-	 * @param userID   is the user ID
-	 * @param folderID is the folder ID
-	 * @return an int value with these rules:
-	 * 
-	 *         -> -1 : if there isn't any value in the table -> 0 : if the folder is
-	 *         not a root folder -> 1 : if the folder is a root folder
-	 * 
-	 * @throws SQLException is there is a SQLException
-	 */
-	public int folderIsRoot(int userID, int folderID) throws SQLException {
-
-		String query = "SELECT is_root FROM Folder WHERE owner_id = ? AND folder_id = ?";
-		PreparedStatement statement = connection.prepareStatement(query);
-		statement.setInt(1, userID);
-		statement.setInt(2, folderID);
-
-		ResultSet result = statement.executeQuery();
-
-		// Test if there isn't any value in the table
-		if (!result.isBeforeFirst())
-			return -1;
-
-		result.next();
-
-		if (result.getBoolean("is_root") == true) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}
 
 	/**
 	 * This method returns the fatherID of the current Folder
@@ -429,7 +387,6 @@ public class FolderDAO {
 			folder.setFolderName(result.getString("folder_name"));
 			folder.setCreationDate(result.getTimestamp("creation_date"));
 			folder.setParentFolderID(result.getInt("parent_folder_id"));
-			folder.setRoot(result.getBoolean("is_root"));
 			folder.setDepth(result.getInt("depth"));
 
 			folderList.add(folder);

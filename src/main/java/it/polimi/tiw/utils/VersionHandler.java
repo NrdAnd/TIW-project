@@ -406,7 +406,7 @@ public class VersionHandler {
 			Folder folder = current.getFolder();
 
 			try {
-				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(), folder.isRoot(),
+				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(),
 						folder.getDepth(), current.getFolder().getFolderID());
 			} catch (SQLException e) {
 

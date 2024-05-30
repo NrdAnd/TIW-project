@@ -128,17 +128,10 @@ public class CreateFolder extends HttpServlet {
 			return;
 		}
 
-		boolean newFolderIsRoot;
-		if (parentFolderDepth == 0) {
-			newFolderIsRoot = true;
-		} else {
-			newFolderIsRoot = false;
-		}
-
 		try {
 
 			int code;
-			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID, newFolderIsRoot,
+			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID,
 					parentFolderDepth + 1, null);
 			if (code != 1) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
