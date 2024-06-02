@@ -85,7 +85,6 @@ nav.navbar {
 
 /* DRAGEDROP*/
 .droppable {
-	color: green;
 	background-color: #ddd;
 }
 
@@ -102,24 +101,24 @@ nav.navbar {
 }
 
 /*CPIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA*/
+
 .right-div {
 	width: 49%;
-	border: solid green;
+	border: none;
 	border-radius: 10px;
 	float: right;
 }
 
 .left-div {
 	width: 50%;
-	border: solid green;
-	border-radius: 4px;
+	border: none;
+	border-radius: 10px;
 	float: left;
 }
 
 a, button {
 	color: black; /* Colore del testo nero */
 	border-color: black; /* Colore del bordo nero */
-	transition: all 0.3s ease; /* Aggiungi un'animazione di transizione */
 	border-radius: 10px;
 }
 
@@ -133,6 +132,7 @@ a:hover, a:active, button:hover {
 
 .BackButton {
 	background-color: #e0e0e0;
+	color:red;
 	border: none;
 	padding: 5px 10px;
 	margin: 5px 0;
@@ -141,9 +141,14 @@ a:hover, a:active, button:hover {
 }
 
 .backVersionButton {
-	background-color: #f0f0f0;
-	border-color: #666;
-	border-radius: 5px; /* Imposta i bordi più squadrati */
+	background-color: #e0e0e0;
+	color:red;
+	border: none;
+	padding: 2.5px 5px;
+	margin: 5px 0;
+	display: inline-block;
+	border-radius: 5px;
+	transition: all 0.3s ease;
 }
 
 /* Stili hover specifici per BackButton */
@@ -152,3 +157,113 @@ a:hover, a:active, button:hover {
 	border-color: #666;
 }
 
+.HideDetails {
+	background-color: #e0e0e0;
+	color:red;
+	border: none;
+	padding: 5px 10px;
+	margin: 5px 0;
+	display: inline-block;
+	border-radius: 5px;
+}
+
+.HideDetails:hover {
+	background-color: red;
+	color:white;
+	border-color: #666;
+}
+
+.clt, .clt ul, .clt li {
+    position: relative;
+}
+
+.clt ul {
+   list-style: none;
+   padding-left: 32px;
+}
+
+.clt li::before, .clt li::after {
+    content: "";
+    position: absolute;
+    left: -12px;
+}
+
+.clt li::before {
+    border-top: 1px solid #000;	
+    top: 20px;
+    width: 10px;
+    height: 0;
+}
+
+.clt li::after {
+    border-left: 1px solid #000;
+    height: 100%;
+    width: 0px;
+    top: 12px;
+}
+
+.clt ul > li:last-child::after {
+    height: 8px;
+}
+
+.document {
+    display: flex;
+    align-items: center;
+}
+
+.document span {
+    margin-right: 10px; /* Aggiungi spazio tra il nome del documento e il pulsante */
+}
+
+.main-title {
+    border: none;
+    border-bottom: 2px solid #adadad;
+    position: sticky;
+}
+
+.text-input{
+	width: 100%;
+	padding: 0 5px;
+	height: 40px;
+	font-size: 16px;
+	border: none;
+	background: none;
+	outline: none;
+	border-bottom: 2px solid #adadad;
+}
+#docSummary {
+    resize: none; /* Impedisci il ridimensionamento della textarea */
+    height: auto; /* Imposta l'altezza automatica in base al contenuto */
+    min-height: 100px; /* Imposta un'altezza minima per garantire che ci sia abbastanza spazio per tre righe di testo */
+}
+
+.ShowDocumentInfo {
+    margin-left: 5px; /* Aggiunge un margine a sinistra */
+    margin-right: 5px; /* Aggiunge un margine a destra */
+    border-radius: 4px; /* Rende i bordi del pulsante arrotondati */
+    background-color: #f0f0f0; /* Imposta il colore di sfondo */
+    border: none; /* Rimuove il bordo */
+    padding: 5px 10px; /* Aggiunge spazio interno al pulsante */
+}
+
+.ShowDocumentInfo:hover {
+    background-color: #666; /* Cambia il colore di sfondo al passaggio del mouse */
+    border-color: #666; /* Cambia il colore del bordo al passaggio del mouse */
+    color: white; /* Cambia il colore del testo al passaggio del mouse */
+}
+
+
+.mngBtn {
+	margin-left:5px;
+	margin-right:5px;
+	border-radius:4px;
+	background-color: #f0f0f0;
+	border: none;
+	padding: 5px 10px;
+}
+
+.mngBtn:hover {
+	background-color: #666; /* Cambia il colore al passaggio del mouse */
+	border-color: #666;
+	color: white;
+}

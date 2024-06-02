@@ -215,6 +215,7 @@
 				let folderLI = document.createElement("li");
 				let folderDiv = document.createElement("div");
 
+
 				folderDiv.textContent = node.folder.folderName;
 				folderDiv.classList.add("folder");
 				folderDiv.setAttribute("folderID", node.folder.folderID);
@@ -275,7 +276,8 @@
 
 						//docElement.style.display = "inline";
 						documentDiv.classList.add("document");
-						documentDiv.textContent = doc.documentName + "." + doc.documentType;
+						let documentNameSpan = document.createElement("span");
+						documentNameSpan.textContent = doc.documentName + "." + doc.documentType;
 						documentDiv.setAttribute("documentID", doc.documentID);
 						documentDiv.setAttribute("folderID", doc.folderID);
 
@@ -288,6 +290,9 @@
 						let docAndButton = document.createElement("div");
 						docAndButton.append(documentDiv);
 						docAndButton.append(docInfo);
+
+						documentDiv.appendChild(documentNameSpan);
+						documentDiv.appendChild(docInfo);
 
 						//show details on click
 						docInfo.addEventListener("click", function() {
@@ -483,7 +488,7 @@
 					makeCall("POST", 'DeleteDocument', formData, function(response) {
 						checkResponse(response);
 					});
-					
+
 				} else if (self.startElement.classList.contains("folder")) {
 					let formData = new FormData();
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
@@ -491,10 +496,10 @@
 						checkResponse(response);
 						//versionHistoryHandler.clear();
 					});
-			
+
 				}
 			}
-			
+
 			self.resetDroppable();
 			pageManager.refresh();
 		};
@@ -541,7 +546,7 @@
 									checkResponse(response);
 								});
 								self.resetDroppable();
-								
+
 							} else {
 
 								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
@@ -621,7 +626,7 @@
 			pageManager.hideContent();
 			versionHistoryHandler.clear();
 			container.style.visibility = "visible";
-			title.textContent = "Create subfolder inside folder " + folderName;
+			title.textContent = "Create subfolder inside " + folderName;
 			container.append(form);
 		}
 	}
@@ -675,7 +680,7 @@
 		 * This method sets the create document form visible and the event on the submit button.
 		 */
 		this.enableForm = function(folderID, folderName) {
-			
+
 			destinationID = folderID;
 			pageManager.hideContent();
 			versionHistoryHandler.clear();
@@ -741,7 +746,7 @@
 		 * @param doc the document to show.
 		 */
 		this.setDocumentDetails = function(doc) {
-			
+
 			versionHistoryHandler.clear();
 			pageManager.hideContent();
 			document.getElementById("rightContainer").style.visibility = "visible";
@@ -755,7 +760,7 @@
 				versionHistoryHandler.getVersionHistory();
 				document.getElementById("rightContainer").style.visibility = "hidden";
 			};
-			
+
 		}
 	}
 
@@ -816,7 +821,7 @@
 			rightContainer.append(title);
 
 			let datasUl = document.createElement('ul');
-			
+
 			let operationNumber = 0;
 
 			self.versionHistoryData.forEach(function(element) {
@@ -825,11 +830,11 @@
 				backVersionButton.className = "backVersionButton";
 				backVersionButton.textContent = "Revert";
 				backVersionButton.setAttribute("operationNumber", operationNumber);
-				
+
 				backVersionButton.addEventListener("click", function() {
 					if (confirm("Are you sure to revert this operation?")) {
 
-			
+
 						let formData = new FormData();
 						formData.append("operationNumber", backVersionButton.getAttribute("operationNumber"));
 						//make a request to the server to get the document details.
@@ -859,7 +864,7 @@
 
 				elementLI.append(divContainer);
 				datasUl.append(elementLI);
-				
+
 				operationNumber = operationNumber + 1;
 			});
 
