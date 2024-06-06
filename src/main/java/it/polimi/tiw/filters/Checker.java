@@ -40,7 +40,7 @@ public class Checker implements Filter {
     			File saveDatasFile = new File(filePath);
     			saveDatasFile.delete();
     		} catch (Exception e) {
-    			e.printStackTrace();
+    			//e.printStackTrace();
     		}
             
             return;
