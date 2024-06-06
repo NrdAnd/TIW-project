@@ -94,6 +94,7 @@ nav.navbar {
 	position: relative;
 	margin-top: 50px;
 	margin-bottom: 20px;
+	margin-left: 30px;
 }
 
 .folder-container:hover {
