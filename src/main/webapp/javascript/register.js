@@ -21,10 +21,16 @@ function passwordMatch() {
 				return false;
 			}
 
+			/*if (checkEmail(document.getElementById("email").value)) { 
+				document.getElementById("errorMsg").textContent.style.visibility = "visible";
+				document.getElementById("errorMsg").textContent = "Email is not valid";
+				return false;
+			}*/
+
 			let formData = new FormData();
 			formData.append("username", document.getElementById("username").value);
 			formData.append("email", document.getElementById("email").value);
-			console.log(pswd1);
+
 			formData.append("password", document.getElementById("pswd1").value);
 			formData.append("passwordCheck", document.getElementById("pswd2").value);
 
