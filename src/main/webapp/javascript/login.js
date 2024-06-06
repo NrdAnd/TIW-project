@@ -29,6 +29,11 @@
                 document.getElementById("errorMessage").textContent = message;
                 document.getElementById("errorMessage").hidden = false;
                 break;
+              case 403: //an other account already logged in
+				window.location.href = req.getResponseHeader("Location");
+                window.sessionStorage.removeItem('utente');
+				alert("An other account is already logged in. Automatically log out...");
+				break;
               case 500: // server error
             	document.getElementById("errorMessage").textContent = message;
                 document.getElementById("errorMessage").hidden = false;

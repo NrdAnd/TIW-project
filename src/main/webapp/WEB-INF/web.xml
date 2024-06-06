@@ -31,13 +31,13 @@
 		<filter-name>Checker</filter-name>
 		<url-pattern>/CreateDocument</url-pattern>
 		<url-pattern>/CreateFolder</url-pattern>
-		<url-pattern>/GoBack</url-pattern>
-		<url-pattern>/GoToFolder</url-pattern>
-		<url-pattern>/GoToHomePage</url-pattern>
+		<url-pattern>/DeleteDocument</url-pattern>
+		<url-pattern>/DeleteFolder</url-pattern>
+		<url-pattern>/GetDocument</url-pattern>
+		<url-pattern>/GetTree</url-pattern>
+		<url-pattern>/GetVersionHistory</url-pattern>
 		<url-pattern>/MoveDocument</url-pattern>
-		<url-pattern>/OpenContentManager</url-pattern>
-		<url-pattern>/OpenDocument</url-pattern>
-		<url-pattern>/SelectDocumentToMove</url-pattern>
+		<url-pattern>/SetRevertAction</url-pattern>
 	</filter-mapping>
 	
 	<filter>

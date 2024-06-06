@@ -51,6 +51,11 @@
 						sessionStorage.clear();
 						window.location.href = "index.html";
 						break;
+					case 403:
+						alert("An other account is already logged in. Automatically log out...");
+						sessionStorage.clear();
+						window.location.href = "index.html";
+						break;
 					default:
 						alert("Unknown Error");
 						break;
@@ -97,6 +102,7 @@
 							}
 
 							self.update(folderTree); // self visible by closure
+							
 						} else if (req.status === 403) {
 							window.location.href = req.getResponseHeader("Location");
 							window.sessionStorage.removeItem('utente');
@@ -744,6 +750,11 @@
 							alert("You are not logged in.")
 							logout();
 							break;
+						case 403:
+							alert("An other account is already logged in. Automatically log out...");
+							sessionStorage.clear();
+							window.location.href = "index.html";
+							break;
 						case 400:
 						case 500:
 							alert(text);
@@ -811,6 +822,11 @@
 						case 401:
 							alert("You are not logged in.")
 							logout();
+							break;
+						case 403:
+							alert("An other account is already logged in. Automatically log out...");
+							sessionStorage.clear();
+							window.location.href = "index.html";
 							break;
 						case 400:
 						case 500:
@@ -946,11 +962,13 @@
 					alert(text);
 					break;
 				case 401:
-					alert("You are not logged in.")
+					alert("You are not logged in.");
 					logout();
 					break;
 				case 403:
-					alert("No response from the Server.")
+					alert("An other account is already logged in. Automatically log out...");
+					sessionStorage.clear();
+					window.location.href = "index.html";
 					break;
 				case 500:
 					alert(text);
