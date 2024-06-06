@@ -29,7 +29,7 @@ public class Logout extends HttpServlet {
 			File saveDatasFile = new File(filePath);
 			saveDatasFile.delete();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		session = req.getSession(false);

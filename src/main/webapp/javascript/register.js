@@ -52,6 +52,11 @@ function passwordMatch() {
 								document.getElementById("errorMessage").textContent = message;
 								document.getElementById("errorMessage").hidden = false;
 								break;
+							case 403: //an other account is already logged in
+								window.location.href = req.getResponseHeader("Location");
+               				 	window.sessionStorage.removeItem('utente');
+								alert("An other account is already logged in. Automatically log out...");
+								break;
 							case 409: // conflict
 								document.getElementById("errorMessage").textContent = message;
 								document.getElementById("errorMessage").hidden = false;

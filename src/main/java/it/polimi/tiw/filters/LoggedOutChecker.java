@@ -37,7 +37,7 @@ public class LoggedOutChecker implements Filter {
     			File saveDatasFile = new File(filePath);
     			saveDatasFile.delete();
     		} catch (Exception e) {
-    			e.printStackTrace();
+    			//e.printStackTrace();
     		}
             
             String loginpath = req.getServletContext().getContextPath() + "/index.html";
