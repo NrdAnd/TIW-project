@@ -157,7 +157,7 @@ public class CreateFolder extends HttpServlet {
 			return;
 		}
 
-		String operationString = "CREATE_FOLDER >> NAME: " + newFolderName + "; PARENT_FOLDER: " + folderName;
+		String operationString = "CREATED FOLDER: " + newFolderName + " INSIDE: " + folderName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {

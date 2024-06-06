@@ -17,6 +17,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.tomcat.util.http.fileupload.FileItem;
 
 import it.polimi.tiw.beans.User;
@@ -103,7 +104,7 @@ public class DeleteDocument extends HttpServlet {
 		
 		
 		String operationString;
-		operationString = "DELETE_DOCUMENT >> DOCUMENT: " + documentName;
+		operationString = "DELETED DOCUMENT: " + documentName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {

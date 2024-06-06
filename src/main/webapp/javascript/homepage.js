@@ -214,7 +214,9 @@
 				let folderUL = document.createElement("ul");
 				let folderLI = document.createElement("li");
 				let folderDiv = document.createElement("div");
+				
 
+				folderUL.classList.add("folder-container");
 
 				folderDiv.textContent = node.folder.folderName;
 				folderDiv.classList.add("folder");
@@ -240,6 +242,7 @@
 				internalContainer.append(folderDiv);
 				internalContainer.append(folderButton);
 				internalContainer.append(docButton);
+
 
 				//It permits the dynamic visual of the mngButton when the editConfig is active
 				internalContainer.addEventListener("mouseenter", function() {
@@ -273,11 +276,24 @@
 						//creates the li element that contains the document.
 						let documentLi = document.createElement("li");
 						let documentDiv = document.createElement("div");
+						let documentIcon = document.createElement("img");
+
+						//setup the document-icon parameters
+						documentIcon.src = 'resources/images/doc.png';
+						documentIcon.height = 25;
+						documentIcon.style.float = 'left';
+						documentIcon.style.width = 'auto';
+						
+						let docNameText = document.createTextNode(doc.documentName + "." + doc.documentType);
 
 						//docElement.style.display = "inline";
 						documentDiv.classList.add("document");
 						let documentNameSpan = document.createElement("span");
-						documentNameSpan.textContent = doc.documentName + "." + doc.documentType;
+						documentNameSpan.classList.add("doc-btn");
+						
+						documentNameSpan.appendChild(documentIcon);
+						documentNameSpan.appendChild(docNameText);
+						
 						documentDiv.setAttribute("documentID", doc.documentID);
 						documentDiv.setAttribute("folderID", doc.folderID);
 

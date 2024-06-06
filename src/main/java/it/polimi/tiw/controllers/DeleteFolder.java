@@ -110,7 +110,7 @@ public class DeleteFolder extends HttpServlet {
 		
 
 		String operationString;
-		operationString = "DELETE_FOLDER >> FOLDER: " + folderName + " (PF: " + parentFolderName + ")";
+		operationString = "DELETED FOLDER: " + folderName + " FROM " + parentFolderName;
 		
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {

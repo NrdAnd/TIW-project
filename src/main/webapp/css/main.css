@@ -62,6 +62,7 @@ nav.navbar {
 
 /* Stile dei bottoni delle cartelle */
 .folder-btn {
+	font-size: 20px;
 	background-color: transparent;
 	border: none;
 	padding: 5px 10px;
@@ -70,10 +71,69 @@ nav.navbar {
 	border-radius: 5px;
 }
 
-/* Stile del bottone per la cartella non cliccabile */
+.document {
+	background-color: transparent;
+	border: none;
+	padding: 5px 10px;
+	margin: 5px 0;
+	display: inline-block;
+	border-radius: 5px;
+}
+
+.folder-container {
+	min-width: 30px; /* Larghezza minima */
+    width: auto; /* Larghezza che si adatta automaticamente */
+    max-width: 100%; /* Larghezza massima (può essere regolata secondo necessità) */
+    display: inline-block; /* Assicura che l'elemento si comporti come un blocco inline */
+    
+	height: relative;
+	margin: 10px auto 10px;
+	border-radius: 10px 10px 10px 10px;
+	filter: drop-shadow(0 0 0.2rem grey);
+	background: white;
+	position: relative;
+	margin-top: 50px;
+	margin-bottom: 20px;
+}
+
+.folder-container:hover {
+	filter: drop-shadow(0 0 0.75rem grey);
+}
+
+.folder-container::before {
+	content: '';
+	position: absolute;
+	top: -18px;
+	width: 200px;
+	height: 25px;
+	background: white;
+	border-radius: 25px 0 0 0;
+	clip-path: path('M 0 0 L 160 0 C 185 2, 175 16, 200 18 L 0 50 z');
+}
+
+.folder-container::after {
+	content: '';
+	position: absolute;
+	left: 45px;
+	width: 85px;
+	height: 5px;
+	top: -18px;
+	background: #7036E9;
+	border-radius: 10px 10px 0px 0px;
+}
+
+.doc-btn {
+	background-color: transparent;
+	border: none;
+	padding: 5px 10px;
+	margin: 5px 0;
+	display: inline-block;
+	border-radius: 5px;
+}
 
 /* Stile dei bottoni delle cartelle al passaggio del mouse */
 .folder-btn:hover {
+	cursor: grab;
 	background-color: #f0f0f0;
 	/* Colore di sfondo al passaggio del mouse */
 }
@@ -83,11 +143,13 @@ nav.navbar {
 	/* Colore di sfondo grigio chiaro al passaggio del mouse */
 }
 
-/* DRAGEDROP*/
-.droppable {
-	background-color: #ddd;
+.doc-btn:hover {
+	cursor: grab;
+	background-color: #f0f0f0;
+	/* Colore di sfondo al passaggio del mouse */
 }
 
+/* DRAGEDROP*/
 .droppable.dragover {
 	font-weight: bold;
 }
@@ -100,17 +162,18 @@ nav.navbar {
 	opacity: .5;
 }
 
-/*CPIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA*/
-
 .right-div {
-	width: 49%;
+	margin-top: 207px;
+	width: 39%;
 	border: none;
 	border-radius: 10px;
 	float: right;
 }
 
 .left-div {
-	width: 50%;
+	margin-left: 10px;
+	margin-top: 200px;
+	width: 60%;
 	border: none;
 	border-radius: 10px;
 	float: left;
@@ -132,7 +195,7 @@ a:hover, a:active, button:hover {
 
 .BackButton {
 	background-color: #e0e0e0;
-	color:red;
+	color: red;
 	border: none;
 	padding: 5px 10px;
 	margin: 5px 0;
@@ -142,7 +205,7 @@ a:hover, a:active, button:hover {
 
 .backVersionButton {
 	background-color: #e0e0e0;
-	color:red;
+	color: red;
 	border: none;
 	padding: 2.5px 5px;
 	margin: 5px 0;
@@ -159,7 +222,7 @@ a:hover, a:active, button:hover {
 
 .HideDetails {
 	background-color: #e0e0e0;
-	color:red;
+	color: red;
 	border: none;
 	padding: 5px 10px;
 	margin: 5px 0;
@@ -169,59 +232,36 @@ a:hover, a:active, button:hover {
 
 .HideDetails:hover {
 	background-color: red;
-	color:white;
+	color: white;
 	border-color: #666;
 }
 
 .clt, .clt ul, .clt li {
-    position: relative;
+	position: relative;
 }
 
 .clt ul {
-   list-style: none;
-   padding-left: 32px;
-}
-
-.clt li::before, .clt li::after {
-    content: "";
-    position: absolute;
-    left: -12px;
-}
-
-.clt li::before {
-    border-top: 1px solid #000;	
-    top: 20px;
-    width: 10px;
-    height: 0;
-}
-
-.clt li::after {
-    border-left: 1px solid #000;
-    height: 100%;
-    width: 0px;
-    top: 12px;
-}
-
-.clt ul > li:last-child::after {
-    height: 8px;
+	list-style: none;
+	padding-left: 32px;
 }
 
 .document {
-    display: flex;
-    align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 .document span {
-    margin-right: 10px; /* Aggiungi spazio tra il nome del documento e il pulsante */
+	margin-right: 10px;
+	/* Aggiungi spazio tra il nome del documento e il pulsante */
 }
 
 .main-title {
-    border: none;
-    border-bottom: 2px solid #adadad;
-    position: sticky;
+	border: none;
+	border-bottom: 2px solid #adadad;
+	position: sticky;
 }
 
-.text-input{
+.text-input {
 	width: 100%;
 	padding: 0 5px;
 	height: 40px;
@@ -231,32 +271,35 @@ a:hover, a:active, button:hover {
 	outline: none;
 	border-bottom: 2px solid #adadad;
 }
+
 #docSummary {
-    resize: none; /* Impedisci il ridimensionamento della textarea */
-    height: auto; /* Imposta l'altezza automatica in base al contenuto */
-    min-height: 100px; /* Imposta un'altezza minima per garantire che ci sia abbastanza spazio per tre righe di testo */
+	resize: none; /* Impedisci il ridimensionamento della textarea */
+	height: auto; /* Imposta l'altezza automatica in base al contenuto */
+	min-height: 100px;
+	/* Imposta un'altezza minima per garantire che ci sia abbastanza spazio per tre righe di testo */
 }
 
 .ShowDocumentInfo {
-    margin-left: 5px; /* Aggiunge un margine a sinistra */
-    margin-right: 5px; /* Aggiunge un margine a destra */
-    border-radius: 4px; /* Rende i bordi del pulsante arrotondati */
-    background-color: #f0f0f0; /* Imposta il colore di sfondo */
-    border: none; /* Rimuove il bordo */
-    padding: 5px 10px; /* Aggiunge spazio interno al pulsante */
+	margin-left: 5px; /* Aggiunge un margine a sinistra */
+	margin-right: 5px; /* Aggiunge un margine a destra */
+	border-radius: 4px; /* Rende i bordi del pulsante arrotondati */
+	background-color: #f0f0f0; /* Imposta il colore di sfondo */
+	border: none; /* Rimuove il bordo */
+	padding: 5px 10px; /* Aggiunge spazio interno al pulsante */
 }
 
 .ShowDocumentInfo:hover {
-    background-color: #666; /* Cambia il colore di sfondo al passaggio del mouse */
-    border-color: #666; /* Cambia il colore del bordo al passaggio del mouse */
-    color: white; /* Cambia il colore del testo al passaggio del mouse */
+	background-color: #666;
+	/* Cambia il colore di sfondo al passaggio del mouse */
+	border-color: #666;
+	/* Cambia il colore del bordo al passaggio del mouse */
+	color: white; /* Cambia il colore del testo al passaggio del mouse */
 }
 
-
 .mngBtn {
-	margin-left:5px;
-	margin-right:5px;
-	border-radius:4px;
+	margin-left: 5px;
+	margin-right: 5px;
+	border-radius: 4px;
 	background-color: #f0f0f0;
 	border: none;
 	padding: 5px 10px;
@@ -267,3 +310,16 @@ a:hover, a:active, button:hover {
 	border-color: #666;
 	color: white;
 }
+#documentDetails {
+	margin-left: 20px;
+	margin-top: 20px;
+}
+
+#main-header {
+	background-color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Assicura che l'header sia sopra altri contenuti */
+}	

@@ -168,7 +168,7 @@ public class CreateDocument extends HttpServlet {
 			return;
 		}
 		
-		String operationString = "CREATE_DOCUMENT >> NAME: " + newDocumentName + "; FOLDER: " + folderName + " (PF: " + parentFolderName + ")";
+		String operationString = "CREATED DOCUMENT: " + newDocumentName + " INSIDE FOLDER: "+ parentFolderName +"/"+folderName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
