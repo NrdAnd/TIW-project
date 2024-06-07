@@ -186,10 +186,10 @@ public class MoveDocument extends HttpServlet {
 				
 				for (int i=0; i < versionQueue.size(); i++) {
 					
-					if (versionQueue.get(i).startsWith("MOVE_DOCUMENT")) {
+					if (versionQueue.get(i).startsWith("MOVED")) {
 						
-						String[] parts = versionQueue.get(i).split("NAME: ");
-						String currentDocName = parts[1].split(" FROM:")[0];
+						String[] parts = versionQueue.get(i).split(" FROM: ");
+						String currentDocName = parts[0].split(" ")[1];
 						
 				        if (currentDocName.equals(documentName)) {
 				        	versionQueue.remove(i);
