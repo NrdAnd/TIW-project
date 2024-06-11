@@ -69,6 +69,18 @@ public class CheckSignupCredentials extends HttpServlet {
 			resp.getWriter().println("Errore: Email non valida");
 			return;
 		}
+		UserDAO userDao = new UserDAO(connection);
+		
+		try {
+			if (!userDao.emailIsDuplicate(email)) {
+				resp.setStatus(HttpServletResponse.SC_CONFLICT);
+				resp.getWriter().println("Errore: Email already exists");
+				return;
+			}
+		} catch (SQLException e) {
+			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error; query non andata a buon fine");
+			return;
+		}
 
 		// check that the entered passwords match
 		if (!passwordCheck.equals(password)) {
@@ -77,7 +89,6 @@ public class CheckSignupCredentials extends HttpServlet {
 			return;
 		}
 
-		UserDAO userDao = new UserDAO(connection);
 
 		// checks the uniqueness of the username
 		boolean isDuplicate;
@@ -91,7 +102,7 @@ public class CheckSignupCredentials extends HttpServlet {
 
 		if (isDuplicate) {
 			resp.setStatus(HttpServletResponse.SC_CONFLICT);
-			resp.getWriter().println("L'email specificata è già in uso!");
+			resp.getWriter().println("Username already exists!");
 			return;
 		}
 

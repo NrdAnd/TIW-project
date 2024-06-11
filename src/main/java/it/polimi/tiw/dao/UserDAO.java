@@ -127,4 +127,20 @@ public class UserDAO {
 
         return utente;
     }
+    
+    public boolean emailIsDuplicate(String email) throws SQLException {
+    	String query = "SELECT * FROM User WHERE email = ?";
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setString(1, email);
+ 
+        ResultSet resultSet = statement.executeQuery();
+        
+        while(resultSet.next()) {
+        	String queryEmail = resultSet.getString("email");
+        	if(queryEmail.equalsIgnoreCase(email)) {
+        		return false;
+        	}
+        }
+        return true;
+    }
 }

@@ -89,7 +89,7 @@ public class MoveDocument extends HttpServlet {
 			initialFolderID = documentDAO.getOriginFolder(utente.getUserID(), documentID);
 			if (initialFolderID == -1) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder ID non valido");
+				resp.getWriter().println("Error: User is not the owner");
 				return;
 			}
 
