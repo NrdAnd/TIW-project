@@ -15,9 +15,12 @@
 		}
 	}, false);
 
+
+	/**
+	 * This function calls the pageManager refresh and sets the logout button
+	 */
 	function start() {
 
-		//document.getElementById("userName").textContent = JSON.parse(sessionStorage.getItem("utente"));
 		document.getElementById("Logout").addEventListener("click", function() {
 			document.getElementById("Logout").disable = true;
 			logout();
@@ -29,9 +32,9 @@
 			event.preventDefault();
 		});
 
-		globalPage.addEventListener('drop', function(event) {
+		/*globalPage.addEventListener('drop', function(event) {
 			event.preventDefault();
-		});
+		});*/
 
 		pageManager.refresh();
 	}
@@ -71,8 +74,8 @@
 
 
 	/**
-	 * This method permits the dynamic print of the Folder Tree
-	 * @param {*} container is the container
+	 * This class handles data acquisition and dynamic printing of the folderTree
+	 * @param container is a specific container
 	 */
 
 	function FolderTree(container) {
@@ -80,7 +83,11 @@
 		this.container = container;
 		this.editConfig = false;
 		this.rootConfig = false;
+		
 
+		/**
+		 * This method handles the datas acqusition of the folderTree
+		 */
 		this.show = function() {
 			this.container.innerHTML = "";
 			document.getElementById("wasteBin").style.visibility = "visible";
@@ -116,7 +123,7 @@
 
 
 		/**
-		 * This method changes the value of the EditButton and then show the edit buttons fo adding new content.
+		 * This method changes the value of the EditButton and then show the edit buttons to adding new content.
 		 */
 		this.edit = function() {
 			const self = this;
@@ -135,6 +142,7 @@
 			self.editConfig = true;
 
 		}
+
 
 		/**
 		 * This method hides the edit buttons and sets the value of the EditButton to "EDIT".
@@ -158,13 +166,17 @@
 		}
 
 
+
+		/**
+		 * This method handles the dynamic printing of the folderTree
+		 */
 		this.update = function(folderTree) {
 
 			this.container.innerHTML = "";
 			const self = this;
 
 
-			//get edit button and set up onclick event.
+			//Get edit button and set up onclick event.
 			let editButton = document.getElementById("EditButton");
 			editButton.textContent = "EDIT";
 			editButton.onclick = function() {
@@ -172,6 +184,7 @@
 			};
 
 			let treeContainer = document.getElementById('treeContainer');
+			
 			//Ricursive Function to print the Folder Tree
 			self.traverseTree(folderTree, treeContainer);
 
@@ -211,6 +224,9 @@
 		}
 
 
+		/**
+		 * This recursive method is used by this.update for the dynamic printing of the folderTree
+		 */
 		this.traverseTree = function traverseTree(node, parentElement) {
 
 			const self = this;
@@ -236,7 +252,7 @@
 					createFolder.enableForm(node.folder.folderID, node.folder.folderName);
 				});
 
-				//create new folder button.
+				//create new a document button.
 				let docButton = document.createElement("button");
 				docButton.className = "mngBtn";
 				docButton.textContent = "Create Document";
@@ -257,7 +273,8 @@
 						docButton.style.visibility = "visible";
 					}
 				});
-
+				
+				//It permits the dynamic visual of the mngButton when the editConfig is active
 				internalContainer.addEventListener("mouseleave", function() {
 					if (self.editConfig) {
 						folderButton.style.visibility = "hidden";
@@ -302,7 +319,8 @@
 						
 						documentDiv.setAttribute("documentID", doc.documentID);
 						documentDiv.setAttribute("folderID", doc.folderID);
-
+						
+						//It creates a new ShowDocumentInfo button
 						let docInfo = document.createElement("button");
 						docInfo.className = "ShowDocumentInfo";
 						docInfo.textContent = "Show Document Info";
@@ -316,7 +334,7 @@
 						documentDiv.appendChild(documentNameSpan);
 						documentDiv.appendChild(docInfo);
 
-						//show details on click
+						//Show details on click
 						docInfo.addEventListener("click", function() {
 							documentInfo.openDocument(doc.documentID);
 						});
@@ -328,6 +346,7 @@
 							}
 						});
 
+						//It permits the DocInfoButton Dynamic Visual when the editConfig is inactive
 						docAndButton.addEventListener("mouseleave", function() {
 							if (!self.editConfig && !self.rootConfig) {
 								docInfo.style.visibility = "hidden";
@@ -343,7 +362,7 @@
 					folderUL.appendChild(documents);
 				}
 
-
+				//Recursive call
 				if (node.children && node.children.length > 0) {
 					node.children.forEach(function(child) {
 						self.traverseTree(child, folderUL);
@@ -353,6 +372,7 @@
 
 			} else {
 
+				//Recursive call for the printing of the root folders
 				if (node.children && node.children.length > 0) {
 					node.children.forEach(function(child) {
 						self.traverseTree(child, parentElement);
@@ -364,12 +384,15 @@
 
 
 	/**
-	 * 
+	 * This class handles Drag and Drop
 	 */
 	function DragAndDropHandler() {
 
 		const self = this;
 
+		/**
+		 * This method sets up all the elements to be draggable or droppable
+		 */
 		this.setUp = function() {
 			let objList = document.getElementsByClassName("document");
 
@@ -418,7 +441,7 @@
 		}
 
 		/**
-		 * This method sets up the dragstart for a deletable element (usually a folder or subfolder).
+		 * This method sets up the dragstart for a deletable element (usually a folder).
 		 * @param element the element we want to assign the dragstart event to.
 		 */
 		this.setDelete = function(element) {
@@ -449,9 +472,6 @@
 			for (const element of elements) {
 				element.classList.remove("droppable");
 			}
-
-			//const wasteBin = document.getElementById("wasteBin");
-			//wasteBin.removeEventListener("drop", self.deletionFunction);
 
 			self.notDroppable = null;
 			self.startElement = null;
@@ -503,7 +523,8 @@
 
 			let decision = confirm("Are you sure you want to delete this item?");
 			if (decision) {
-				//request to delete the element
+				
+				//Request to delete the element
 				//For the request we have to find the proper servlet
 				//If the request is successful the folder list has to be refreshed
 
@@ -520,7 +541,6 @@
 					formData.append("folderID", self.startElement.getAttribute("folderID"));
 					makeCall("POST", 'DeleteFolder', formData, function(response) {
 						checkResponse(response);
-						//versionHistoryHandler.clear();
 					});
 
 				}
@@ -567,7 +587,8 @@
 								let formData = new FormData();
 								formData.append("folderID", folderID);
 								formData.append("documentID", self.startElement.getAttribute("documentID"));
-								//send the move request to the server. If it's successful the folder list is refreshed.
+								
+								//Send the move request to the server. If it's successful the folder list is refreshed.
 								makeCall("POST", 'MoveDocument', formData, function(response) {
 									checkResponse(response);
 								});
@@ -575,22 +596,21 @@
 
 							} else {
 
-								alert("Non puoi spostare un documento nella stessa cartella da cui proviene!");
+								alert("You cannot move a document to the same folder it came from!");
 								self.resetDroppable();
 								versionHistoryHandler.clear();
 								pageManager.refresh();
 
 							}
+							
 						} else {
 
-							alert("Puoi spostare le cartelle solo nel cestino!");
+							alert("You can only move folders to the trash!");
 							self.resetDroppable();
 							versionHistoryHandler.clear();
 							pageManager.refresh();
 
 						}
-
-						//versionHistoryHandler.clear();
 					}
 				});
 			}
@@ -624,7 +644,8 @@
 			if (form.checkValidity()) {
 				const formData = new FormData(form);
 				formData.append("destinationID", destinationID);
-				//make a request to the server to create the folder.
+				
+				//Make a request to the server to create the folder.
 				makeCall("POST", 'CreateFolder', formData, function(response) {
 					checkResponse(response);
 				});
@@ -632,6 +653,7 @@
 			} else form.reportValidity();
 		}, false);
 		form.parentNode.removeChild(form);
+
 
 		/**
 		 * Hides the container.
@@ -684,7 +706,8 @@
 			if (form.checkValidity()) {
 				const formData = new FormData(form);
 				formData.append("destinationID", destinationID);
-				//make a request to the server to create the document.
+				
+				//Make a request to the server to create the document.
 				makeCall("POST", 'CreateDocument', formData, function(response) {
 					checkResponse(response);
 				});
@@ -713,6 +736,7 @@
 			container.style.visibility = "visible";
 			title.textContent = "Create document inside folder: " + folderName;
 			container.append(form);
+			
 		}
 	}
 
@@ -741,7 +765,8 @@
 		 */
 		this.openDocument = function(documentID) {
 			let self = this;
-			//make a request to the server to get the document details.
+			
+			//Make a request to the server to get the document details.
 			makeCall("GET", "GetDocument?documentID=" + documentID, null, function(response) {
 				if (response.readyState === XMLHttpRequest.DONE) {
 					let text = response.responseText;
@@ -772,6 +797,7 @@
 
 		}
 
+
 		/**
 		 * Sets up the container with the document details.
 		 * @param doc the document to show.
@@ -796,6 +822,9 @@
 	}
 
 
+	/**
+	 * This class handles the Version Log 
+	 */
 	function ShowVersionHistory(container) {
 
 		const self = this;
@@ -814,7 +843,8 @@
 		 */
 		this.getVersionHistory = function() {
 			let self = this;
-			//make a request to the server to get the version history datas.
+			
+			//Make a request to the server to get the version history datas.
 			makeCall("GET", "GetVersionHistory", null, function(response) {
 				if (response.readyState === XMLHttpRequest.DONE) {
 					let text = response.responseText;
@@ -844,6 +874,10 @@
 			});
 		}
 
+
+		/**
+		 * This method handles the printing of the VersionHistoryData
+		 */
 		this.setVersionHistoryData = function() {
 
 			pageManager.hideContent();
@@ -862,6 +896,7 @@
 
 			self.versionHistoryData.forEach(function(element) {
 
+				//It creates the revert button that allows reverting a specific operation
 				let backVersionButton = document.createElement('button');
 				backVersionButton.className = "backVersionButton";
 				backVersionButton.textContent = "Revert";
@@ -870,10 +905,10 @@
 				backVersionButton.addEventListener("click", function() {
 					if (confirm("Are you sure to revert this operation?")) {
 
-
 						let formData = new FormData();
 						formData.append("operationNumber", backVersionButton.getAttribute("operationNumber"));
-						//make a request to the server to get the document details.
+						
+						//Make a request to the server to get the document details.
 						makeCall("POST", "SetRevertAction", formData, function(response) {
 							checkResponse(response);
 						});
@@ -954,7 +989,10 @@
 		}
 	}
 
-
+	
+	/**
+	 * This function checks the different responses that could come from the server side. If is okey it calls pageManager.refresh()
+	 */
 	function checkResponse(response) {
 		if (response.readyState === XMLHttpRequest.DONE) {
 			let text = response.responseText;

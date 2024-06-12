@@ -1,9 +1,10 @@
 function passwordMatch() {
+	
 	let pswd1 = document.getElementById("pswd1").value;
 	let pswd2 = document.getElementById("pswd2").value;
 
 	if (pswd1 != null && pswd2 != null && pswd1 !== "" && pswd2 !== "")
-		return pswd1.match(pswd2);
+		return pswd1 === pswd2;
 
 	return false;
 }
@@ -15,17 +16,18 @@ function passwordMatch() {
 		let form = e.target;
 
 		if (form.checkValidity()) {
+			
 			if (!passwordMatch()) {
-				document.getElementById("errorMessage").textContent = "Le password non corrispondono (o sono mancanti)!";
+				document.getElementById("errorMessage").textContent = "The passwords do not match (or are missing)!";
 				document.getElementById("errorMessage").hidden = false;
 				return false;
 			}
 
-			/*if (checkEmail(document.getElementById("email").value)) { 
-				document.getElementById("errorMsg").textContent.style.visibility = "visible";
-				document.getElementById("errorMsg").textContent = "Email is not valid";
+			if (!checkEmail(document.getElementById("email").value)) { 
+				document.getElementById("errorMessage").textContent = "Email is not valid!";
+				document.getElementById("errorMessage").hidden = false;
 				return false;
-			}*/
+			}
 
 			let formData = new FormData();
 			formData.append("username", document.getElementById("username").value);
