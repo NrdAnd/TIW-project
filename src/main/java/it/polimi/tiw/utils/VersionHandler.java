@@ -406,8 +406,8 @@ public class VersionHandler {
 			Folder folder = current.getFolder();
 
 			try {
-				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(),
-						folder.getDepth(), current.getFolder().getFolderID());
+				folderDao.createFolder(userID, folder.getFolderName(), folder.getParentFolderID(), folder.getDepth(),
+						current.getFolder().getFolderID());
 			} catch (SQLException e) {
 
 				e.printStackTrace();
@@ -526,26 +526,26 @@ public class VersionHandler {
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 
 		ArrayList<String> privateVersionQueueCopy = new ArrayList<String>();
-		privateVersionQueueCopy.addAll(privateVersionQueue);	
+		privateVersionQueueCopy.addAll(privateVersionQueue);
 
 		TreeNode currentDeleteFolder = datasMap.get(dataID);
 		int storeID = -1;
-		
+
 		Stack<TreeNode> stack = new Stack<>();
 		stack.push(currentDeleteFolder);
 		while (!stack.isEmpty()) {
 
 			TreeNode currentNode = stack.pop();
-			
+
 			for (Integer key : datasMap.keySet()) {
-	            if (datasMap.get(key).getFolder() != null && !key.equals(currentNode.getFolder().getFolderID())) {
-	            	TreeNode value = datasMap.get(key);
-	            	if (value.getFolder().getParentFolderID() == currentDeleteFolder.getFolder().getFolderID()) {
-	            		storeID = key;
-	            		datasMap.remove(key);
-	            	}
-	            }
-	        }
+				if (datasMap.get(key).getFolder() != null && !key.equals(currentNode.getFolder().getFolderID())) {
+					TreeNode value = datasMap.get(key);
+					if (value.getFolder().getParentFolderID() == currentNode.getFolder().getFolderID()) {
+						storeID = key;
+						datasMap.remove(key);
+					}
+				}
+			}
 
 			for (String s : privateVersionQueue) {
 
@@ -619,7 +619,8 @@ public class VersionHandler {
 
 					int folderID = Integer.parseInt(stringVector[1]);
 
-					if ((folderID != dataID && folderID == currentNode.getFolder().getFolderID()) || folderID == storeID) {
+					if ((folderID != dataID && folderID == currentNode.getFolder().getFolderID())
+							|| folderID == storeID) {
 
 						int cont = -1;
 						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
@@ -650,6 +651,30 @@ public class VersionHandler {
 					int documentID = Integer.parseInt(stringVector[1]);
 					int initialFolderID = Integer.parseInt(stringVector[2]);
 					int postFolderID = Integer.parseInt(stringVector[3]);
+
+					if (currentNode.getFolder() == null
+							&& currentNode.getDocumentList().get(0).getDocumentID() == documentID) {
+
+						int cont = -1;
+						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+							if (privateVersionQueueCopy.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						privateVersionQueueCopy.remove(cont);
+
+						for (int j = 0; j < versionQueue.size(); j++) {
+							if (versionQueue.get(j).equals(s)) {
+								cont = j;
+								break;
+							}
+						}
+
+						versionQueue.remove(cont);
+						break;
+					}
 
 					if (initialFolderID == currentNode.getFolder().getFolderID()
 							|| postFolderID == currentNode.getFolder().getFolderID()) {
@@ -721,8 +746,117 @@ public class VersionHandler {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		session.setAttribute("privateVersionQueue", privateVersionQueueCopy);
 		session.setAttribute("versionQueue", versionQueue);
 	}
+
+	
+	
+	public static void checkName(int userID, HttpServletResponse resp, String newName, String parentFolderName, HttpSession session) {
+
+		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
+				+ userID + ".json";
+		HashMap<Integer, TreeNode> datasMap = extractDeletionDatas(userID, resp, -1);
+		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
+
+		for (Integer key : datasMap.keySet()) {
+
+			TreeNode value = datasMap.get(key);
+
+			if (value.getFolder() != null && value.getFolder().getFolderName().equals(newName)) {
+				datasMap.remove(key);
+			} else {
+				if (value.getDocumentList().get(0).getDocumentName().equals(newName)) {
+					datasMap.remove(key);
+				}
+			}
+		}
+
+		
+		for (int i = 0; i < versionQueue.size(); i++) {
+			
+
+			String[] stringVector = versionQueue.get(i).split(": ");
+
+			switch (stringVector[0]) {
+
+			case "CREATED DOCUMENT": {
+				
+				String documentName = stringVector[1].split(" INSIDE FOLDER: ")[0];
+				if (documentName.equals(newName)) {
+					versionQueue.remove(i);
+					privateVersionQueue.remove(i);
+				}
+				
+				break;
+			}
+
+			case "CREATE FOLDER": {
+
+				String folderName = stringVector[1].split(" INSIDE: ")[0];
+				String parFoldName = stringVector[1].split(" INSIDE: ")[1];
+				if (folderName.equals(newName) && parFoldName.equals(parentFolderName) ) {
+					versionQueue.remove(i);
+					privateVersionQueue.remove(i);
+				}
+				
+				break;
+
+			}
+
+			case "DELETED FOLDER": {
+
+				String folderName = stringVector[1].split(" FROM ")[0];
+				String parFoldName = stringVector[1].split(" FROM ")[1];
+				if (folderName.equals(newName) && parFoldName.equals(parentFolderName) ) {
+					versionQueue.remove(i);
+					privateVersionQueue.remove(i);
+				}
+
+				break;
+			}
+
+			case "DELETED DOCUMENT": {
+
+				String documentName = stringVector[1];
+				if (documentName.equals(newName)) {
+					versionQueue.remove(i);
+					privateVersionQueue.remove(i);
+				}
+				
+				//System.out.println("DD");
+
+				break;
+			}
+
+			case "MOVED": {
+
+				String documentName = stringVector[1].split(" FROM: ")[0];
+				if (documentName.equals(newName)) {
+					versionQueue.remove(i);
+					privateVersionQueue.remove(i);
+				}
+				
+				break;
+			}
+			
+			}
+
+		}
+		
+		try (FileWriter writer = new FileWriter(filePath)) {
+			gson.toJson(datasMap, writer);
+		} catch (IOException e) {
+			closeConnection();
+			e.printStackTrace();
+			return;
+		}
+
+		session.setAttribute("privateVersionQueue", privateVersionQueue);
+		session.setAttribute("versionQueue", versionQueue);
+
+	}
+
 }

@@ -102,6 +102,7 @@ public class DeleteDocument extends HttpServlet {
 			return;
 		}
 		
+		VersionHandler.changeVersionHistory(utente.getUserID(), resp, documentID, session);
 		
 		String operationString;
 		operationString = "DELETED DOCUMENT: " + documentName;

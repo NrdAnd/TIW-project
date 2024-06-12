@@ -23,6 +23,7 @@ import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
+import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/CreateDocument") // Filtered
 public class CreateDocument extends HttpServlet {
@@ -167,6 +168,8 @@ public class CreateDocument extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Parent Folder ID dal DB");
 			return;
 		}
+		
+		VersionHandler.checkName(utente.getUserID(), resp, newDocumentName, null, session);
 		
 		String operationString = "CREATED DOCUMENT: " + newDocumentName + " INSIDE FOLDER: "+ parentFolderName +"/"+folderName;
 

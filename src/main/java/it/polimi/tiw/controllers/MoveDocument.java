@@ -177,7 +177,7 @@ public class MoveDocument extends HttpServlet {
 		}
 
 		
-		String operationString = "MOVED " + documentName + " FROM: " + initialParentFolderName+ "/" + initialFolderName  + " INTO " +postParentFolderName + 
+		String operationString = "MOVED: " + documentName + " FROM: " + initialParentFolderName+ "/" + initialFolderName  + " INTO " +postParentFolderName + 
 				"/" + postFolderName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");

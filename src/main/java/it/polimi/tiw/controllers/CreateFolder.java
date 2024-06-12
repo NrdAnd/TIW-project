@@ -23,6 +23,7 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
+import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/CreateFolder") // Filtered
 public class CreateFolder extends HttpServlet {
@@ -156,6 +157,18 @@ public class CreateFolder extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
 			return;
 		}
+		
+		
+		String parentFolderName;
+		try {
+			parentFolderName = folderDao.getFolderName(utente.getUserID(), parentFolderDepth);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
+			return;
+		}
+		
+		VersionHandler.checkName(utente.getUserID(), resp, newFolderName, parentFolderName, session);
 
 		String operationString = "CREATED FOLDER: " + newFolderName + " INSIDE: " + folderName;
 
