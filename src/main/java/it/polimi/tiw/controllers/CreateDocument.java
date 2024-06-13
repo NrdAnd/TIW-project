@@ -195,7 +195,7 @@ public class CreateDocument extends HttpServlet {
 			return;
 		}
 		
-		String privateOperationString = "CD_" + documentID;
+		String privateOperationString = "CD_" + documentID + "_OD_" + destinationID;
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		if (privateVersionQueue.size() < 10) {
 			privateVersionQueue.add(privateOperationString);

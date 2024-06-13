@@ -314,6 +314,34 @@ public class DocumentDAO {
         }
         return true;
     }
+    
+    
+    
+    /**
+     * This method return the folder id in which the document is contained
+     * @param userID is the user
+     * @param documentID is the specific document id
+     * @return the folder id
+     * @throws SQLException if there's an excepetion
+     */
+    
+    public int getFolderID (int userID, Integer documentID) throws SQLException {
+    	
+    	String query = "SELECT folder_id FROM Document WHERE owner_id = ? AND document_id = ?";
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setInt(1, userID);
+        statement.setInt(2, documentID);
+        
+        ResultSet result = statement.executeQuery();
+        
+        if (!result.isBeforeFirst())
+			return -1;
+        
+        result.next();
+		
+		return result.getInt("folder_id");	
+        
+    }
 }
 
 

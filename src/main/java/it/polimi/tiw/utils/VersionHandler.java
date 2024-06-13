@@ -557,6 +557,35 @@ public class VersionHandler {
 				case "DD": {
 
 					int documentID = Integer.parseInt(stringVector[1]);
+					int parentFolderID = Integer.parseInt(stringVector[3]);
+					boolean flag = false;
+
+					for (Integer key : datasMap.keySet()) {
+						TreeNode value = datasMap.get(key);
+						if (value.getFolder() == null && currentNode.getFolder() != null && value.getDocumentList()
+								.get(0).getFolderID() == currentNode.getFolder().getFolderID()) {
+
+							datasMap.remove(key);
+							
+							int cont = -1;
+							for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
+								if (privateVersionQueueCopy.get(j).equals(s)) {
+									cont = j;
+									break;
+								}
+							}
+
+							privateVersionQueueCopy.remove(cont);
+
+							for (int j = 0; j < versionQueue.size(); j++) {
+								if (versionQueue.get(j).equals(s)) {
+									cont = j;
+									break;
+								}
+							}
+							versionQueue.remove(cont);
+						}
+					}
 
 					for (Document doc : currentNode.getDocumentList()) {
 						if (doc.getDocumentID() == documentID) {
@@ -590,7 +619,7 @@ public class VersionHandler {
 
 					int folderID = Integer.parseInt(stringVector[1]);
 
-					if (folderID == currentNode.getFolder().getFolderID()) {
+					if (currentNode.getFolder() != null && folderID == currentNode.getFolder().getFolderID()) {
 
 						int cont = -1;
 						for (int j = 0; j < privateVersionQueueCopy.size(); j++) {
@@ -619,7 +648,8 @@ public class VersionHandler {
 
 					int folderID = Integer.parseInt(stringVector[1]);
 
-					if ((folderID != dataID && folderID == currentNode.getFolder().getFolderID())
+					if ((currentNode.getFolder() != null
+							&& (folderID != dataID && folderID == currentNode.getFolder().getFolderID()))
 							|| folderID == storeID) {
 
 						int cont = -1;
@@ -751,9 +781,8 @@ public class VersionHandler {
 		session.setAttribute("versionQueue", versionQueue);
 	}
 
-	
-	
-	public static void checkName(int userID, HttpServletResponse resp, String newName, String parentFolderName, HttpSession session) {
+	public static void checkName(int userID, HttpServletResponse resp, String newName, String parentFolderName,
+			HttpSession session) {
 
 		final String filePath = "REDACTED_HOME/git/TIW_Project_2024_RIA/src/main/java/it/polimi/tiw/utils/SaveDatas_ID_"
 				+ userID + ".json";
@@ -761,35 +790,36 @@ public class VersionHandler {
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 
-		for (Integer key : datasMap.keySet()) {
+		if (datasMap != null) {
 
-			TreeNode value = datasMap.get(key);
+			for (Integer key : datasMap.keySet()) {
 
-			if (value.getFolder() != null && value.getFolder().getFolderName().equals(newName)) {
-				datasMap.remove(key);
-			} else {
-				if (value.getDocumentList().get(0).getDocumentName().equals(newName)) {
+				TreeNode value = datasMap.get(key);
+
+				if (value.getFolder() != null && value.getFolder().getFolderName().equals(newName)) {
 					datasMap.remove(key);
+				} else {
+					if (value.getDocumentList().get(0).getDocumentName().equals(newName)) {
+						datasMap.remove(key);
+					}
 				}
 			}
 		}
 
-		
 		for (int i = 0; i < versionQueue.size(); i++) {
-			
 
 			String[] stringVector = versionQueue.get(i).split(": ");
 
 			switch (stringVector[0]) {
 
 			case "CREATED DOCUMENT": {
-				
+
 				String documentName = stringVector[1].split(" INSIDE FOLDER: ")[0];
 				if (documentName.equals(newName)) {
 					versionQueue.remove(i);
 					privateVersionQueue.remove(i);
 				}
-				
+
 				break;
 			}
 
@@ -797,11 +827,11 @@ public class VersionHandler {
 
 				String folderName = stringVector[1].split(" INSIDE: ")[0];
 				String parFoldName = stringVector[1].split(" INSIDE: ")[1];
-				if (folderName.equals(newName) && parFoldName.equals(parentFolderName) ) {
+				if (folderName.equals(newName) && parFoldName.equals(parentFolderName)) {
 					versionQueue.remove(i);
 					privateVersionQueue.remove(i);
 				}
-				
+
 				break;
 
 			}
@@ -810,7 +840,7 @@ public class VersionHandler {
 
 				String folderName = stringVector[1].split(" FROM ")[0];
 				String parFoldName = stringVector[1].split(" FROM ")[1];
-				if (folderName.equals(newName) && parFoldName.equals(parentFolderName) ) {
+				if (folderName.equals(newName) && parFoldName.equals(parentFolderName)) {
 					versionQueue.remove(i);
 					privateVersionQueue.remove(i);
 				}
@@ -825,8 +855,8 @@ public class VersionHandler {
 					versionQueue.remove(i);
 					privateVersionQueue.remove(i);
 				}
-				
-				//System.out.println("DD");
+
+				// System.out.println("DD");
 
 				break;
 			}
@@ -838,14 +868,14 @@ public class VersionHandler {
 					versionQueue.remove(i);
 					privateVersionQueue.remove(i);
 				}
-				
+
 				break;
 			}
-			
+
 			}
 
 		}
-		
+
 		try (FileWriter writer = new FileWriter(filePath)) {
 			gson.toJson(datasMap, writer);
 		} catch (IOException e) {

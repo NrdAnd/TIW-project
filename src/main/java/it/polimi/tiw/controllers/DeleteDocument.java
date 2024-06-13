@@ -90,6 +90,15 @@ public class DeleteDocument extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile estrarre il nome del documento");
 			return;
 		}
+		
+		Integer folderID;
+		try {
+			folderID = documentDao.getFolderID(utente.getUserID(), documentID);
+		} catch (SQLException e) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Errore SQL: impossibile estrarre l'owner id del documento");
+			return;
+		}
 
 		VersionHandler.saveDeletionDatas(utente.getUserID(), resp, documentID, 0);
 		
@@ -116,7 +125,7 @@ public class DeleteDocument extends HttpServlet {
 		}
 		
 		
-		String privateOperationString = "DD_" + documentID;
+		String privateOperationString = "DD_" + documentID + "_OD_" + folderID;
 		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
 		if (privateVersionQueue.size() < 10) {
 			privateVersionQueue.add(privateOperationString);
