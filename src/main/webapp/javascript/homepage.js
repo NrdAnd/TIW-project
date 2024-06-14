@@ -598,8 +598,8 @@
 
 								alert("You cannot move a document to the same folder it came from!");
 								self.resetDroppable();
-								versionHistoryHandler.clear();
-								pageManager.refresh();
+								//versionHistoryHandler.clear();
+								//pageManager.refresh();
 
 							}
 							
@@ -607,8 +607,8 @@
 
 							alert("You can only move folders to the trash!");
 							self.resetDroppable();
-							versionHistoryHandler.clear();
-							pageManager.refresh();
+							//versionHistoryHandler.clear();
+							//pageManager.refresh();
 
 						}
 					}
