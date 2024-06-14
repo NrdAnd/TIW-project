@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,7 +21,6 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
-import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/DeleteFolder")
 public class DeleteFolder extends HttpServlet {
@@ -86,10 +84,7 @@ public class DeleteFolder extends HttpServlet {
 			resp.getWriter().println("Errore SQL: impossibile estrarre il nome della cartella");
 			return;
 		}
-				
-		
-		VersionHandler.saveDeletionDatas(utente.getUserID(), resp, folderID, 1);
-		
+			
 		
 		String parentFolderName;
 		try {
@@ -120,21 +115,7 @@ public class DeleteFolder extends HttpServlet {
 			versionQueue.add(operationString);
 		}
 		
-		
-		String privateOperationString = "DF_" + folderID;
-		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
-		if (privateVersionQueue.size() < 10) {
-			privateVersionQueue.add(privateOperationString);
-		} else {
-			privateVersionQueue.remove(0);
-			privateVersionQueue.add(privateOperationString);
-		}
-		
-		session.setAttribute("privateVersionQueue", privateVersionQueue);
 		session.setAttribute("versionQueue", versionQueue);
-		
-		
-		VersionHandler.changeVersionHistory(utente.getUserID(), resp, folderID, session);
 		
 	}
 	

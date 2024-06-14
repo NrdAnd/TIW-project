@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,13 +16,11 @@ import javax.servlet.http.HttpSession;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.tomcat.util.http.fileupload.FileItem;
 
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
-import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/DeleteDocument")
 public class DeleteDocument extends HttpServlet {
@@ -91,16 +88,6 @@ public class DeleteDocument extends HttpServlet {
 			return;
 		}
 		
-		Integer folderID;
-		try {
-			folderID = documentDao.getFolderID(utente.getUserID(), documentID);
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre l'owner id del documento");
-			return;
-		}
-
-		VersionHandler.saveDeletionDatas(utente.getUserID(), resp, documentID, 0);
 		
 		try {
 			documentDao.deleteDocument(utente.getUserID(), documentID);
@@ -111,10 +98,8 @@ public class DeleteDocument extends HttpServlet {
 			return;
 		}
 		
-		VersionHandler.changeVersionHistory(utente.getUserID(), resp, documentID, session);
 		
-		String operationString;
-		operationString = "DELETED DOCUMENT: " + documentName;
+		String operationString = "DELETED DOCUMENT: " + documentName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
@@ -124,17 +109,6 @@ public class DeleteDocument extends HttpServlet {
 			versionQueue.add(operationString);
 		}
 		
-		
-		String privateOperationString = "DD_" + documentID + "_OD_" + folderID;
-		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
-		if (privateVersionQueue.size() < 10) {
-			privateVersionQueue.add(privateOperationString);
-		} else {
-			privateVersionQueue.remove(0);
-			privateVersionQueue.add(privateOperationString);
-		}
-		
-		session.setAttribute("privateVersionQueue", privateVersionQueue);
 		session.setAttribute("versionQueue", versionQueue);
 		
 	}

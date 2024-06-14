@@ -547,7 +547,7 @@
 			}
 
 			self.resetDroppable();
-			pageManager.refresh();
+			//pageManager.refresh();
 		};
 
 
@@ -733,7 +733,7 @@
 			destinationID = folderID;
 			pageManager.hideContent();
 			versionHistoryHandler.clear();
-			container.style.visibility = "visible";
+			container.style.visibility = "visible";		
 			title.textContent = "Create document inside folder: " + folderName;
 			container.append(form);
 			
@@ -746,9 +746,9 @@
 	 * @param options a list of container elements.
 	 */
 	function ShowDocument(options) {
+		
 		const documentDetails = document.getElementById("documentDetails");
 		documentDetails.parentNode.removeChild(documentDetails);
-
 
 		/**
 		 * Hides the document details.
@@ -884,36 +884,23 @@
 			const rightContainer = document.getElementById("rightContainer");
 			rightContainer.style.visibility = "visible";
 
+			let titleSpaceDiv = document.createElement("div");
+				titleSpaceDiv.style.marginTop = "20px";
+				rightContainer.append(titleSpaceDiv);
+				
 			let title = document.createElement("h2");
 			title.textContent = "History Log";
 			title.style.visibility = "visible";
 
 			rightContainer.append(title);
-
+		
+			let spaceDiv = document.createElement("div");
+				spaceDiv.style.marginTop = "20px";
+				rightContainer.append(spaceDiv);
+			
 			let datasUl = document.createElement('ul');
-
-			let operationNumber = 0;
-
+			
 			self.versionHistoryData.forEach(function(element) {
-
-				//It creates the revert button that allows reverting a specific operation
-				let backVersionButton = document.createElement('button');
-				backVersionButton.className = "backVersionButton";
-				backVersionButton.textContent = "Revert";
-				backVersionButton.setAttribute("operationNumber", operationNumber);
-
-				backVersionButton.addEventListener("click", function() {
-					if (confirm("Are you sure to revert this operation?")) {
-
-						let formData = new FormData();
-						formData.append("operationNumber", backVersionButton.getAttribute("operationNumber"));
-						
-						//Make a request to the server to get the document details.
-						makeCall("POST", "SetRevertAction", formData, function(response) {
-							checkResponse(response);
-						});
-					}
-				});
 
 				let elementDiv = document.createElement("div");
 				let elementLI = document.createElement("li");
@@ -923,20 +910,10 @@
 				elementDiv.textContent = element;
 				elementDiv.style.visibility = "visible";
 				divContainer.append(elementDiv);
-				divContainer.append(backVersionButton);
-
-				divContainer.addEventListener("mouseenter", function() {
-					backVersionButton.style.visibility = "visible";
-				});
-
-				divContainer.addEventListener("mouseleave", function() {
-					backVersionButton.style.visibility = "hidden";
-				});
 
 				elementLI.append(divContainer);
 				datasUl.append(elementLI);
 
-				operationNumber = operationNumber + 1;
 			});
 
 			rightContainer.append(datasUl);

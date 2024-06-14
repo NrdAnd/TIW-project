@@ -23,7 +23,6 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
-import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/CreateFolder") // Filtered
 public class CreateFolder extends HttpServlet {
@@ -159,17 +158,6 @@ public class CreateFolder extends HttpServlet {
 		}
 		
 		
-		String parentFolderName;
-		try {
-			parentFolderName = folderDao.getFolderName(utente.getUserID(), parentFolderDepth);
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
-			return;
-		}
-		
-		VersionHandler.checkName(utente.getUserID(), resp, newFolderName, parentFolderName, session);
-
 		String operationString = "CREATED FOLDER: " + newFolderName + " INSIDE: " + folderName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
@@ -180,31 +168,8 @@ public class CreateFolder extends HttpServlet {
 			versionQueue.add(operationString);
 		}
 
-		int folderID;
-		try {
-			folderID = folderDao.getLastFolderID(utente.getUserID());
-			if (folderID == -1) {
-				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder ID non valido");
-				return;
-			}
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il Max Folder ID dal DB");
-			return;
-		}
-
-		String privateOperationString = "CF_" + folderID;
-		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
-		if (privateVersionQueue.size() < 10) {
-			privateVersionQueue.add(privateOperationString);
-		} else {
-			privateVersionQueue.remove(0);
-			privateVersionQueue.add(privateOperationString);
-		}
-
-		session.setAttribute("privateVersionQueue", privateVersionQueue);
 		session.setAttribute("versionQueue", versionQueue);
+		
 	}
 
 	@Override

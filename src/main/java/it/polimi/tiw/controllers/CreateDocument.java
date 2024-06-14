@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,7 +22,6 @@ import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.DocumentDAO;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
-import it.polimi.tiw.utils.VersionHandler;
 
 @WebServlet("/CreateDocument") // Filtered
 public class CreateDocument extends HttpServlet {
@@ -169,7 +167,6 @@ public class CreateDocument extends HttpServlet {
 			return;
 		}
 		
-		VersionHandler.checkName(utente.getUserID(), resp, newDocumentName, null, session);
 		
 		String operationString = "CREATED DOCUMENT: " + newDocumentName + " INSIDE FOLDER: "+ parentFolderName +"/"+folderName;
 
@@ -180,31 +177,7 @@ public class CreateDocument extends HttpServlet {
 			versionQueue.remove(0);
 			versionQueue.add(operationString);
 		}
-		
-		int documentID;
-		try {
-			documentID = documentDao.getLastDocumentID(utente.getUserID());
-			if (documentID == -1) {
-				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Document ID non valido");
-				return;
-			}
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il Max Document ID dal DB");
-			return;
-		}
-		
-		String privateOperationString = "CD_" + documentID + "_OD_" + destinationID;
-		ArrayList<String> privateVersionQueue = (ArrayList<String>) session.getAttribute("privateVersionQueue");
-		if (privateVersionQueue.size() < 10) {
-			privateVersionQueue.add(privateOperationString);
-		} else {
-			privateVersionQueue.remove(0);
-			privateVersionQueue.add(privateOperationString);
-		}
-		
-		session.setAttribute("privateVersionQueue", privateVersionQueue);
+				
 		session.setAttribute("versionQueue", versionQueue);
 		
 	}
