@@ -18,7 +18,7 @@ function passwordMatch() {
 		if (form.checkValidity()) {
 			
 			if (!passwordMatch()) {
-				document.getElementById("errorMessage").textContent = "The passwords doesn't match (or are missing)!";
+				document.getElementById("errorMessage").textContent = "The passwords do not match (or are missing)!";
 				document.getElementById("errorMessage").hidden = false;
 				return false;
 			}
