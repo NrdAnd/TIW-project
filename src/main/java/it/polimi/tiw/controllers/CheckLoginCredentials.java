@@ -41,7 +41,7 @@ public class CheckLoginCredentials extends HttpServlet {
 
 		if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Credenziali vuote o mancanti");
+			resp.getWriter().println("Missing credentials");
 			return;
 		}
 
@@ -53,13 +53,13 @@ public class CheckLoginCredentials extends HttpServlet {
 			utente = utenteDAO.checkLogin(username, password);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Impossibile validare le credenziali");
+			resp.getWriter().println("Impossible to validate credentials");
 			return;
 		}
 
 		if (utente == null) {
 			resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			resp.getWriter().println("Username o password errati");
+			resp.getWriter().println("Username or Password are invalid");
 			return;
 		} else {
 			req.getSession().setMaxInactiveInterval(300);

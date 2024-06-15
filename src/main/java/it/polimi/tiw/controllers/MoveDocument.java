@@ -69,7 +69,7 @@ public class MoveDocument extends HttpServlet {
 
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder ID o Document ID non valido");
+				resp.getWriter().println("Error: Folder ID or Document ID invalid");
 				return;
 			}
 
@@ -93,13 +93,13 @@ public class MoveDocument extends HttpServlet {
 			initialFolderName = folderDao.getFolderName(utente.getUserID(), initialFolderID);
 			if (initialFolderName == null) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Initial Folder Name non valido");
+				resp.getWriter().println("Errore: Initial Folder Name is invalid");
 				return;
 			}
 
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella nel DB");
+			resp.getWriter().println("SQL Error: Impossible to fetch Folder name");
 			return;
 		}
 		
@@ -111,7 +111,7 @@ public class MoveDocument extends HttpServlet {
 					
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella padre iniziale nel DB");
+			resp.getWriter().println("SQL Error: Impossible to fetch Parent Folder name");
 			return;
 		}
 
@@ -121,7 +121,7 @@ public class MoveDocument extends HttpServlet {
 			documentDAO.updateDocumentPosition(documentID, destinationFolderID, utente.getUserID());
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile eseguire la update della posizione del documento nel DB");
+			resp.getWriter().println("SQL Error: Impossible to update document position");
 			return;
 		}
 		
@@ -134,20 +134,20 @@ public class MoveDocument extends HttpServlet {
 			postFolderID = documentDAO.getOriginFolder(utente.getUserID(), documentID);
 			if (postFolderID == -1) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder ID non valido");
+				resp.getWriter().println("Error: Folder ID is invalid");
 				return;
 			}
 
 			postFolderName = folderDao.getFolderName(utente.getUserID(), postFolderID);
 			if (postFolderName == null) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Post Folder Name non valido");
+				resp.getWriter().println("Error: Post Folder Name is invalid");
 				return;
 			}
 
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella nel DB");
+			resp.getWriter().println("SQL Error: impossible to fetch the Folder name");
 			return;
 		}
 		
@@ -160,7 +160,7 @@ public class MoveDocument extends HttpServlet {
 			
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella padre finale nel DB");
+			resp.getWriter().println("SQL Error: Impossible to fetch Parent Folder name");
 			return;
 		}
 		
@@ -169,7 +169,7 @@ public class MoveDocument extends HttpServlet {
 			documentName = documentDAO.getDocumentNameByDocumentID(utente.getUserID(), documentID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile eseguire l'estrazione del nome della cartella padre finale nel DB");
+			resp.getWriter().println("SQL Error: Impossible to fetch Parent Folder name");
 			return;
 		}
 

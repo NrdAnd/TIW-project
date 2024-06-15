@@ -43,7 +43,7 @@ public class GetDocument extends HttpServlet {
         try {
              documentID = Integer.parseInt(req.getParameter("documentID"));
         } catch (NumberFormatException | NullPointerException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "DocumentID mancante o vuoto");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Document ID missing or empty");
             return;
         }
         
@@ -55,7 +55,7 @@ public class GetDocument extends HttpServlet {
         	document = documentDao.findDocumentByID(utente.getUserID(), documentID);
         } catch (SQLException | NullPointerException e) {
         	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("Errore SQL: impossibile estrarre le informazioni del documento");
+            resp.getWriter().println("SQL Error: impossible to fetch document informations");
             return;
         }
         

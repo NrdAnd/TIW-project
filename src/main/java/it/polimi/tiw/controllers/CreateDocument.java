@@ -67,7 +67,7 @@ public class CreateDocument extends HttpServlet {
 				destinationID = Integer.parseInt(items.get(3).getString());
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: DestinationID non valido");
+				resp.getWriter().println("Error: Destination ID is invalid");
 				return;
 			}
 
@@ -75,7 +75,7 @@ public class CreateDocument extends HttpServlet {
 				newDocumentName = items.get(0).getString();
 			} catch (IllegalArgumentException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: New Document Name non valido");
+				resp.getWriter().println("Error: New Document Name is invalid");
 				return;
 			}
 
@@ -83,7 +83,7 @@ public class CreateDocument extends HttpServlet {
 				summary = items.get(2).getString();
 			} catch (IllegalArgumentException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Summary non valido");
+				resp.getWriter().println("Error: Invalid Summary");
 				return;
 			}
 
@@ -91,13 +91,13 @@ public class CreateDocument extends HttpServlet {
 				documentType = items.get(1).getString();
 			} catch (IllegalArgumentException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Document Type non valido");
+				resp.getWriter().println("Error: Invalid Document Type");
 				return;
 			}
 			
 			if(newDocumentName.isBlank() || summary.isBlank() || documentType.isBlank() || newDocumentName.length()>25 || summary.length()>250 || documentType.length()>5) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Parametri non validi");
+				resp.getWriter().println("Error: Invalid parameters");
 				return;
 			}
 
@@ -110,12 +110,12 @@ public class CreateDocument extends HttpServlet {
 		try {
 			if(!documentDao.checkUniqueName(utente.getUserID(), newDocumentName)){
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				resp.getWriter().println("Possiedi un documento con questo nome");
+				resp.getWriter().println("Error: You already own a document with this name");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: Query non andata a buon fine");
+			resp.getWriter().println("SQL Error: Something went wrong with the query");
 			return;
 		}
 		
@@ -126,12 +126,12 @@ public class CreateDocument extends HttpServlet {
 
 			if (code != 1) {
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio del documento nel DB");
+				resp.getWriter().println("SQL Error: Impossible to save document in the DB");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile effettuare il salvataggio del documento nel DB");
+			resp.getWriter().println("SQL Error: Impossible to save document in the DB");
 			return;
 		}
 		
@@ -143,12 +143,12 @@ public class CreateDocument extends HttpServlet {
 			folderName = folderDao.getFolderName(utente.getUserID(), destinationID);
 			if (folderName == null) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder Name non valido");
+				resp.getWriter().println("Error: Folder Name is invalid");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
+			resp.getWriter().println("SQL Error: Impossible to fetch Folder Name");
 			return;
 		}
 		
@@ -157,13 +157,13 @@ public class CreateDocument extends HttpServlet {
 			parentFolderName = folderDao.getParentFolderName(utente.getUserID(), destinationID);
 			if (parentFolderName == null) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Parent Folder Name non valido");
+				resp.getWriter().println("Error: Invalid Parent Folder name");
 				return;
 			}
 			
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Parent Folder ID dal DB");
+			resp.getWriter().println("SQL Error: Impossible to fetch Parent Folder name");
 			return;
 		}
 		

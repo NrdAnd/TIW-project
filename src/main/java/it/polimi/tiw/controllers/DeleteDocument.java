@@ -65,7 +65,7 @@ public class DeleteDocument extends HttpServlet {
 				documentID = Integer.parseInt(items.get(0).getString());
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Document ID non valido");
+				resp.getWriter().println("Errore: Invalid Document ID");
 				return;
 			}
 		}
@@ -79,12 +79,12 @@ public class DeleteDocument extends HttpServlet {
 			documentName = documentDao.getDocumentNameByDocumentID(utente.getUserID(), documentID);
 			if (documentName == null) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Document Name non valido");
+				resp.getWriter().println("Error: Document Name is invalid");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il nome del documento");
+			resp.getWriter().println("SQL Error: impossible to fetch Document name");
 			return;
 		}
 		
@@ -94,7 +94,7 @@ public class DeleteDocument extends HttpServlet {
 			resp.setStatus(HttpServletResponse.SC_OK);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione del documento nel DB");
+			resp.getWriter().println("SQL Error: Impossible to delete the document");
 			return;
 		}
 		

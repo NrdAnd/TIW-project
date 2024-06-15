@@ -71,7 +71,7 @@ public class CreateFolder extends HttpServlet {
 
 			} catch (IllegalStateException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: New Folder Name non valido");
+				resp.getWriter().println("Error: New Folder Name is invalid");
 				return;
 			}
 
@@ -82,20 +82,20 @@ public class CreateFolder extends HttpServlet {
 
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Destination ID non valido");
+				resp.getWriter().println("Error: Destination ID is invalid");
 				return;
 			}
 		} 
 		
 		else {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("FormData null o non accettabile");
+			resp.getWriter().println("FormData is unacceptable");
 			return;
 		}
 
 		if (destinationID == 0 || newFolderName.isBlank() || newFolderName.length()>25) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Parametri non validi (FolderName)");
+			resp.getWriter().println("Invalid parameters (FolderName)");
 			return;
 		}
 
@@ -107,24 +107,24 @@ public class CreateFolder extends HttpServlet {
 			parentFolderDepth = folderDao.getDepthByID(utente.getUserID(), destinationID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre la profondità della cartella padre");
+			resp.getWriter().println("SQL Error: impossible fetching parent folder depth");
 			return;
 		}
 
 		if (parentFolderDepth < 0) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Errore: Cartella padre non esistente");
+			resp.getWriter().println("Error: Parent folder does not exists");
 			return;
 		}
 		try {
 			if (!folderDao.checkUniqueName(utente.getUserID(), destinationID, newFolderName)) {
 				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				resp.getWriter().println("Nome già presente nella cartella di destinazione");
+				resp.getWriter().println("There is already a folder with the same name in this position");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("SQL error; query non andata a buon fine");
+			resp.getWriter().println("SQL Error: Something went wrong with the query");
 			return;
 		}
 
@@ -135,12 +135,12 @@ public class CreateFolder extends HttpServlet {
 					parentFolderDepth + 1, null);
 			if (code != 1) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: impossibile la creazione della Folder nel DB");
+				resp.getWriter().println("Error: Impossible to create Folder");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile la creazione della Folder nel DB");
+			resp.getWriter().println("SQL Error: Impossible to create Folder");
 		}
 
 		String folderName;
@@ -148,12 +148,12 @@ public class CreateFolder extends HttpServlet {
 			folderName = folderDao.getFolderName(utente.getUserID(), destinationID);
 			if (folderName == null) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder Name non valido");
+				resp.getWriter().println("Error: Folder Name is invalid");
 				return;
 			}
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il Nome della Folder ID dal DB");
+			resp.getWriter().println("SQL Error: impossible to fetch Folder name");
 			return;
 		}
 		

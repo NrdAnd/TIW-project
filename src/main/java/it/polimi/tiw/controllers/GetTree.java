@@ -54,7 +54,7 @@ public class GetTree extends HttpServlet {
             folderTree = folderDao.getFolderTree(utente.getUserID());
         } catch (SQLException e) {
         	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println("SQL error: impossibile ricavare l'albero di cartelle");
+            resp.getWriter().println("SQL error: Impossible to fetch the Folder Tree");
             return;
         }
         
@@ -75,7 +75,7 @@ public class GetTree extends HttpServlet {
                 	
                 } catch (SQLException e) {
                 	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    resp.getWriter().println("SQL error: impossibile ricavare l'albero di cartelle");
+                    resp.getWriter().println("SQL error: Impossible to fetch the Folder Tree");
                     return;
                 }
             }

@@ -47,7 +47,7 @@ public class CheckSignupCredentials extends HttpServlet {
 		if (email == null || password == null || passwordCheck == null || username == null || email.isEmpty()
 				|| password.isEmpty() || username.isEmpty()) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Errore: Credenziali mancanti o nulle");
+			resp.getWriter().println("Error: Missing credentials");
 			return;
 		}
 
@@ -55,7 +55,7 @@ public class CheckSignupCredentials extends HttpServlet {
 		Pattern emailPattern = Pattern.compile("^.+@.+\\..+$");
 		if (!emailPattern.matcher(email).matches()) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Errore: Email non valida");
+			resp.getWriter().println("Error: Invalid Email");
 			return;
 		}
 		UserDAO userDao = new UserDAO(connection);
@@ -63,18 +63,18 @@ public class CheckSignupCredentials extends HttpServlet {
 		try {
 			if (!userDao.emailIsDuplicate(email)) {
 				resp.setStatus(HttpServletResponse.SC_CONFLICT);
-				resp.getWriter().println("Errore: Email already exists");
+				resp.getWriter().println("Error: Email already exists");
 				return;
 			}
 		} catch (SQLException e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error; query non andata a buon fine");
+			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error; Query went wrong");
 			return;
 		}
 
 		// check that the entered passwords match
 		if (!passwordCheck.equals(password)) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Le password inserite non corrispondono!");
+			resp.getWriter().println("Passwords must be equal");
 			return;
 		}
 
@@ -85,7 +85,7 @@ public class CheckSignupCredentials extends HttpServlet {
 			isDuplicate = userDao.checkRegister(username);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("SQL error: impossibile controllare unicità dello username");
+			resp.getWriter().println("SQL error: impossible to check if username is unique");
 			return;
 		}
 
@@ -100,7 +100,7 @@ public class CheckSignupCredentials extends HttpServlet {
 			userDao.registerUser(email, password, username);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("SQL error: impossibile registrare l'utente");
+			resp.getWriter().println("SQL error: Impossible to Signup user");
 			return;
 		}
 
@@ -126,13 +126,13 @@ public class CheckSignupCredentials extends HttpServlet {
 					return;
 				}
 			} catch (SQLException e) {
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: query non andata a buon fine");
+				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error; Query went wrong");
 				return;
 			}
 
 		} catch (SQLException e) {
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-					"Errore SQL: impossibile ricavare l'utente richiesto");
+					"SQL Error: Impossible to fetch requested user");
 			return;
 		}
 

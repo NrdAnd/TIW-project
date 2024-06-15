@@ -67,7 +67,7 @@ public class DeleteFolder extends HttpServlet {
 				folderID = Integer.parseInt(items.get(0).getString());
 			} catch (NumberFormatException | NullPointerException e) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				resp.getWriter().println("Errore: Folder ID non valido");
+				resp.getWriter().println("Error: Invalid Folder ID");
 				return;
 			}
 		}
@@ -81,7 +81,7 @@ public class DeleteFolder extends HttpServlet {
 			folderName = folderDao.getFolderName(utente.getUserID(), folderID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile estrarre il nome della cartella");
+			resp.getWriter().println("SQL Error: impossible to fetch Folder name");
 			return;
 		}
 			
@@ -91,7 +91,7 @@ public class DeleteFolder extends HttpServlet {
 			parentFolderName = folderDao.getParentFolderName(utente.getUserID(), folderID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile effettuare l'estrazione del parent folder name dal DB");
+			resp.getWriter().println("SQL Error: impossible to fetch parent folder name");
 			return;
 		}
 		
@@ -99,7 +99,7 @@ public class DeleteFolder extends HttpServlet {
 			folderDao.deleteFolder(utente.getUserID(), folderID);
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("Errore SQL: impossibile effettuare l'eliminazione della Folder nel DB");
+			resp.getWriter().println("SQL Error: impossible to delete Folder");
 			return;
 		}
 		
