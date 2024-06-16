@@ -244,7 +244,7 @@
 				folderDiv.classList.add("folder");
 				folderDiv.setAttribute("folderID", node.folder.folderID);
 
-				//creates new folder button.
+				//create new folder button.
 				let folderButton = document.createElement("button");
 				folderButton.className = "mngBtn";
 				folderButton.textContent = "Create Folder";
