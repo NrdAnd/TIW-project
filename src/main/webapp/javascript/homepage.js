@@ -103,7 +103,7 @@
 							let folderTree = JSON.parse(req.responseText);
 
 							if (!folderTree) {
-								error.textContent = "Nessuna Folder presente!";
+								error.textContent = "No folder is present!";
 								error.classList.add("alert", "alert-danger");
 								return;
 							}

@@ -50,6 +50,12 @@ public class CheckSignupCredentials extends HttpServlet {
 			resp.getWriter().println("Error: Missing credentials");
 			return;
 		}
+		
+		if (email.length()>30 || username.length()>25 || password.length()>25 || passwordCheck.length()>25) {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().println("Error: Invalid credential length");
+			return;
+		}
 
 		// Validate email
 		Pattern emailPattern = Pattern.compile("^.+@.+\\..+$");
@@ -122,11 +128,11 @@ public class CheckSignupCredentials extends HttpServlet {
 				code = folderDao.createHomePageFolder(utente.getUserID());
 				if (code != 1) {
 					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-							"SQL error: query non andata a buon fine");
+							"SQL error: Query went wrong");
 					return;
 				}
 			} catch (SQLException e) {
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error; Query went wrong");
+				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: Query went wrong");
 				return;
 			}
 
