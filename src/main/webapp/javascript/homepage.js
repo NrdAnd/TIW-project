@@ -612,6 +612,8 @@
 
 						}
 					}
+					
+					document.getElementById("wasteBin").style.visibility = "visible";
 				});
 			}
 		}
