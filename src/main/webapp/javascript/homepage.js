@@ -640,6 +640,7 @@
 		form.append(backButton);
 
 		backButton.addEventListener("click", function() {
+			form.reset();
 			pageManager.refresh();
 		});
 
@@ -702,6 +703,7 @@
 		form.append(backButton);
 
 		backButton.addEventListener("click", function() {
+			form.reset();
 			pageManager.refresh();
 		});
 
