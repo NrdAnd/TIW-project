@@ -427,8 +427,10 @@
 				e.target.classList.add("dragging");
 				self.startElement = e.target;
 				
-				const infoDocButton = self.startElement.querySelector('.ShowDocumentInfo');
-				infoDocButton.style.visibility = "hidden";
+				if (self.startElement.classList.contains('document')) {
+					const infoDocButton = self.startElement.querySelector('.ShowDocumentInfo');
+					infoDocButton.style.visibility = "hidden";
+				}
 				
 				if (self.findNotDroppable(e.target)) {
 					self.notDroppable.classList.add("not-droppable");
