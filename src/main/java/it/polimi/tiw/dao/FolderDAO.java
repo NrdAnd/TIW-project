@@ -230,17 +230,13 @@ public class FolderDAO {
 	 *                       folder
 	 * @param depth          is the parameters that represents the depth of the
 	 *                       current folder
-	 * @param previousID	 is the previous id of the folder, it is used for the revert action creating an other time the same folder with
-	 * 						 the same previous id if it is null is a simple creation with the autoincremental id in the DB, otherwhise the folder
-	 * 						 id is inserted manually
 	 * @return a code, that it is equal to 1 if the query was successfull
 	 * @throws SQLException
 	 */
 
-	public int createFolder(int userID, String folderName, int parentFolderID, int depth, Integer previousID)
+	public int createFolder(int userID, String folderName, int parentFolderID, int depth)
 			throws SQLException {
 
-		if (previousID == null) {
 			String query = "INSERT INTO Folder(owner_id, folder_name, parent_folder_id, depth) VALUES (?,?,?,?)";
 			PreparedStatement statement = connection.prepareStatement(query);
 			statement.setInt(1, userID);
@@ -254,26 +250,6 @@ public class FolderDAO {
 				throw new SQLException("Registration failed, no rows affected");
 
 			return code;
-			
-		} else {
-			
-			String query = "INSERT INTO Folder(folder_id, owner_id, folder_name, parent_folder_id, depth) VALUES (?,?,?,?,?)";
-			PreparedStatement statement = connection.prepareStatement(query);
-			statement.setInt(1, previousID.intValue());
-			statement.setInt(2, userID);
-			statement.setString(3, folderName);
-			statement.setInt(4, parentFolderID);
-			statement.setInt(5, depth);
-
-			int code = statement.executeUpdate();
-
-			if (code == 0)
-				throw new SQLException("Registration failed, no rows affected");
-
-			return code;
-		}
-		
-
 	}
 
 

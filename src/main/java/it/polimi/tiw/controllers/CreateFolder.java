@@ -132,7 +132,7 @@ public class CreateFolder extends HttpServlet {
 
 			int code;
 			code = folderDao.createFolder(utente.getUserID(), newFolderName, destinationID,
-					parentFolderDepth + 1, null);
+					parentFolderDepth + 1);
 			if (code != 1) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				resp.getWriter().println("Error: Impossible to create Folder");
