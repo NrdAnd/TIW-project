@@ -66,7 +66,7 @@
 			<div style="margin-bottom: 20px;"></div>
 			<h3 id="createFolderFormTitle">Create a Folder</h3>
 			<label for="folderName"></label> <input type="text"
-				id="folderName" name="newFolderName" placeholder="Folder Name" maxlength="25" required class="text-input"> <br> 
+				id="folderName" name="newFolderName" placeholder="Folder Name" maxlength="25" required class="text-input" pattern="[a-zA-Z0-9 ]+" title="Only letters, numbers, and spaces are allowed"> <br> 
 				<input type="submit" id="createFld"
 				value="Create Folder"
 				class="btn btn-outline-light btn-round my-1 go-page-btn">
@@ -76,7 +76,7 @@
 			<div style="margin-bottom: 20px;"></div>
     		<h3 id="createDocumentTitle">Create a Document</h3>
     		<label for="docName"></label>
-    			<input type="text" id="docName" name="docName" maxlength="25" placeholder="Document Name" required class="text-input"><br>
+    			<input type="text" id="docName" name="docName" maxlength="25" placeholder="Document Name" pattern="[a-zA-Z0-9 ]+" title="Only letters, numbers, and spaces are allowed" required class="text-input"><br>
     		<label for="docFormat"></label>
     			<input type="text" id="docFormat" name="docFormat" maxlength="5" placeholder="Format" pattern="^[^\s.]{1,10}$" required class="text-input"><br>
     		<label for="docSummary"></label>

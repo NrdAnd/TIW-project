@@ -100,7 +100,11 @@ public class CreateDocument extends HttpServlet {
 				resp.getWriter().println("Error: Invalid parameters");
 				return;
 			}
-
+			if(!newDocumentName.matches("[a-zA-Z0-9 ]+") || !documentType.matches("[a-zA-Z0-9]+")) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				resp.getWriter().println("Error: You can only use numbers and letters for the name and the type");
+				return;
+			}
 		}
 
 		int code;

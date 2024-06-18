@@ -98,6 +98,11 @@ public class CreateFolder extends HttpServlet {
 			resp.getWriter().println("Invalid parameters (FolderName)");
 			return;
 		}
+		if(!newFolderName.matches("[a-zA-Z0-9 ]+")) {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("Error: You can only use numbers and letters");
+			return;
+		}
 
 		FolderDAO folderDao = new FolderDAO(connection);
 		User utente = (User) session.getAttribute("utente");
