@@ -102,21 +102,18 @@ public class MoveDocument extends HttpServlet {
 			resp.getWriter().println("SQL Error: Impossible to fetch Folder name");
 			return;
 		}
-		
-		
+
 		String initialParentFolderName;
 		try {
-			
+
 			initialParentFolderName = folderDao.getParentFolderName(utente.getUserID(), initialFolderID);
-					
+
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			resp.getWriter().println("SQL Error: Impossible to fetch Parent Folder name");
 			return;
 		}
 
-		
-		
 		try {
 			documentDAO.updateDocumentPosition(documentID, destinationFolderID, utente.getUserID());
 		} catch (SQLException e) {
@@ -124,13 +121,11 @@ public class MoveDocument extends HttpServlet {
 			resp.getWriter().println("SQL Error: Impossible to update document position");
 			return;
 		}
-		
-		
 
 		String postFolderName;
 		int postFolderID;
 		try {
-			
+
 			postFolderID = documentDAO.getOriginFolder(utente.getUserID(), documentID);
 			if (postFolderID == -1) {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -150,20 +145,18 @@ public class MoveDocument extends HttpServlet {
 			resp.getWriter().println("SQL Error: impossible to fetch the Folder name");
 			return;
 		}
-		
-		
-		
+
 		String postParentFolderName;
 		try {
-			
+
 			postParentFolderName = folderDao.getParentFolderName(utente.getUserID(), postFolderID);
-			
+
 		} catch (SQLException e) {
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			resp.getWriter().println("SQL Error: Impossible to fetch Parent Folder name");
 			return;
 		}
-		
+
 		String documentName;
 		try {
 			documentName = documentDAO.getDocumentNameByDocumentID(utente.getUserID(), documentID);
@@ -173,23 +166,29 @@ public class MoveDocument extends HttpServlet {
 			return;
 		}
 
-		
-		String operationString = "MOVED: " + documentName + " FROM: " + initialParentFolderName+ "/" + initialFolderName  + " INTO " +postParentFolderName + 
-				"/" + postFolderName;
+		String operationString = "MOVED: " + documentName + " FROM: " + initialParentFolderName + "/"
+				+ initialFolderName + " INTO " + postParentFolderName + "/" + postFolderName;
 
 		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
 		if (versionQueue.size() < 10) {
-			if(!versionQueue.contains(operationString)) {
+			if (!versionQueue.contains(operationString)) {
 				versionQueue.add(operationString);
 			}
 		} else {
 			versionQueue.remove(0);
 			versionQueue.add(operationString);
 		}
-		
+
 		session.setAttribute("versionQueue", versionQueue);
-		
+
 	}
+
+	
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		doPost(req, resp);
+	}
+	
 
 	@Override
 	public void destroy() {

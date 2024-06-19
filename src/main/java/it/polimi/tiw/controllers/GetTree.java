@@ -95,6 +95,12 @@ public class GetTree extends HttpServlet {
         resp.getWriter().write(json);    
      
     }
+    
+    
+    @Override
+  	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  		doGet(req, resp);
+  	}
   
 
     @Override

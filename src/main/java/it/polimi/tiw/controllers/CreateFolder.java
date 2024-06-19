@@ -176,6 +176,12 @@ public class CreateFolder extends HttpServlet {
 		session.setAttribute("versionQueue", versionQueue);
 		
 	}
+	
+	
+    @Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		doPost(req, resp);
+	}
 
 	@Override
 	public void destroy() {

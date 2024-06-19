@@ -15,26 +15,30 @@ import com.google.gson.Gson;
 @WebServlet("/GetVersionHistory")
 public class GetVersionHistory extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-	
-    public GetVersionHistory() {
-        super();
-    }
-    
+
+	public GetVersionHistory() {
+		super();
+	}
+
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		
-		HttpSession session = req.getSession();        
-        resp.setContentType("text/plain");
-        
-        ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
-		
+
+		HttpSession session = req.getSession();
+		resp.setContentType("text/plain");
+
+		ArrayList<String> versionQueue = (ArrayList<String>) session.getAttribute("versionQueue");
+
 		Gson gson = new Gson();
-        String json = gson.toJson(versionQueue);
-        
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        resp.getWriter().write(json);
-        
+		String json = gson.toJson(versionQueue);
+
+		resp.setContentType("application/json");
+		resp.setCharacterEncoding("UTF-8");
+		resp.getWriter().write(json);
+
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		doGet(req, resp);
 	}
 
 }
