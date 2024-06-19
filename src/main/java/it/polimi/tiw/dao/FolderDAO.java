@@ -75,7 +75,7 @@ public class FolderDAO {
 
 	public TreeNode getSubTreeFolder(int userID, int folderID) throws SQLException {
 
-		String query = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) SELECT * FROM FolderHierarchy ORDER BY depth ASC";
+		String query = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) SELECT * FROM FolderHierarchy ORDER BY depth ASC";
 
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setInt(1, userID);
@@ -404,8 +404,8 @@ public class FolderDAO {
 
 	public void deleteFolder(int userID, int folderID) throws SQLException {
 
-		String folderDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT folder_id FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.folder_id FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Folder WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy) ORDER BY folder_id DESC";
-		String docDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION ALL SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Document WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy);";
+		String folderDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT folder_id FROM Folder WHERE owner_id = ? AND folder_id = ? UNION SELECT f.folder_id FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Folder WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy) ORDER BY folder_id DESC";
+		String docDelete = "WITH RECURSIVE FolderHierarchy AS (SELECT * FROM Folder WHERE owner_id = ? AND folder_id = ? UNION SELECT f.* FROM Folder f INNER JOIN FolderHierarchy fh ON f.parent_folder_id = fh.folder_id) DELETE FROM Document WHERE folder_id IN (SELECT folder_id FROM FolderHierarchy);";
 
 		connection.setAutoCommit(false);
 
