@@ -31,11 +31,7 @@
 		globalPage.addEventListener('dragover', function(event) {
 			event.preventDefault();
 		});
-
-		/*globalPage.addEventListener('drop', function(event) {
-			event.preventDefault();
-		});*/
-
+		
 		pageManager.refresh();
 	}
 
@@ -54,7 +50,7 @@
 						sessionStorage.clear();
 						window.location.href = "index.html";
 						break;
-					case 403:
+					case 403: //an other account is already logged in
 						alert("An other account is already logged in. Automatically log out...");
 						sessionStorage.clear();
 						window.location.href = "index.html";
@@ -110,7 +106,7 @@
 
 							self.update(folderTree); // self visible by closure
 							
-						} else if (req.status === 403) {
+						} else if (req.status === 403) { //an other account is already logged in
 							window.location.href = req.getResponseHeader("Location");
 							window.sessionStorage.removeItem('utente');
 						} else {
@@ -600,8 +596,6 @@
 
 								alert("You cannot move a document to the same folder it came from!");
 								self.resetDroppable();
-								//versionHistoryHandler.clear();
-								//pageManager.refresh();
 
 							}
 							
@@ -609,8 +603,6 @@
 
 							alert("You can only move folders to the trash!");
 							self.resetDroppable();
-							//versionHistoryHandler.clear();
-							//pageManager.refresh();
 
 						}
 					}
@@ -781,17 +773,17 @@
 							self.setDocumentDetails(JSON.parse(text));
 							document.getElementById("rightContainer").append(documentDetails);
 							break;
-						case 401:
+						case 401: // unauthorized
 							alert("You are not logged in.")
 							logout();
 							break;
-						case 403:
+						case 403: //an other account is already logged in
 							alert("An other account is already logged in. Automatically log out...");
 							sessionStorage.clear();
 							window.location.href = "index.html";
 							break;
-						case 400:
-						case 500:
+						case 400: // bad request
+						case 500: // server error
 							alert(text);
 							break;
 						default:
@@ -859,17 +851,17 @@
 							self.versionHistoryData = JSON.parse(text);
 							self.setVersionHistoryData();
 							break;
-						case 401:
+						case 401: // unauthorized
 							alert("You are not logged in.")
 							logout();
 							break;
-						case 403:
+						case 403: //an other account is already logged in
 							alert("An other account is already logged in. Automatically log out...");
 							sessionStorage.clear();
 							window.location.href = "index.html";
 							break;
-						case 400:
-						case 500:
+						case 400: // bad request
+						case 500: // server error
 							alert(text);
 							break;
 						default:
@@ -983,19 +975,19 @@
 				case 200:
 					pageManager.refresh();
 					break;
-				case 400:
+				case 400: // bad request
 					alert(text);
 					break;
-				case 401:
+				case 401: // unauthorized
 					alert("You are not logged in.");
 					logout();
 					break;
-				case 403:
+				case 403: //an other account is already logged in
 					alert("An other account is already logged in. Automatically log out...");
 					sessionStorage.clear();
 					window.location.href = "index.html";
 					break;
-				case 500:
+				case 500: // server error
 					alert(text);
 					break;
 				default:
