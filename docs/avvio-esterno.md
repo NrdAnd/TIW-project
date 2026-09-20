@@ -25,7 +25,7 @@ mysql --version
 Sostituisci il percorso con quello della tua copia del progetto:
 
 ```sh
-cd "/Users/andrea/Documents/PoliMi/Master Degree/TIW/TIW_Project_2024_RIA"
+cd "/percorso/del/progetto/TIW_Project_2024_RIA"
 ```
 
 ## 3. Avviare MySQL
