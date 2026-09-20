@@ -24,7 +24,7 @@ Import `database/schema.sql` with your database administration workflow. It crea
 
 MySQL DDL auto-commits: the migration is not an all-or-nothing transaction and is not idempotent. If it fails partway, inspect which statements ran and restore the backup or repair the specific partial schema before retrying. Do not blindly rerun it. Rolling back to v1 after users have uploaded data requires restoring the pre-upgrade backup; there is no lossless downgrade script.
 
-If your old database differs from the supplied v1 schema, adapt and review the migration against a clone first. In particular, verify owner/parent foreign keys and uniqueness rules. Do not drop unknown constraints merely to make the SQL run. **No migration was applied to the user's original database during this work.**
+If your old database differs from the supplied v1 schema, adapt and review the migration against a clone first. In particular, verify owner/parent foreign keys and uniqueness rules. Do not drop unknown constraints merely to make the SQL run. An existing database with `FileBlob`, `WorkspaceState` and `WorkspaceAction` has already been upgraded; do not run the migration twice.
 
 ### Database and upload capacity
 

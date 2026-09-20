@@ -55,7 +55,7 @@ Use `TIW_BROWSER_CHANNEL=chrome` if relying on an installed Chrome. The live sui
 
 ## Practical limits
 
-- No migration was applied to the original database or existing Eclipse/Tomcat installation.
+- These isolated integration tests do not establish the state of a separately installed database or Eclipse/Tomcat runtime; verify those independently before use.
 - No full penetration test, dependency vulnerability audit, sustained load test, all-browser certification or screen-reader audit was performed.
 - Per-file and malformed-batch rejection were exercised. Maximum account-quota saturation, 10,000-item saturation, process-crash recovery and real-time five-minute expiry were not stress-tested.
 - Authentication retains legacy plaintext-password storage and session-hardening limitations; see [security](security.md).
