@@ -6,15 +6,15 @@
 
     <context-param>
         <param-name>dbUrl</param-name>
-        <param-value>jdbc:mysql://localhost:3306/REDACTED_DATABASE</param-value>
+        <param-value></param-value>
     </context-param>
     <context-param>
         <param-name>dbUser</param-name>
-        <param-value>root</param-value>
+        <param-value></param-value>
     </context-param>
     <context-param>
         <param-name>dbPassword</param-name>
-        <param-value>REDACTED_DATABASE_PASSWORD</param-value>
+        <param-value></param-value>
     </context-param>
     <context-param>
         <param-name>dbDriver</param-name>
@@ -37,6 +37,14 @@
 		<url-pattern>/GetTree</url-pattern>
 		<url-pattern>/GetVersionHistory</url-pattern>
 		<url-pattern>/MoveDocument</url-pattern>
+		<url-pattern>/SessionToken</url-pattern>
+		<url-pattern>/MoveFolder</url-pattern>
+		<url-pattern>/RenameItem</url-pattern>
+		<url-pattern>/UploadFiles</url-pattern>
+		<url-pattern>/DownloadFile</url-pattern>
+		<url-pattern>/PreviewFile</url-pattern>
+		<url-pattern>/UndoActions</url-pattern>
+		<url-pattern>/Logout</url-pattern>
 	</filter-mapping>
 	
 	<filter>

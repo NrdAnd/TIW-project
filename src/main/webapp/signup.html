@@ -1,38 +1,120 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Sign up</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <link href="css/access.css" rel="stylesheet">
-    <link rel="icon" href="resources/images/polimi_icon.png">
-    <script src="javascript/utils.js" charset="utf-8" defer></script>
-    <script src="javascript/register.js" charset="utf-8" defer></script>
-</head>
-<body>
-
-<div class="center">
-<div style="margin-bottom: 20px;"></div>
-<div class="form-signin wrapper">
-   	 	<div class="image-container">
-        	<img class="mb-4 centered-image" src="resources/images/polimi_logo.png" alt="Polimi Logo" width="240" height="auto">
-    	</div>
-    <h1 class="h3 mb-3 font-weight-normal">Sign up</h1>
-
-    <form id="registerForm" action="CheckSignupCredentials" method="POST" class="form-signin">
-        <input id="username" type="text" name="username" class="form-control centered-input" placeholder="Username" maxlength="25" required><br>
-        <input id="email" type="email" name="email" class="form-control centered-input" placeholder="Email" maxlength="30" required><br>
-        <input id = "pswd1" type="password" name="password" class="form-control centered-input" placeholder="Password" maxlength="25" required><br>
-        <input id = "pswd2" type="password" name="passwordCheck" class="form-control centered-input" placeholder="Ripeti password" maxlength="25" required><br>
-        <button id="register-button" class="btn btn-lg btn-light btn-main">Sign up</button>
-    </form>
-    
-    <a href="index.html"><button class="btn btn-lg btn-light btn-secondary">Login</button></a>
-    <p id = "errorMessage" class = "alert alert-danger" hidden></p>
-    
-</div>
-</div>
-
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#15132d" />
+    <link rel="icon" href="resources/images/polimi_icon.png" />
+    <link rel="stylesheet" href="css/main.css" />
+    <title>Sign up · Document Manager</title>
+    <link rel="stylesheet" href="css/access.css" />
+    <script src="javascript/utils.js" defer></script>
+    <script src="javascript/register.js" defer></script>
+  </head>
+  <body class="access-page">
+    <main class="access-shell">
+      <section class="access-story" aria-label="Document Manager">
+        <div class="brand-pair">
+          <a class="brand" href="index.html"
+            ><span class="brand-mark" aria-hidden="true">d<span>m</span></span
+            ><span>Document<br /><strong>Manager.</strong></span></a
+          ><img
+            class="polimi-access-logo"
+            src="resources/images/polimi_logo_horizontal_white.png"
+            alt="Politecnico di Milano"
+          />
+        </div>
+        <div class="story-copy">
+          <span class="eyebrow">A LITTLE ORDER. A LOT OF SPACE.</span>
+          <h1>Everything<br />in its <em>right place.</em></h1>
+          <p>
+            Your documents, your structure. A thoughtful workspace to keep ideas
+            organised and within reach.
+          </p>
+          <div class="folder-art" aria-hidden="true">
+            <div class="art-back"></div>
+            <div class="art-paper">
+              <span></span><span></span><span></span><i>TIW / 2024</i>
+            </div>
+            <div class="art-front">
+              <span>Room for your next idea.</span><b>↗</b>
+            </div>
+          </div>
+        </div>
+        <footer class="story-footer">
+          <img
+            src="resources/images/polimi_logo_horizontal_white.png"
+            alt="Politecnico di Milano"
+          /><span
+            >TECNOLOGIE INFORMATICHE PER IL WEB<br />RIA PROJECT · 2024</span
+          >
+        </footer>
+      </section>
+      <section class="access-form-panel">
+        <div class="access-form-wrap">
+          <span class="eyebrow">YOUR PERSONAL WORKSPACE</span>
+          <h2>Create your account</h2>
+          <p class="muted">
+            Start with an account. Make room for your documents.
+          </p>
+          <form id="registerForm" action="CheckSignupCredentials" method="post">
+            <label for="username">Username</label
+            ><input
+              id="username"
+              name="username"
+              autocomplete="username"
+              placeholder="Your username"
+              maxlength="25"
+              required
+            /><label for="email">Email address</label
+            ><input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              maxlength="30"
+              required
+            /><label for="pswd1">Password</label
+            ><input
+              id="pswd1"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Your password"
+              maxlength="25"
+              required
+            /><label for="pswd2">Confirm password</label
+            ><input
+              id="pswd2"
+              name="passwordCheck"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Repeat your password"
+              maxlength="25"
+              required
+            />
+            <button
+              id="register-button"
+              class="button primary access-submit"
+              type="submit"
+            >
+              Create account <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p id="errorMessage" class="alert" role="alert" hidden></p>
+          <p class="access-switch">
+            Already have an account? <a href="index.html">Sign in</a>
+          </p>
+          <div class="access-note">
+            <span class="small-dot"></span> A dedicated space for your
+            documents.
+          </div>
+        </div>
+        <span class="access-bottom"
+          >DOCUMENT MANAGER <span>Organise. Find. Focus.</span></span
+        >
+      </section>
+    </main>
+  </body>
 </html>

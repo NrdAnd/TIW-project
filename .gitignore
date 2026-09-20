@@ -1,1 +1,39 @@
+# OS / editor output
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+# Build and test output
 /build/
+/target/
+/node_modules/
+/test-results/
+/playwright-report/
+*.log
+# Local configuration and secrets (examples remain tracked)
+.env
+.env.*
+!.env.example
+/config/*.local.*
+/config/document-manager.xml
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa*
+id_ed25519*
+*.crt
+*.mobileprovision
+# Preview data is memory-only; no database dumps belong in Git
+*.sql.gz
+*.dump
+*.bak
+*.backup
+*.sqlite
+*.sqlite3
+# Python development caches
+__pycache__/
+*.py[cod]

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copy OUTSIDE the repository to $CATALINA_BASE/conf/Catalina/localhost/document-manager.xml.
+     Replace placeholders locally. Do not commit the resulting file. -->
+<Context>
+  <Parameter name="dbDriver" value="com.mysql.cj.jdbc.Driver" override="false"/>
+  <Parameter name="dbUrl" value="jdbc:mysql://localhost:3306/tiw_document_manager" override="false"/>
+  <Parameter name="dbUser" value="REPLACE_WITH_DATABASE_USER" override="false"/>
+  <Parameter name="dbPassword" value="REPLACE_WITH_DATABASE_PASSWORD" override="false"/>
+</Context>

@@ -1,90 +1,302 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Document Manager</title>
-
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-	rel="stylesheet"
-	integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
-	crossorigin="anonymous">
-<link href="css/main.css" rel="stylesheet">
-<script src="javascript/utils.js" charset="utf-8" defer></script>
-<script src="javascript/homepage.js" charset="utf-8" defer></script>
-</head>
-</head>
-<body>
-
-<div id="globalPage">
-	<header id="main-header">
-		<nav class="navbar navbar-dark fixed-top">
-			<img src="resources/images/polimi_logo_horizontal_white.png"
-				height="60" width="auto">
-			<div class="d-flex flex-row my-1" style="margin-right: 10px">
-				<button id="Logout" class="btn btn-outline-light my-1" type="submit">Logout</button>
-			</div>
-		</nav>
-			<div style="margin-top: 10px" class="main-title">
-		<div style="margin-top: 90px; display: flex; align-items: center; justify-content: space-between;">
-			<!-- <h1 style="margin-left: 13px;">HomePage</h1> -->
-		</div> 
-			<button id="EditButton" type="button"
-				class="btn btn-outline-light btn-round my-1 go-page-btn"
-				style="margin-right: 10px; margin-left: 10px;">Edit</button>
-			<button id="RootButton" type="button"
-				class="btn btn-outline-light btn-round my-1 go-page-btn">Root
-				Button</button>
-			<img id="wasteBin" src="resources/images/trash_icon.png" height="40" width="auto" style="float:right; margin-right:10px">
-	</div>
-	</header>
-		<div id="rightContainer" class="right-div"></div>
-		<div class="left-div">
-		<div class="clt">
-			<div class="wrap">
-				<div id="treeContainer"></div>
-			</div>
-		</div>
-			<p id="treeError"></p>
-		</div>
-
-		<div id="documentDetails">
-			<h3>DOCUMENT DETAILS:</h3>
-			<div style="margin-bottom: 20px;"></div>
-			<h4>Name:</h4>
-			<p id="documentName"></p>
-			<h4>Format:</h4>
-			<p id="documentFormat"></p>
-			<h4>Summary:</h4>
-			<p id="documentSummary"></p>
-			<h4>Creation Date:</h4>
-			<p id="documentDate"></p>
-			<input class="HideDetails" type="button" id="hideDetails" value="Hide Details">
-		</div>
-
-		<form id="createFolder" action="#" class="creation-form">
-			<div style="margin-bottom: 20px;"></div>
-			<h3 id="createFolderFormTitle">Create a Folder</h3>
-			<label for="folderName"></label> <input type="text"
-				id="folderName" name="newFolderName" placeholder="Folder Name" maxlength="25" required class="text-input" pattern="[a-zA-Z0-9 ]+" title="Only letters, numbers, and spaces are allowed"> <br> 
-				<input type="submit" id="createFld"
-				value="Create Folder"
-				class="btn btn-outline-light btn-round my-1 go-page-btn">
-		</form>
-
-		<form id="createDocument" action="#" class="creation-form">
-			<div style="margin-bottom: 20px;"></div>
-    		<h3 id="createDocumentTitle">Create a Document</h3>
-    		<label for="docName"></label>
-    			<input type="text" id="docName" name="docName" maxlength="25" placeholder="Document Name" pattern="[a-zA-Z0-9 ]+" title="Only letters, numbers, and spaces are allowed" required class="text-input"><br>
-    		<label for="docFormat"></label>
-    			<input type="text" id="docFormat" name="docFormat" maxlength="5" placeholder="Format" pattern="^[^\s.]{1,10}$" required class="text-input"><br>
-    		<label for="docSummary"></label>
-    			<textarea id="docSummary" name="docSummary" rows="3" maxlength="250" placeholder="Summary" required class="text-input"></textarea>
-    		<br>
-    		<input type="submit" id="createDoc" value="Create Document" class="btn btn-outline-light btn-round my-1 go-page-btn">
-		</form>
-
-	</div>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#15132d" />
+    <link rel="icon" href="resources/images/polimi_icon.png" />
+    <link rel="stylesheet" href="css/main.css" />
+    <title>Workspace · Document Manager</title>
+    <script src="javascript/utils.js" defer></script>
+    <script src="javascript/homepage.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+    <div id="globalPage" class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="homepage.html"
+          ><span class="brand-mark" aria-hidden="true">d<span>m</span></span
+          ><span>Document<br /><strong>Manager.</strong></span></a
+        >
+        <div class="sidebar-group">
+          <p class="eyebrow">WORKSPACE</p>
+          <button id="overviewButton" class="nav-item active" type="button">
+            <span aria-hidden="true">▦</span> All documents
+            <span class="nav-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button id="activityButton" class="nav-item" type="button">
+            <span aria-hidden="true">◷</span> Session activity
+          </button>
+        </div>
+        <div class="sidebar-note">
+          <span class="note-icon" aria-hidden="true">✳</span>
+          <h2>A place for everything.</h2>
+          <p>Build your structure.<br />Keep your ideas in order.</p>
+          <button id="guideButton" type="button">
+            A quick guide <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="sidebar-footer">
+          <img
+            src="resources/images/polimi_logo_horizontal_white.png"
+            alt="Politecnico di Milano"
+          />
+          <p>TIW · RIA PROJECT 2024</p>
+        </div>
+      </aside>
+      <div class="app-main">
+        <header class="topbar">
+          <div class="topbar-brand">
+            <img
+              class="polimi-top-logo"
+              src="resources/images/polimi_logo_horizontal.png"
+              alt="Politecnico di Milano"
+            />
+            <div class="breadcrumb">
+              Workspace <span>/</span> <strong>All documents</strong>
+            </div>
+          </div>
+          <div class="account">
+            <span class="avatar" id="userInitial" aria-hidden="true">U</span
+            ><span id="userLabel">Your account</span
+            ><button id="Logout" class="text-button" type="button">
+              Sign out <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </header>
+        <main id="workspace" tabindex="-1">
+          <section class="workspace-heading">
+            <div>
+              <span class="eyebrow">LESS CLUTTER. MORE CLARITY.</span>
+              <h1>My workspace<span>.</span></h1>
+              <p class="muted">
+                A little structure for everything you're working on.
+              </p>
+            </div>
+            <div class="heading-actions">
+              <button id="UploadButton" class="button primary" type="button">
+                ↑ Upload files</button
+              ><button id="RootButton" class="button secondary" type="button">
+                <span aria-hidden="true">＋</span> New root folder
+              </button>
+            </div>
+          </section>
+          <section class="stats" aria-label="Workspace overview">
+            <div class="stat">
+              <span class="stat-icon folder-symbol" aria-hidden="true"></span>
+              <div>
+                <span class="stat-label">Folders</span
+                ><strong id="folderCount">—</strong>
+              </div>
+              <span class="stat-caption">Your structure</span>
+            </div>
+            <div class="stat">
+              <span class="stat-icon document-symbol" aria-hidden="true"></span>
+              <div>
+                <span class="stat-label">Files &amp; documents</span
+                ><strong id="documentCount">—</strong>
+              </div>
+              <span class="stat-caption">Ideas, organised</span>
+            </div>
+            <div class="stat accent-stat">
+              <span class="stat-icon" aria-hidden="true">↗</span>
+              <div>
+                <span class="stat-label">Your storage</span>
+                <p id="storageUsed">Loading storage…</p>
+              </div>
+            </div>
+          </section>
+          <div
+            id="statusMessage"
+            class="status-message"
+            role="status"
+            hidden
+          ></div>
+          <div class="workspace-columns">
+            <section class="library panel" aria-labelledby="libraryTitle">
+              <div class="panel-heading">
+                <div>
+                  <span class="eyebrow">YOUR LIBRARY</span>
+                  <h2 id="libraryTitle">Folders &amp; documents</h2>
+                </div>
+                <button
+                  id="EditButton"
+                  class="button secondary"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  Edit workspace
+                </button>
+              </div>
+              <div class="library-toolbar">
+                <label class="search-field"
+                  ><span aria-hidden="true">⌕</span
+                  ><input
+                    id="searchInput"
+                    type="search"
+                    placeholder="Find a folder or document…"
+                    aria-label="Find a folder or document"
+                  /><span class="search-hint" aria-hidden="true"
+                    >Search</span
+                  ></label
+                ><span class="tree-label">TREE VIEW</span>
+              </div>
+              <div
+                id="uploadDropzone"
+                class="upload-dropzone"
+                tabindex="0"
+                role="button"
+                aria-label="Choose files to upload"
+              >
+                <span aria-hidden="true">↑</span
+                ><strong>Drop files here, or onto a folder</strong
+                ><span
+                  >Photos, PDFs, documents &amp; more · 25 MB per file</span
+                >
+              </div>
+              <p id="modeHint" class="mode-hint">
+                Drag files or folders to move them. Drop files from your
+                computer onto a folder to upload.
+              </p>
+              <div
+                id="treeContainer"
+                aria-label="Folder hierarchy"
+                aria-busy="true"
+              ></div>
+              <div id="emptyState" class="empty-state" hidden>
+                <span
+                  class="empty-icon folder-symbol"
+                  aria-hidden="true"
+                ></span>
+                <h3>Room for your first idea.</h3>
+                <p>Create a root folder to start organising your documents.</p>
+              </div>
+              <p id="searchEmpty" class="empty-state" hidden>
+                No matching folders or documents.
+              </p>
+              <p id="treeError" class="alert" role="alert" hidden></p>
+              <div class="library-footer">
+                <span
+                  ><span class="small-dot"></span> Your personal document
+                  library</span
+                >
+                <div
+                  id="wasteBin"
+                  class="trash-target"
+                  title="Drag a document or folder here to delete it"
+                >
+                  <span aria-hidden="true">⌫</span> Drop to delete
+                </div>
+              </div>
+            </section>
+            <aside class="inspector" aria-label="Activity and details">
+              <div
+                id="rightContainer"
+                class="panel inspector-panel"
+                aria-live="polite"
+              ></div>
+              <div class="workspace-tip">
+                <span aria-hidden="true">↳</span>
+                <p>
+                  <strong>A smoother workflow.</strong> Move documents between
+                  folders with drag &amp; drop, or use Move in the document
+                  details.
+                </p>
+              </div>
+            </aside>
+          </div>
+          <footer class="workspace-footer">
+            <span>DOCUMENT MANAGER / RIA</span
+            ><span>A clearer space to work.</span>
+          </footer>
+        </main>
+      </div>
+    </div>
+    <template id="folderFormTemplate"
+      ><form id="createFolder">
+        <span class="eyebrow">BUILD YOUR STRUCTURE</span>
+        <h2>New folder</h2>
+        <p class="form-destination muted"></p>
+        <label for="folderName">Folder name</label
+        ><input
+          id="folderName"
+          name="newFolderName"
+          placeholder="e.g. Course notes"
+          maxlength="100"
+          required
+        />
+        <p class="field-help">Up to 100 characters. No path separators.</p>
+        <div class="form-actions">
+          <button type="submit" class="button primary">Create folder</button
+          ><button type="button" class="button secondary cancel-button">
+            Cancel
+          </button>
+        </div>
+      </form></template
+    >
+    <template id="uploadFormTemplate"
+      ><form id="uploadForm">
+        <span class="eyebrow">MAKE ROOM FOR REAL FILES</span>
+        <h2>Upload files</h2>
+        <p class="muted form-destination">
+          Photos, documents, archives and more.
+        </p>
+        <label for="uploadDestination">Destination folder</label
+        ><select id="uploadDestination" name="destinationID" required></select
+        ><label for="fileInput" class="file-picker-label">Choose files</label
+        ><input id="fileInput" name="files" type="file" multiple />
+        <ul id="uploadSelection" class="upload-selection"></ul>
+        <p class="field-help">
+          Up to 20 files, 25 MB each and 100 MB per selection. Duplicate names
+          are rejected; existing files are never overwritten.
+        </p>
+        <div class="form-actions">
+          <button type="submit" class="button primary">
+            Upload selected files</button
+          ><button type="button" class="button secondary cancel-button">
+            Cancel
+          </button>
+        </div>
+      </form></template
+    >
+    <div id="uploadProgress" class="upload-progress" role="status" hidden>
+      <span id="uploadProgressLabel">Uploading…</span
+      ><progress id="uploadProgressBar" max="100" value="0"></progress>
+    </div>
+    <dialog id="guideDialog">
+      <button
+        id="closeGuide"
+        class="dialog-close button secondary"
+        type="button"
+        aria-label="Close guide"
+      >
+        ×</button
+      ><span class="eyebrow">MAKE YOURSELF AT HOME</span>
+      <h2>A little guide to your workspace.</h2>
+      <ol>
+        <li>
+          <strong>Start with a folder.</strong> Use New root folder to create
+          the first level of your library.
+        </li>
+        <li>
+          <strong>Build your structure.</strong> Enable Edit workspace to add
+          subfolders, rename items or move folders. Upload files with the Upload
+          button or drag them onto a folder.
+        </li>
+        <li>
+          <strong>Keep things moving.</strong> Drag documents onto a folder, or
+          use Move in their details.
+        </li>
+        <li>
+          <strong>Stay in the loop.</strong> Choose an action in Session
+          activity to undo it and every newer action. Undo is available during
+          your current session.
+        </li>
+      </ol>
+      <p class="muted">
+        Deleting a folder also deletes its contents. Restore it from Session
+        activity before the session ends. Undo has no redo.
+      </p>
+    </dialog>
+  </body>
 </html>

@@ -1,0 +1,12 @@
+{
+  "name": "tiw-document-manager-ui-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development-only browser regression checks. No frontend build or runtime dependencies.",
+  "scripts": {
+    "test": "node scripts/test-ui.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

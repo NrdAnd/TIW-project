@@ -1,0 +1,39 @@
+name: Verify
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tracked files for private data
+        run: python3 scripts/check-publication.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Java regression tests and WAR
+        run: mvn --batch-mode --no-transfer-progress verify
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Browser contract tests with fictional data
+        run: |
+          python3 scripts/preview.py > /tmp/tiw-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/homepage.html > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          npm test

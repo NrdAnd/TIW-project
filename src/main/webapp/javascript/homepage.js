@@ -1,998 +1,866 @@
-{
-
-	let folderTree, documentInfo, createFolder, createDocument, dragAndDropHandler, versionHistoryHandler,
-		pageManager = new PageManager();
-
-	/**
-	 * This starts the page if the user is logged in.
-	 */
-	window.addEventListener('load', function() {
-		pageManager.start();
-		if (sessionStorage.getItem("utente") === null) {
-			logout()
-		} else {
-			start();
-		}
-	}, false);
-
-
-	/**
-	 * This function calls the pageManager refresh and sets the logout button
-	 */
-	function start() {
-
-		document.getElementById("Logout").addEventListener("click", function() {
-			document.getElementById("Logout").disable = true;
-			logout();
-		});
-
-		let globalPage = document.getElementById("globalPage");
-
-		globalPage.addEventListener('dragover', function(event) {
-			event.preventDefault();
-		});
-		
-		pageManager.refresh();
-	}
-
-
-	/**
-	 * This method logs out the user and goes to the login page.
-	 */
-	function logout() {
-		let loggedOut = false;
-		makeCall("GET", 'Logout', null, function(response) {
-
-			if (response.readyState === XMLHttpRequest.DONE) {
-				switch (response.status) {
-					case 200:
-						loggedOut = true;
-						sessionStorage.clear();
-						window.location.href = "index.html";
-						break;
-					case 403: //an other account is already logged in
-						alert("An other account is already logged in. Automatically log out...");
-						sessionStorage.clear();
-						window.location.href = "index.html";
-						break;
-					default:
-						alert("Unknown Error");
-						break;
-				}
-			}
-		});
-
-		if (!loggedOut) {
-			sessionStorage.clear();
-			window.location.href = "index.html";
-		}
-	}
-
-
-	/**
-	 * This class handles data acquisition and dynamic printing of the folderTree
-	 * @param container is a specific container
-	 */
-
-	function FolderTree(container) {
-
-		this.container = container;
-		this.editConfig = false;
-		this.rootConfig = false;
-		
-
-		/**
-		 * This method handles the datas acqusition of the folderTree
-		 */
-		this.show = function() {
-			this.container.innerHTML = "";
-			document.getElementById("wasteBin").style.visibility = "visible";
-			const self = this;
-			makeCall("GET", "GetTree", null,
-				function(req) {
-					if (req.readyState === 4) {
-
-						let message = req.responseText;
-						let error = document.getElementById("treeError");
-
-						if (req.status === 200) {
-							let folderTree = JSON.parse(req.responseText);
-
-							if (!folderTree) {
-								error.textContent = "No folder is present!";
-								error.classList.add("alert", "alert-danger");
-								return;
-							}
-
-							self.update(folderTree); // self visible by closure
-							
-						} else if (req.status === 403) { //an other account is already logged in
-							window.location.href = req.getResponseHeader("Location");
-							window.sessionStorage.removeItem('utente');
-						} else {
-							error.textContent = message;
-						}
-					}
-				}
-			)
-		}
-
-
-		/**
-		 * This method changes the value of the EditButton and then show the edit buttons to adding new content.
-		 */
-		this.edit = function() {
-			const self = this;
-			let editButton = document.getElementById("EditButton");
-			editButton.textContent = "UNDO";
-			editButton.onclick = function() {
-				self.undo();
-				pageManager.hideContent();
-			};
-
-			let showDetails = document.getElementsByClassName("ShowDocumentInfo");
-			for (const btnDetail of showDetails) {
-				btnDetail.style.visibility = "hidden";
-			}
-
-			self.editConfig = true;
-
-		}
-
-
-		/**
-		 * This method hides the edit buttons and sets the value of the EditButton to "EDIT".
-		 */
-		this.undo = function() {
-
-			pageManager.hideContent();
-			const self = this;
-			let editButton = document.getElementById("EditButton");
-			editButton.textContent = "EDIT";
-			editButton.onclick = function() {
-				self.edit();
-			};
-
-			let editButtons = document.getElementsByClassName("mngBtn");
-			for (const editBtn of editButtons) {
-				editBtn.style.visibility = "hidden";
-			}
-
-			self.editConfig = false;
-		}
-
-
-
-		/**
-		 * This method handles the dynamic printing of the folderTree
-		 */
-		this.update = function(folderTree) {
-
-			this.container.innerHTML = "";
-			const self = this;
-
-
-			//Get edit button and set up onclick event.
-			let editButton = document.getElementById("EditButton");
-			editButton.textContent = "EDIT";
-			editButton.onclick = function() {
-				self.edit();
-			};
-
-			let treeContainer = document.getElementById('treeContainer');
-			
-			//Ricursive Function to print the Folder Tree
-			self.traverseTree(folderTree, treeContainer);
-
-			//Set up the drag and drop
-			dragAndDropHandler.setUp();
-			//Set up Button Dynamic Visual
-			self.undo();
-
-			//Button to create Root Folders
-			let rootButton = document.getElementById("RootButton");
-			rootButton.textContent = "Create a Root Folder";
-			rootButton.addEventListener("click", function() {
-
-				self.rootConfig = true;
-				let editButtons = document.getElementsByClassName("mngBtn");
-				for (const editBtn of editButtons) {
-					editBtn.style.visibility = "hidden";
-				}
-
-				let showDetails = document.getElementsByClassName("ShowDocumentInfo");
-				for (const btnDetail of showDetails) {
-					btnDetail.style.visibility = "visible";
-					btnDetail.style.visibility = "hidden";
-				}
-
-				createFolder.enableForm(folderTree.folder.folderID, "HomePage");
-
-				let editButton = document.getElementById("EditButton");
-				editButton.onclick = null;
-				editButton.style.visibility = "hidden";
-
-			});
-
-			self.rootConfig = false;
-			editButton.style.visibility = "visible";
-
-		}
-
-
-		/**
-		 * This recursive method is used by this.update for the dynamic printing of the folderTree
-		 */
-		this.traverseTree = function traverseTree(node, parentElement) {
-
-			const self = this;
-
-			if (node.folder.depth > 0) {
-
-				let folderUL = document.createElement("ul");
-				let folderLI = document.createElement("li");
-				let folderDiv = document.createElement("div");
-				
-
-				folderUL.classList.add("folder-container");
-
-				folderDiv.textContent = node.folder.folderName;
-				folderDiv.classList.add("folder");
-				folderDiv.setAttribute("folderID", node.folder.folderID);
-
-				//create new folder button.
-				let folderButton = document.createElement("button");
-				folderButton.className = "mngBtn";
-				folderButton.textContent = "Create Folder";
-				folderButton.addEventListener("click", function() {
-					createFolder.enableForm(node.folder.folderID, node.folder.folderName);
-				});
-
-				//create new a document button.
-				let docButton = document.createElement("button");
-				docButton.className = "mngBtn";
-				docButton.textContent = "Create Document";
-				docButton.addEventListener("click", function() {
-					createDocument.enableForm(node.folder.folderID, node.folder.folderName);
-				});
-
-				let internalContainer = document.createElement("div");
-				internalContainer.append(folderDiv);
-				internalContainer.append(folderButton);
-				internalContainer.append(docButton);
-
-
-				//It permits the dynamic visual of the mngButton when the editConfig is active
-				internalContainer.addEventListener("mouseenter", function() {
-					if (self.editConfig) {
-						folderButton.style.visibility = "visible";
-						docButton.style.visibility = "visible";
-					}
-				});
-				
-				//It permits the dynamic visual of the mngButton when the editConfig is active
-				internalContainer.addEventListener("mouseleave", function() {
-					if (self.editConfig) {
-						folderButton.style.visibility = "hidden";
-						docButton.style.visibility = "hidden";
-					}
-				});
-
-				folderLI.append(internalContainer);
-
-				folderUL.append(folderLI);
-				parentElement.appendChild(folderUL);
-
-
-
-				// Document print
-				if (node.documentList && node.documentList.length > 0) {
-
-					let documents = document.createElement('ul');
-
-					node.documentList.forEach(function(doc) {
-
-						//creates the li element that contains the document.
-						let documentLi = document.createElement("li");
-						let documentDiv = document.createElement("div");
-						let documentIcon = document.createElement("img");
-
-						//setup the document-icon parameters
-						documentIcon.src = 'resources/images/doc.png';
-						documentIcon.height = 25;
-						documentIcon.style.float = 'left';
-						documentIcon.style.width = 'auto';
-						
-						let docNameText = document.createTextNode(doc.documentName + "." + doc.documentType);
-
-						//docElement.style.display = "inline";
-						documentDiv.classList.add("document");
-						let documentNameSpan = document.createElement("span");
-						documentNameSpan.classList.add("doc-btn");
-						
-						documentNameSpan.appendChild(documentIcon);
-						documentNameSpan.appendChild(docNameText);
-						
-						documentDiv.setAttribute("documentID", doc.documentID);
-						documentDiv.setAttribute("folderID", doc.folderID);
-						
-						//It creates a new ShowDocumentInfo button
-						let docInfo = document.createElement("button");
-						docInfo.className = "ShowDocumentInfo";
-						docInfo.textContent = "Show Document Info";
-						docInfo.style.visibility = "hidden";
-
-
-						let docAndButton = document.createElement("div");
-						docAndButton.append(documentDiv);
-						docAndButton.append(docInfo);
-
-						documentDiv.appendChild(documentNameSpan);
-						documentDiv.appendChild(docInfo);
-
-						//Show details on click
-						docInfo.addEventListener("click", function() {
-							documentInfo.openDocument(doc.documentID);
-						});
-
-						//It permits the DocInfoButton Dynamic Visual when the editConfig is inactive
-						docAndButton.addEventListener("mouseenter", function() {
-							if (!self.editConfig && !self.rootConfig) {
-								docInfo.style.visibility = "visible";
-							}
-						});
-
-						//It permits the DocInfoButton Dynamic Visual when the editConfig is inactive
-						docAndButton.addEventListener("mouseleave", function() {
-							if (!self.editConfig && !self.rootConfig) {
-								docInfo.style.visibility = "hidden";
-							}
-						});
-
-
-						documentLi.append(docAndButton);
-						documents.append(documentLi);
-
-					});
-
-					folderUL.appendChild(documents);
-				}
-
-				//Recursive call
-				if (node.children && node.children.length > 0) {
-					node.children.forEach(function(child) {
-						self.traverseTree(child, folderUL);
-					});
-				}
-
-
-			} else {
-
-				//Recursive call for the printing of the root folders
-				if (node.children && node.children.length > 0) {
-					node.children.forEach(function(child) {
-						self.traverseTree(child, parentElement);
-					});
-				}
-			}
-		}
-	}
-
-
-	/**
-	 * This class handles Drag and Drop
-	 */
-	function DragAndDropHandler() {
-
-		const self = this;
-
-		/**
-		 * This method sets up all the elements to be draggable or droppable
-		 */
-		this.setUp = function() {
-			let objList = document.getElementsByClassName("document");
-
-			for (let doc of objList) {
-				self.setMove(doc);
-				doc.setAttribute('draggable', "true");
-			}
-
-			objList = document.getElementsByClassName("folder");
-			for (let folder of objList) {
-
-				self.setDelete(folder);
-				self.setMove(folder);
-				folder.setAttribute('draggable', "true");
-				folder.classList.add("droppable");
-			}
-
-			let wasteBin = document.getElementById("wasteBin");
-
-			wasteBin.classList.add("droppable");
-
-			self.setDrop();
-			self.setWasteBin();
-		}
-
-		/**
-		 * This method sets up the dragstart for a movable element (usually a document).
-		 * @param element the element we want to assign the dragstart event to.
-		 */
-		this.setMove = function(element) {
-			element.addEventListener("dragstart", function(e) {
-				e.target.classList.add("dragging");
-				self.startElement = e.target;
-				
-				if (self.startElement.classList.contains('document')) {
-					const infoDocButton = self.startElement.querySelector('.ShowDocumentInfo');
-					infoDocButton.style.visibility = "hidden";
-				}
-				
-				if (self.findNotDroppable(e.target)) {
-					self.notDroppable.classList.add("not-droppable");
-				}
-			});
-			element.addEventListener("dragend", function(e) {
-				e.target.classList.remove("dragging");
-				self.resetDroppable();
-			});
-		}
-
-		/**
-		 * This method sets up the dragstart for a deletable element (usually a folder).
-		 * @param element the element we want to assign the dragstart event to.
-		 */
-		this.setDelete = function(element) {
-			element.addEventListener("dragstart", function(e) {
-				e.target.classList.add("dragging");
-				self.startElement = e.target;
-				let wasteBin = document.getElementById("wasteBin");
-				wasteBin.classList.add("droppable");
-			});
-			element.addEventListener("dragend", function(e) {
-				e.target.classList.remove("dragging");
-				self.resetDroppable();
-			});
-		}
-
-
-		/**
-		* Reset the droppable elements and the notDroppable element.
-		*/
-		this.resetDroppable = function() {
-
-			let elements = Array.from(document.getElementsByClassName("not-droppable"));
-			for (const elem of elements) {
-				elem.classList.remove("not-droppable");
-			}
-
-			elements = Array.from(document.getElementsByClassName("droppable"));
-			for (const element of elements) {
-				element.classList.remove("droppable");
-			}
-
-			self.notDroppable = null;
-			self.startElement = null;
-		}
-
-
-		/**
-		* Finds the element that can't be a drop target cause is the subfolder of the startElement.
-		* @param startElement the document element who has been dragged.
-		*/
-		this.findNotDroppable = function(startElement) {
-
-			let elements = document.getElementsByClassName("folder");
-
-			for (const element of elements) {
-				if (element.getAttribute("folderID") === startElement.getAttribute("folderID")) {
-					self.notDroppable = element;
-					return true;
-				}
-			}
-			return false;
-		}
-
-
-		/**
-		 * This method sets up the dragover, dragleave and drop events for the trash can element.
-		 * When an element is dragged over the trash can it can be deleted.
-		 */
-		this.setWasteBin = function() {
-
-			const wasteBin = document.getElementById("wasteBin");
-			wasteBin.addEventListener("dragover", function(e) {
-				e.preventDefault();
-				wasteBin.classList.add("dragover");
-			});
-
-			wasteBin.addEventListener("dragleave", function() {
-				wasteBin.classList.remove("dragover");
-			});
-
-			wasteBin.addEventListener("drop", self.deletionFunction);
-		}
-
-
-		/**
-		 * This function permits to delete the document and the folder that are dropped in the Waste Bin
-		 */
-		this.deletionFunction = function() {
-
-			let decision = confirm("Are you sure you want to delete this item?");
-			if (decision) {
-				
-				//Request to delete the element
-				//For the request we have to find the proper servlet
-				//If the request is successful the folder list has to be refreshed
-
-				if (self.startElement.classList.contains("document")) {
-					let formData = new FormData();
-
-					formData.append('documentID', self.startElement.getAttribute("documentID"));
-					makeCall("POST", 'DeleteDocument', formData, function(response) {
-						checkResponse(response);
-					});
-
-				} else if (self.startElement.classList.contains("folder")) {
-					let formData = new FormData();
-					formData.append("folderID", self.startElement.getAttribute("folderID"));
-					makeCall("POST", 'DeleteFolder', formData, function(response) {
-						checkResponse(response);
-					});
-
-				}
-			}
-
-			self.resetDroppable();
-			//pageManager.refresh();
-		};
-
-
-		/**
-		 * This method sets the dragover, dragleave and drop for each droppable element.
-		 * The droppable elements are the subfolders.
-		 */
-		this.setDrop = function() {
-
-			let elements = document.getElementsByClassName("folder");
-
-			for (const element of elements) {
-				element.addEventListener("dragover", function(e) {
-					if (element.classList.contains("droppable")) {
-						e.preventDefault();
-						element.classList.add("dragover");
-					}
-				});
-
-				element.classList.add("folder-btn");
-				element.addEventListener("dragleave", function() {
-					if (element.classList.contains("droppable")) {
-						element.classList.remove("dragover");
-					}
-				});
-
-				element.addEventListener("drop", function(e) {
-
-					document.getElementById("wasteBin").style.visibility = "hidden";
-
-					let folderID = e.target.getAttribute("folderID");
-
-					if (self.startElement !== null && self.startElement !== undefined) {
-
-						if (self.startElement.classList.contains('document')) {
-							if (folderID !== self.startElement.getAttribute("folderID")) {
-								let formData = new FormData();
-								formData.append("folderID", folderID);
-								formData.append("documentID", self.startElement.getAttribute("documentID"));
-								
-								//Send the move request to the server. If it's successful the folder list is refreshed.
-								makeCall("POST", 'MoveDocument', formData, function(response) {
-									checkResponse(response);
-								});
-								self.resetDroppable();
-
-							} else {
-
-								alert("You cannot move a document to the same folder it came from!");
-								self.resetDroppable();
-
-							}
-							
-						} else {
-
-							alert("You can only move folders to the trash!");
-							self.resetDroppable();
-
-						}
-					}
-					
-					document.getElementById("wasteBin").style.visibility = "visible";
-				});
-			}
-		}
-	}
-
-
-	/**
-	 * This class is used for creating a new Folder
-	 * @param container the container element.
-	 */
-	function CreateFolder(container) {
-
-		const form = document.getElementById("createFolder");
-		const title = document.getElementById("createFolderFormTitle");
-		let destinationID;
-
-		//It creates and sets the back button in the form
-		let backButton = document.createElement("button");
-		backButton.className = "BackButton";
-		backButton.textContent = "Cancel";
-		backButton.style.visibility = "visible";
-		form.append(backButton);
-
-		backButton.addEventListener("click", function() {
-			form.reset();
-			pageManager.refresh();
-		});
-
-		form.addEventListener("submit", function(e) {
-			e.preventDefault();
-			if (form.checkValidity()) {
-				const formData = new FormData(form);
-				formData.append("destinationID", destinationID);
-				
-				//Make a request to the server to create the folder.
-				makeCall("POST", 'CreateFolder', formData, function(response) {
-					checkResponse(response);
-				});
-				form.reset();
-			} else form.reportValidity();
-		}, false);
-		form.parentNode.removeChild(form);
-
-
-		/**
-		 * Hides the container.
-		 */
-		this.hide = function() {
-			container.style.visibility = "hidden";
-			if (container.contains(form))
-				container.removeChild(form);
-		}
-
-
-		/**
-		 * This method sets the create folder form visible and the event on the submit button.
-		 */
-		this.enableForm = function(folderID, folderName) {
-
-			destinationID = folderID;
-			pageManager.hideContent();
-			versionHistoryHandler.clear();
-			container.style.visibility = "visible";
-			title.textContent = "Create subfolder inside " + folderName;
-			container.append(form);
-		}
-	}
-
-
-	/**
-	 * This class is used for creating a new document.
-	 * @param container the container element.
-	 */
-	function CreateDocument(container) {
-
-		const title = document.getElementById("createDocumentTitle");
-		const form = document.getElementById("createDocument");
-		let destinationID;
-
-		//It creates and sets the back button in the form
-		let backButton = document.createElement("button");
-		backButton.className = "BackButton";
-		backButton.textContent = "Cancel";
-		backButton.style.visibility = "visible";
-		form.append(backButton);
-
-		backButton.addEventListener("click", function() {
-			form.reset();
-			pageManager.refresh();
-		});
-
-		form.addEventListener("submit", function(e) {
-			e.preventDefault();
-			if (form.checkValidity()) {
-				const formData = new FormData(form);
-				formData.append("destinationID", destinationID);
-				
-				//Make a request to the server to create the document.
-				makeCall("POST", 'CreateDocument', formData, function(response) {
-					checkResponse(response);
-				});
-				form.reset();
-			} else form.reportValidity();
-		}, false);
-		form.parentNode.removeChild(form);
-
-		/**
-		 * Hides the container.
-		 */
-		this.hide = function() {
-			container.style.visibility = "hidden";
-			if (container.contains(form))
-				container.removeChild(form);
-		}
-
-		/**
-		 * This method sets the create document form visible and the event on the submit button.
-		 */
-		this.enableForm = function(folderID, folderName) {
-
-			destinationID = folderID;
-			pageManager.hideContent();
-			versionHistoryHandler.clear();
-			container.style.visibility = "visible";		
-			title.textContent = "Create document inside folder: " + folderName;
-			container.append(form);
-			
-		}
-	}
-
-
-	/**
-	 * This class is used to show the document details.
-	 * @param options a list of container elements.
-	 */
-	function ShowDocument(options) {
-		
-		const documentDetails = document.getElementById("documentDetails");
-		documentDetails.parentNode.removeChild(documentDetails);
-
-		/**
-		 * Hides the document details.
-		 */
-		this.hide = function() {
-			document.getElementById("rightContainer").style.visibility = "hidden";
-			if (document.getElementById("rightContainer").contains(documentDetails))
-				document.getElementById("rightContainer").removeChild(documentDetails);
-		};
-
-		/**
-		 * Shows the document details
-		 * @param documentID the id of the document to show.
-		 */
-		this.openDocument = function(documentID) {
-			let self = this;
-			
-			//Make a request to the server to get the document details.
-			makeCall("GET", "GetDocument?documentID=" + documentID, null, function(response) {
-				if (response.readyState === XMLHttpRequest.DONE) {
-					let text = response.responseText;
-					switch (response.status) {
-						case 200:
-							self.setDocumentDetails(JSON.parse(text));
-							document.getElementById("rightContainer").append(documentDetails);
-							break;
-						case 401: // unauthorized
-							alert("You are not logged in.")
-							logout();
-							break;
-						case 403: //an other account is already logged in
-							alert("An other account is already logged in. Automatically log out...");
-							sessionStorage.clear();
-							window.location.href = "index.html";
-							break;
-						case 400: // bad request
-						case 500: // server error
-							alert(text);
-							break;
-						default:
-							alert("Unknown error");
-							break;
-					}
-				}
-			});
-
-		}
-
-
-		/**
-		 * Sets up the container with the document details.
-		 * @param doc the document to show.
-		 */
-		this.setDocumentDetails = function(doc) {
-
-			versionHistoryHandler.clear();
-			pageManager.hideContent();
-			document.getElementById("rightContainer").style.visibility = "visible";
-			options['documentName'].textContent = doc.documentName;
-			options['documentFormat'].textContent = doc.documentType;
-			options['documentSummary'].textContent = doc.summary;
-			options['documentDate'].textContent = doc.creationDate;
-
-			options['button'].onclick = function() {
-				versionHistoryHandler.clear();
-				versionHistoryHandler.getVersionHistory();
-				document.getElementById("rightContainer").style.visibility = "hidden";
-			};
-
-		}
-	}
-
-
-	/**
-	 * This class handles the Version Log 
-	 */
-	function ShowVersionHistory(container) {
-
-		const self = this;
-
-		/**
-		 * Hides the Version History.
-		 */
-		this.clear = function() {
-
-			document.getElementById("rightContainer").innerHTML = "";
-			document.getElementById("rightContainer").style.visibility = "hidden";
-		};
-
-		/**
-		 * Take the Version History details.
-		 */
-		this.getVersionHistory = function() {
-			let self = this;
-			
-			//Make a request to the server to get the version history datas.
-			makeCall("GET", "GetVersionHistory", null, function(response) {
-				if (response.readyState === XMLHttpRequest.DONE) {
-					let text = response.responseText;
-					switch (response.status) {
-						case 200:
-							self.versionHistoryData = JSON.parse(text);
-							self.setVersionHistoryData();
-							break;
-						case 401: // unauthorized
-							alert("You are not logged in.")
-							logout();
-							break;
-						case 403: //an other account is already logged in
-							alert("An other account is already logged in. Automatically log out...");
-							sessionStorage.clear();
-							window.location.href = "index.html";
-							break;
-						case 400: // bad request
-						case 500: // server error
-							alert(text);
-							break;
-						default:
-							alert("Unknown error");
-							break;
-					}
-				}
-			});
-		}
-
-
-		/**
-		 * This method handles the printing of the VersionHistoryData
-		 */
-		this.setVersionHistoryData = function() {
-
-			pageManager.hideContent();
-			const rightContainer = document.getElementById("rightContainer");
-			rightContainer.style.visibility = "visible";
-
-			let titleSpaceDiv = document.createElement("div");
-				titleSpaceDiv.style.marginTop = "20px";
-				rightContainer.append(titleSpaceDiv);
-				
-			let title = document.createElement("h2");
-			title.textContent = "History Log";
-			title.style.visibility = "visible";
-
-			rightContainer.append(title);
-		
-			let spaceDiv = document.createElement("div");
-				spaceDiv.style.marginTop = "20px";
-				rightContainer.append(spaceDiv);
-			
-			let datasUl = document.createElement('ul');
-			
-			self.versionHistoryData.forEach(function(element) {
-
-				let elementDiv = document.createElement("div");
-				let elementLI = document.createElement("li");
-				let divContainer = document.createElement("div");
-
-				elementDiv.classList.add("historyDatas");
-				elementDiv.textContent = element;
-				elementDiv.style.visibility = "visible";
-				divContainer.append(elementDiv);
-
-				elementLI.append(divContainer);
-				datasUl.append(elementLI);
-
-			});
-
-			rightContainer.append(datasUl);
-
-		}
-	}
-
-
-	/**
-	 * This class is used for setting up the page and passing the right elements to the classes.
-	 */
-	function PageManager() {
-
-		/**
-		 * This method is called on refresh. Crates the classes by passing them the right elements.
-		 */
-		this.start = function() {
-			folderTree = new FolderTree(document.getElementById("treeContainer"));
-			const rightContainer = document.getElementById("rightContainer");
-			documentInfo = new ShowDocument({
-				documentName: document.getElementById("documentName"),
-				documentDate: document.getElementById("documentDate"),
-				documentFormat: document.getElementById("documentFormat"),
-				documentSummary: document.getElementById("documentSummary"),
-				button: document.getElementById("hideDetails")
-			});
-			createFolder = new CreateFolder(rightContainer);
-			createDocument = new CreateDocument(rightContainer);
-			dragAndDropHandler = new DragAndDropHandler();
-			versionHistoryHandler = new ShowVersionHistory(rightContainer);
-			this.hideContent();
-		}
-
-		/**
-		 * This method refreshes the page.
-		 */
-		this.refresh = function() {
-			folderTree.show();
-			versionHistoryHandler.clear();
-			versionHistoryHandler.getVersionHistory();
-		}
-
-		/**
-		 * This method hides all the content except the folder list.
-		 */
-		this.hideContent = function() {
-			documentInfo.hide();
-			createFolder.hide();
-			createDocument.hide();
-		}
-	}
-
-	
-	/**
-	 * This function checks the different responses that could come from the server side. If is okey it calls pageManager.refresh()
-	 */
-	function checkResponse(response) {
-		if (response.readyState === XMLHttpRequest.DONE) {
-			let text = response.responseText;
-			switch (response.status) {
-				case 200:
-					pageManager.refresh();
-					break;
-				case 400: // bad request
-					alert(text);
-					break;
-				case 401: // unauthorized
-					alert("You are not logged in.");
-					logout();
-					break;
-				case 403: //an other account is already logged in
-					alert("An other account is already logged in. Automatically log out...");
-					sessionStorage.clear();
-					window.location.href = "index.html";
-					break;
-				case 500: // server error
-					alert(text);
-					break;
-				default:
-					alert("Unknown error");
-			}
-		}
-	}
-}
+/* Server-authorised workspace. Uploaded bytes and cumulative undo are transactional. */
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const folders = new Map(),
+    documents = new Map();
+  let tree = null,
+    history = [],
+    workspaceRevision = "0",
+    csrfToken = "",
+    editing = false,
+    dragged = null,
+    busy = false,
+    panelRevision = 0;
+  let limits = {
+    maxFileSize: 25 * 1024 * 1024,
+    maxRequestSize: 100 * 1024 * 1024,
+    storageLimit: 250 * 1024 * 1024,
+  };
+  const fileName = (doc) =>
+    doc.fileName ||
+    doc.documentName + (doc.documentType ? "." + doc.documentType : "");
+  const bytes = (value) =>
+    value < 1024
+      ? value + " B"
+      : value < 1024 * 1024
+        ? (value / 1024).toFixed(1) + " KB"
+        : (value / (1024 * 1024)).toFixed(1) + " MB";
+  function node(tag, className, text) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function button(text, className, action) {
+    const e = node("button", className, text);
+    e.type = "button";
+    e.addEventListener("click", action);
+    return e;
+  }
+  function formData(values) {
+    const data = new FormData();
+    Object.entries(values).forEach(([key, value]) => data.append(key, value));
+    return data;
+  }
+  function announce(text, error = false) {
+    const e = $("statusMessage");
+    e.textContent = text;
+    e.className = error ? "alert" : "status-message";
+    e.hidden = false;
+  }
+  function request(method, endpoint, data = null) {
+    return new Promise((resolve, reject) => {
+      const uploading = endpoint === "UploadFiles";
+      makeCall(
+        method,
+        endpoint,
+        data,
+        (response) => {
+          if (response.readyState !== XMLHttpRequest.DONE) return;
+          if (
+            response.status === 401 ||
+            (response.status === 403 && response.getResponseHeader("Location"))
+          ) {
+            sessionStorage.removeItem("utente");
+            window.location.href = "index.html";
+          }
+          if (response.status === 200) resolve(response.responseText);
+          else {
+            const error = new Error(
+              response.responseText ||
+                "Unable to reach the server. Please try again.",
+            );
+            error.status = response.status;
+            reject(error);
+          }
+        },
+        true,
+        {
+          headers: method === "POST" ? { "X-CSRF-Token": csrfToken } : {},
+          timeout: uploading ? 300000 : 20000,
+          onProgress: uploading
+            ? (event) => {
+                if (event.lengthComputable) {
+                  const percentage = Math.round(
+                    (event.loaded / event.total) * 100,
+                  );
+                  $("uploadProgressBar").value = percentage;
+                  $("uploadProgressLabel").textContent =
+                    percentage === 100
+                      ? "Saving your files…"
+                      : "Uploading… " + percentage + "%";
+                }
+              }
+            : null,
+        },
+      );
+    });
+  }
+  async function refresh() {
+    $("treeContainer").setAttribute("aria-busy", "true");
+    $("treeError").hidden = true;
+    const revision = panelRevision;
+    const results = await Promise.allSettled([
+      request("GET", "GetTree").then(JSON.parse),
+      request("GET", "GetVersionHistory").then(JSON.parse),
+    ]);
+    if (results[0].status === "fulfilled" && results[0].value) {
+      tree = results[0].value;
+      folders.clear();
+      documents.clear();
+      (function collect(branch) {
+        folders.set(branch.folder.folderID, branch.folder);
+        (branch.documentList || []).forEach((doc) =>
+          documents.set(doc.documentID, doc),
+        );
+        (branch.children || []).forEach(collect);
+      })(tree);
+      $("folderCount").textContent = [...folders.values()].filter(
+        (folder) => folder.depth > 0,
+      ).length;
+      $("documentCount").textContent = documents.size;
+      renderTree();
+    } else {
+      $("treeError").textContent =
+        results[0].reason?.message || "Unable to load your library.";
+      $("treeError").hidden = false;
+    }
+    if (results[1].status === "fulfilled") {
+      const data = results[1].value;
+      history = data.actions;
+      workspaceRevision = data.revision;
+      $("storageUsed").textContent =
+        bytes(data.storageUsed) +
+        " / " +
+        bytes(data.storageLimit) +
+        " · includes undo";
+      if (panelRevision === revision) showActivity();
+    } else if (panelRevision === revision) {
+      $("rightContainer").replaceChildren(
+        node("h2", "", "Session activity"),
+        node("p", "alert", results[1].reason.message),
+      );
+    }
+    $("treeContainer").setAttribute("aria-busy", "false");
+  }
+  function setEdit(value) {
+    editing = value;
+    $("EditButton").setAttribute("aria-pressed", String(value));
+    $("EditButton").textContent = value ? "Done editing" : "Edit workspace";
+    $("modeHint").textContent = value
+      ? "Create, rename or move folders. Deleted items can be restored from Session activity."
+      : "Drag files or folders to move them. Drop files from your computer onto a folder to upload.";
+    renderTree();
+  }
+  function pathFor(folder) {
+    const parts = [folder.folderName];
+    let parent = folders.get(folder.parentFolderID);
+    while (parent && parent.depth > 0) {
+      parts.unshift(parent.folderName);
+      parent = folders.get(parent.parentFolderID);
+    }
+    return folder.depth === 0 ? "Workspace root" : parts.join(" / ");
+  }
+  function externalDrag(event) {
+    return [...(event.dataTransfer?.types || [])].includes("Files");
+  }
+  function renderTree() {
+    if (!tree) return;
+    const query = $("searchInput").value.trim().toLowerCase(),
+      list = node("ul", "folder-tree");
+    function renderFolder(branch, inherited = false) {
+      const folder = branch.folder,
+        matching = inherited || folder.folderName.toLowerCase().includes(query);
+      const children = (branch.children || [])
+        .map((child) => renderFolder(child, matching))
+        .filter(Boolean);
+      const docs = (branch.documentList || []).filter(
+        (doc) => matching || fileName(doc).toLowerCase().includes(query),
+      );
+      if (query && !matching && !docs.length && !children.length) return null;
+      const item = node("li", "folder-card"),
+        header = node("div", "folder-header");
+      header.dataset.folderId = folder.folderID;
+      header.append(
+        node("span", "folder-icon folder-symbol"),
+        node("span", "folder-name", folder.folderName),
+      );
+      header.firstChild.setAttribute("aria-hidden", "true");
+      const count = (branch.documentList || []).length;
+      header.append(
+        node("span", "folder-meta", count + (count === 1 ? " file" : " files")),
+      );
+      makeDraggable(header, { type: "folder", id: folder.folderID });
+      header.addEventListener("dragover", (event) => {
+        if (dragged || externalDrag(event)) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.dataTransfer.dropEffect = externalDrag(event) ? "copy" : "move";
+          header.classList.add("dragover");
+        }
+      });
+      header.addEventListener("dragleave", () =>
+        header.classList.remove("dragover"),
+      );
+      header.addEventListener("drop", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        header.classList.remove("dragover");
+        if (event.dataTransfer.files.length)
+          uploadFiles([...event.dataTransfer.files], folder.folderID);
+        else if (dragged) moveItem(dragged, folder.folderID);
+        dragged = null;
+      });
+      item.append(header);
+      if (editing) {
+        const actions = node("div", "folder-actions");
+        actions.append(
+          button("+ Folder", "button secondary", () => showFolderForm(folder)),
+          button("↑ Upload", "button secondary", () =>
+            showUpload(folder.folderID),
+          ),
+          button("Rename", "button secondary", () =>
+            showRename({ type: "folder", id: folder.folderID }),
+          ),
+          button("Move", "button secondary", () =>
+            showMove({ type: "folder", id: folder.folderID }),
+          ),
+          button("Delete", "button danger", () =>
+            deleteItem({ type: "folder", id: folder.folderID }),
+          ),
+        );
+        item.append(actions);
+      }
+      const docList = node("ul", "document-list");
+      docs.forEach((doc) => {
+        const row = node("li", "document-row");
+        row.dataset.documentId = doc.documentID;
+        const badge = node(
+          "span",
+          "file-badge",
+          (doc.documentType || "FILE").slice(0, 5),
+        );
+        badge.setAttribute("aria-hidden", "true");
+        if (doc.canPreview) badge.classList.add("image-badge");
+        const open = button(fileName(doc), "document-open", () =>
+          showDocument(doc.documentID),
+        );
+        open.append(
+          node(
+            "span",
+            "document-format",
+            doc.hasFile ? bytes(doc.size) : "Legacy metadata",
+          ),
+        );
+        const details = button("Details ↗", "text-button", () =>
+          showDocument(doc.documentID),
+        );
+        details.setAttribute("aria-label", "Details for " + fileName(doc));
+        row.append(badge, open, details);
+        makeDraggable(row, { type: "document", id: doc.documentID });
+        docList.append(row);
+      });
+      item.append(docList);
+      if (!docs.length && !children.length && !query) {
+        const empty = node("div", "folder-empty");
+        empty.append(
+          node("span", "", "Drop your first files here, or "),
+          button("choose files", "text-button", () =>
+            showUpload(folder.folderID),
+          ),
+        );
+        item.append(empty);
+      }
+      if (children.length) {
+        const nested = node("ul", "folder-tree");
+        nested.append(...children);
+        item.append(nested);
+      }
+      return item;
+    }
+    (tree.children || []).forEach((branch) => {
+      const item = renderFolder(branch);
+      if (item) list.append(item);
+    });
+    $("treeContainer").replaceChildren(list);
+    $("emptyState").hidden = !!tree.children?.length;
+    $("searchEmpty").hidden =
+      !query || !!list.children.length || !tree.children?.length;
+  }
+  function makeDraggable(element, item) {
+    element.draggable = true;
+    element.addEventListener("dragstart", (event) => {
+      if (busy) {
+        event.preventDefault();
+        return;
+      }
+      event.stopPropagation();
+      dragged = item;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(item.id));
+      element.classList.add("dragging");
+    });
+    element.addEventListener("dragend", () => {
+      dragged = null;
+      element.classList.remove("dragging");
+      document
+        .querySelectorAll(".dragover")
+        .forEach((e) => e.classList.remove("dragover"));
+    });
+  }
+  function showActivity() {
+    panelRevision++;
+    const panel = $("rightContainer");
+    panel.replaceChildren(
+      node("span", "eyebrow", "EVERY STEP, REVERSIBLE"),
+      node("h2", "", "Session activity"),
+      node(
+        "p",
+        "inspector-subtitle",
+        "Undo an action and everything after it. Available until your session ends.",
+      ),
+    );
+    if (!history.length) {
+      const empty = node("p", "activity-empty");
+      empty.append(
+        node("strong", "", "A fresh session."),
+        document.createTextNode(
+          "Upload, move or organise your files. You can retrace your steps here.",
+        ),
+      );
+      panel.append(empty);
+      return;
+    }
+    const list = node("ol", "activity-list");
+    history.forEach((entry, index) => {
+      const item = node("li", "activity-item");
+      item.dataset.actionId = entry.id;
+      item.append(
+        node(
+          "span",
+          "activity-kind",
+          index === 0 ? "MOST RECENT" : "EARLIER THIS SESSION",
+        ),
+        node("p", "activity-description", entry.description),
+      );
+      const undo = button(
+        entry.undoCount > 1
+          ? "↶ Undo this + " + (entry.undoCount - 1) + " newer"
+          : "↶ Undo this action",
+        "undo-button",
+        () => undoAction(entry),
+      );
+      undo.disabled = !entry.undoable || busy;
+      undo.setAttribute(
+        "aria-label",
+        "Undo " +
+          entry.description +
+          (entry.undoCount > 1
+            ? " and " + (entry.undoCount - 1) + " newer actions"
+            : ""),
+      );
+      if (!entry.undoable)
+        undo.title =
+          "Another session changed the workspace, or undo data expired.";
+      item.append(undo);
+      if (!entry.undoable)
+        item.append(
+          node(
+            "span",
+            "field-help",
+            "Undo unavailable after another session or expiry.",
+          ),
+        );
+      list.append(item);
+    });
+    panel.append(list);
+  }
+  function undoAction(entry) {
+    if (busy || !entry.undoable) return;
+    const text =
+      entry.undoCount === 1
+        ? "Undo “" + entry.description + "”?"
+        : "Undo “" +
+          entry.description +
+          "” and all " +
+          (entry.undoCount - 1) +
+          " newer actions?";
+    if (
+      !confirm(
+        text +
+          " Files, names and folder locations will return to their earlier state. There is no redo.",
+      )
+    )
+      return;
+    return mutate(
+      "UndoActions",
+      formData({ actionID: entry.id, revision: workspaceRevision }),
+      entry.undoCount +
+        " action" +
+        (entry.undoCount === 1 ? "" : "s") +
+        " undone.",
+    );
+  }
+  function focusPanel() {
+    const heading = $("rightContainer").querySelector("h2");
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
+    if (matchMedia("(max-width: 960px)").matches)
+      $("rightContainer").scrollIntoView({ behavior: "auto", block: "start" });
+  }
+  function showFolderForm(destination) {
+    panelRevision++;
+    const panel = $("rightContainer");
+    panel.replaceChildren($("folderFormTemplate").content.cloneNode(true));
+    panel.querySelector(".form-destination").textContent =
+      "Inside " + pathFor(destination);
+    panel
+      .querySelector(".cancel-button")
+      .addEventListener("click", showActivity);
+    const form = panel.querySelector("form");
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (form.reportValidity())
+        mutate(
+          "CreateFolder",
+          formData({
+            newFolderName: $("folderName").value,
+            destinationID: destination.folderID,
+          }),
+          "Folder created.",
+        );
+    });
+    focusPanel();
+    $("folderName").focus({ preventScroll: true });
+  }
+  function showUpload(destination = null, selected = []) {
+    if (busy) return;
+    panelRevision++;
+    const panel = $("rightContainer");
+    panel.replaceChildren($("uploadFormTemplate").content.cloneNode(true));
+    const select = $("uploadDestination");
+    [...folders.values()]
+      .filter((f) => f.depth > 0)
+      .forEach((folder) => {
+        const option = node("option", "", pathFor(folder));
+        option.value = folder.folderID;
+        select.append(option);
+      });
+    if (destination !== null) select.value = String(destination);
+    if (!select.options.length) {
+      panel.replaceChildren(
+        node("h2", "", "Create your first folder"),
+        node(
+          "p",
+          "muted form-destination",
+          "Files live inside folders. Create a root folder, then upload your files.",
+        ),
+        button("Create root folder", "button primary", () =>
+          showFolderForm(tree.folder),
+        ),
+      );
+      focusPanel();
+      return;
+    }
+    let files = selected;
+    const showSelection = () => {
+      const list = $("uploadSelection");
+      list.replaceChildren();
+      files.forEach((file) =>
+        list.append(node("li", "", file.name + " · " + bytes(file.size))),
+      );
+    };
+    showSelection();
+    $("fileInput").addEventListener("change", (event) => {
+      files = [...event.target.files];
+      showSelection();
+    });
+    panel
+      .querySelector(".cancel-button")
+      .addEventListener("click", showActivity);
+    $("uploadForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (event.target.reportValidity())
+        uploadFiles(files, Number(select.value));
+    });
+    focusPanel();
+  }
+  async function uploadFiles(files, destination) {
+    if (busy) return;
+    if (!files.length || files.length > 20) {
+      announce("Choose between 1 and 20 files.", true);
+      return;
+    }
+    if (
+      files.some((file) => file.size > limits.maxFileSize) ||
+      files.reduce((total, file) => total + file.size, 0) >
+        limits.maxRequestSize
+    ) {
+      announce(
+        "Use files up to 25 MB, with at most 100 MB per selection.",
+        true,
+      );
+      return;
+    }
+    const data = formData({ destinationID: destination });
+    files.forEach((file) => data.append("files", file, file.name));
+    return mutate(
+      "UploadFiles",
+      data,
+      files.length === 1 ? "File uploaded." : files.length + " files uploaded.",
+    );
+  }
+  async function showDocument(id) {
+    const revision = ++panelRevision;
+    try {
+      const doc = JSON.parse(
+        await request(
+          "GET",
+          "GetDocument?documentID=" + encodeURIComponent(id),
+        ),
+      );
+      if (revision !== panelRevision) return;
+      if (!doc) throw new Error("This file is no longer available.");
+      const panel = $("rightContainer");
+      panel.replaceChildren(
+        node("span", "eyebrow", "FILE DETAILS"),
+        node("h2", "detail-heading", fileName(doc)),
+        node("span", "format-chip", doc.documentType || "File"),
+      );
+      if (doc.canPreview) {
+        const image = node("img", "file-preview");
+        image.alt = "Preview of " + fileName(doc);
+        image.src = "PreviewFile?documentID=" + encodeURIComponent(id);
+        image.addEventListener("error", () =>
+          image.replaceWith(
+            node(
+              "p",
+              "field-help",
+              "Preview unavailable. Download the original file to open it.",
+            ),
+          ),
+        );
+        panel.append(image);
+      }
+      const details = node("dl", "document-details");
+      const fields = [
+        ["Size", doc.hasFile ? bytes(doc.size) : "Metadata only"],
+        ["Created", doc.creationDate],
+        ["Folder", folders.get(doc.folderID)?.folderName || "—"],
+      ];
+      if (doc.summary) fields.unshift(["Summary", doc.summary]);
+      fields.forEach(([label, value]) =>
+        details.append(node("dt", "", label), node("dd", "", value)),
+      );
+      const actions = node("div", "form-actions");
+      if (doc.hasFile) {
+        const download = node("a", "button primary", "↓ Download");
+        download.href = "DownloadFile?documentID=" + encodeURIComponent(id);
+        download.setAttribute("download", fileName(doc));
+        actions.append(download);
+      }
+      actions.append(
+        button("Rename", "button secondary", () =>
+          showRename({ type: "document", id }),
+        ),
+        button("Move file", "button secondary", () =>
+          showMove({ type: "document", id }),
+        ),
+        button("Delete", "button danger", () =>
+          deleteItem({ type: "document", id }),
+        ),
+      );
+      panel.append(
+        details,
+        actions,
+        button("← Back to activity", "text-button back-link", showActivity),
+      );
+      focusPanel();
+    } catch (error) {
+      announce(error.message, true);
+    }
+  }
+  function showRename(item) {
+    if (busy) return;
+    panelRevision++;
+    const entry =
+      item.type === "folder" ? folders.get(item.id) : documents.get(item.id);
+    if (!entry) return;
+    const panel = $("rightContainer"),
+      form = node("form");
+    panel.replaceChildren(
+      node("span", "eyebrow", "A FRESH NAME"),
+      node("h2", "", "Rename " + (item.type === "folder" ? "folder" : "file")),
+    );
+    const label = node("label", "", "Name");
+    label.htmlFor = "renameInput";
+    const input = node("input");
+    input.id = "renameInput";
+    input.required = true;
+    input.maxLength = item.type === "folder" ? 100 : 200;
+    input.value = entry.folderName || fileName(entry);
+    const save = node("button", "button primary", "Save name");
+    save.type = "submit";
+    const actions = node("div", "form-actions");
+    actions.append(save, button("Cancel", "button secondary", showActivity));
+    form.append(label, input, actions);
+    panel.append(form);
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (form.reportValidity())
+        mutate(
+          "RenameItem",
+          formData({ itemType: item.type, itemID: item.id, name: input.value }),
+          "Name updated.",
+        );
+    });
+    focusPanel();
+    input.focus({ preventScroll: true });
+    input.select();
+  }
+  function isDescendant(folder, id) {
+    let current = folder;
+    while (current) {
+      if (current.folderID === id) return true;
+      current = folders.get(current.parentFolderID);
+    }
+    return false;
+  }
+  function showMove(item) {
+    if (busy) return;
+    panelRevision++;
+    const entry =
+      item.type === "folder" ? folders.get(item.id) : documents.get(item.id);
+    if (!entry) return;
+    const panel = $("rightContainer");
+    panel.replaceChildren(
+      node("span", "eyebrow", "A NEW PLACE"),
+      node("h2", "", "Move " + (item.type === "folder" ? "folder" : "file")),
+      node("p", "muted form-destination", entry.folderName || fileName(entry)),
+    );
+    const form = node("form"),
+      label = node("label", "", "Destination folder"),
+      select = node("select");
+    label.htmlFor = "moveDestination";
+    select.id = "moveDestination";
+    select.required = true;
+    [...folders.values()]
+      .filter((folder) =>
+        item.type === "folder"
+          ? !isDescendant(folder, item.id) &&
+            folder.folderID !== entry.parentFolderID
+          : folder.depth > 0 && folder.folderID !== entry.folderID,
+      )
+      .forEach((folder) => {
+        const option = node("option", "", pathFor(folder));
+        option.value = folder.folderID;
+        select.append(option);
+      });
+    const submit = node("button", "button primary", "Move here");
+    submit.type = "submit";
+    submit.disabled = !select.options.length;
+    if (!select.options.length)
+      form.append(
+        node("p", "field-help", "There are no available destination folders."),
+      );
+    const actions = node("div", "form-actions");
+    actions.append(submit, button("Cancel", "button secondary", showActivity));
+    form.append(label, select, actions);
+    panel.append(form);
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (form.reportValidity()) moveItem(item, Number(select.value));
+    });
+    focusPanel();
+  }
+  function moveItem(item, destination) {
+    if (item.type === "folder")
+      return mutate(
+        "MoveFolder",
+        formData({ folderID: item.id, destinationID: destination }),
+        "Folder moved.",
+      );
+    if (documents.get(item.id)?.folderID === destination) {
+      announce("Choose a different destination folder.", true);
+      return;
+    }
+    return mutate(
+      "MoveDocument",
+      formData({ folderID: destination, documentID: item.id }),
+      "File moved.",
+    );
+  }
+  function deleteItem(item) {
+    if (busy || !item) return;
+    const entry =
+      item.type === "folder" ? folders.get(item.id) : documents.get(item.id);
+    if (!entry || entry.depth === 0) return;
+    const name = entry.folderName || fileName(entry),
+      extra =
+        item.type === "folder"
+          ? " This includes all files and subfolders."
+          : "";
+    if (
+      !confirm(
+        "Delete “" +
+          name +
+          "”?" +
+          extra +
+          " You can restore it from Session activity before this session ends.",
+      )
+    )
+      return;
+    return mutate(
+      item.type === "folder" ? "DeleteFolder" : "DeleteDocument",
+      formData(
+        item.type === "folder"
+          ? { folderID: item.id }
+          : { documentID: item.id },
+      ),
+      "Item deleted. Undo is available in Session activity.",
+    );
+  }
+  async function mutate(endpoint, data, message) {
+    if (busy) return false;
+    busy = true;
+    const controls = [
+      ...document.querySelectorAll(
+        "button:not(:disabled),input:not(:disabled),select:not(:disabled)",
+      ),
+    ];
+    controls.forEach((control) => (control.disabled = true));
+    if (endpoint === "UploadFiles") {
+      $("uploadProgress").hidden = false;
+      $("uploadProgressBar").value = 0;
+      $("uploadProgressLabel").textContent = "Uploading…";
+    }
+    try {
+      await request("POST", endpoint, data);
+      panelRevision++;
+      await refresh();
+      announce(message);
+      return true;
+    } catch (error) {
+      if (endpoint === "UndoActions" && error.status === 409) {
+        panelRevision++;
+        await refresh();
+      }
+      announce(error.message, true);
+      return false;
+    } finally {
+      busy = false;
+      controls.forEach((control) => (control.disabled = false));
+      $("uploadProgress").hidden = true;
+      document.querySelectorAll(".undo-button").forEach((control) => {
+        const entry = history.find(
+          (entry) =>
+            entry.id === control.closest(".activity-item").dataset.actionId,
+        );
+        control.disabled = !entry?.undoable;
+      });
+    }
+  }
+  async function logout() {
+    if (busy) return;
+    $("Logout").disabled = true;
+    try {
+      await request("POST", "Logout");
+      sessionStorage.removeItem("utente");
+      location.href = "index.html";
+    } catch (error) {
+      announce(error.message, true);
+      $("Logout").disabled = false;
+    }
+  }
+  const user = sessionStorage.getItem("utente");
+  if (user === null) {
+    location.replace("index.html");
+    return;
+  }
+  $("userLabel").textContent = user.trim();
+  $("userInitial").textContent = user.trim().charAt(0).toUpperCase() || "U";
+  $("Logout").addEventListener("click", logout);
+  $("EditButton").addEventListener("click", () => setEdit(!editing));
+  $("RootButton").addEventListener("click", () => {
+    if (tree && !busy) showFolderForm(tree.folder);
+  });
+  $("UploadButton").addEventListener("click", () => {
+    if (tree) showUpload();
+  });
+  $("searchInput").addEventListener("input", renderTree);
+  $("overviewButton").addEventListener("click", () => {
+    $("searchInput").value = "";
+    renderTree();
+    $("workspace").focus();
+  });
+  $("activityButton").addEventListener("click", () => {
+    showActivity();
+    focusPanel();
+  });
+  $("guideButton").addEventListener("click", () =>
+    $("guideDialog").showModal(),
+  );
+  $("closeGuide").addEventListener("click", () => $("guideDialog").close());
+  const dropzone = $("uploadDropzone");
+  dropzone.addEventListener("click", () => {
+    if (tree) showUpload();
+  });
+  dropzone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (tree) showUpload();
+    }
+  });
+  dropzone.addEventListener("dragover", (event) => {
+    if (externalDrag(event)) {
+      event.preventDefault();
+      dropzone.classList.add("dragover");
+    }
+  });
+  dropzone.addEventListener("dragleave", () =>
+    dropzone.classList.remove("dragover"),
+  );
+  dropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dropzone.classList.remove("dragover");
+    if (tree && event.dataTransfer.files.length)
+      showUpload(null, [...event.dataTransfer.files]);
+  });
+  window.addEventListener("dragover", (event) => {
+    if (externalDrag(event)) event.preventDefault();
+  });
+  window.addEventListener("drop", (event) => {
+    if (externalDrag(event)) event.preventDefault();
+  });
+  $("wasteBin").addEventListener("dragover", (event) => {
+    if (dragged) {
+      event.preventDefault();
+      $("wasteBin").classList.add("dragover");
+    }
+  });
+  $("wasteBin").addEventListener("dragleave", () =>
+    $("wasteBin").classList.remove("dragover"),
+  );
+  $("wasteBin").addEventListener("drop", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    $("wasteBin").classList.remove("dragover");
+    deleteItem(dragged);
+    dragged = null;
+  });
+  $("rightContainer").append(
+    node("p", "loading-state", "Loading your workspace…"),
+  );
+  request("GET", "SessionToken")
+    .then(JSON.parse)
+    .then((config) => {
+      csrfToken = config.csrfToken;
+      limits = config;
+      return refresh();
+    })
+    .catch((error) => announce(error.message, true));
+})();
