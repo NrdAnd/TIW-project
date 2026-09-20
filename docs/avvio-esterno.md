@@ -1,18 +1,18 @@
-# Avvio esterno al progetto
+# External startup guide
 
-Questa procedura avvia l'applicazione usando soltanto Terminale, MySQL e Tomcat. Codex, Eclipse e la preview JavaScript non sono necessari.
+This procedure starts the application using only Terminal, MySQL and Tomcat. Codex, Eclipse and the JavaScript preview are not required.
 
-## 1. Controllare i prerequisiti
+## 1. Check the requirements
 
-Servono:
+You need:
 
-- macOS o Linux;
-- JDK 19 o più recente;
-- Maven 3.9 o più recente;
-- MySQL 8 o più recente;
+- macOS or Linux;
+- JDK 19 or newer;
+- Maven 3.9 or newer;
+- MySQL 8 or newer;
 - Tomcat 9.
 
-Controlla le versioni:
+Check the installed versions:
 
 ```sh
 java -version
@@ -20,53 +20,53 @@ mvn -version
 mysql --version
 ```
 
-## 2. Aprire il progetto nel Terminale
+## 2. Open the project in Terminal
 
-Sostituisci il percorso con quello della tua copia del progetto:
+Replace the path with the location of your project copy:
 
 ```sh
-cd "/percorso/del/progetto/TIW_Project_2024_RIA"
+cd "/path/to/TIW_Project_2024_RIA"
 ```
 
-## 3. Avviare MySQL
+## 3. Start MySQL
 
-Se MySQL è stato installato con il pacchetto ufficiale, puoi avviarlo da **Impostazioni di Sistema → MySQL → Start MySQL Server**.
+If MySQL was installed with the official package, open **System Settings → MySQL → Start MySQL Server**.
 
-In alternativa, da Terminale:
+Alternatively, start it from Terminal:
 
 ```sh
 sudo /usr/local/mysql/support-files/mysql.server start
 ```
 
-Verifica che risponda:
+Check that it is responding:
 
 ```sh
 mysqladmin -u root -p ping
 ```
 
-Inserisci la password amministrativa quando richiesto. Non scrivere la password direttamente nel comando.
+Enter the administrator password when prompted. Do not put the password directly in the command.
 
-## 4. Preparare il database
+## 4. Prepare the database
 
-Solo per una nuova installazione, importa lo schema:
+For a new installation only, import the schema:
 
 ```sh
 mysql -u root -p < database/schema.sql
 ```
 
-Se il database esiste già e contiene dati, non eseguire questo comando. Segui invece la procedura di migrazione descritta in [setup.md](setup.md).
+If the database already contains data, do not run this command. Follow the migration procedure in [setup.md](setup.md) instead.
 
-## 5. Configurare Tomcat fuori dal repository
+## 5. Configure Tomcat outside the repository
 
-Imposta il percorso dell'installazione Tomcat:
+Set the path to your Tomcat installation:
 
 ```sh
-export CATALINA_HOME="/percorso/tomcat-9"
+export CATALINA_HOME="/path/to/tomcat-9"
 export CATALINA_BASE="$HOME/tomcat-document-manager"
 mkdir -p "$CATALINA_BASE"
 ```
 
-Prepara la configurazione locale:
+Create the local configuration:
 
 ```sh
 if [ ! -d "$CATALINA_BASE/conf" ]; then
@@ -78,9 +78,9 @@ cp config/document-manager.example.xml \
 chmod 600 "$CATALINA_BASE/conf/Catalina/localhost/document-manager.xml"
 ```
 
-Apri il file appena copiato e imposta `dbUrl`, `dbUser` e `dbPassword`. Il file deve restare dentro `CATALINA_BASE`, fuori dal repository.
+Open the copied file and set `dbUrl`, `dbUser` and `dbPassword`. Keep this file inside `CATALINA_BASE`, outside the repository.
 
-## 6. Compilare e installare l'applicazione
+## 6. Build and install the application
 
 ```sh
 mvn clean verify
@@ -88,38 +88,38 @@ mkdir -p "$CATALINA_BASE/webapps"
 cp target/document-manager.war "$CATALINA_BASE/webapps/"
 ```
 
-## 7. Avviare Tomcat
+## 7. Start Tomcat
 
 ```sh
 "$CATALINA_HOME/bin/catalina.sh" start
 ```
 
-Apri il browser su:
+Open the application at:
 
 ```text
 http://localhost:8080/document-manager/index.html
 ```
 
-Registra un account oppure accedi con un account già presente nel database.
+Register an account or sign in with an account already present in the database.
 
-## 8. Fermare l'applicazione
+## 8. Stop the application
 
 ```sh
 "$CATALINA_HOME/bin/catalina.sh" stop
 ```
 
-Quando non serve più, puoi fermare anche MySQL:
+When it is no longer needed, you can stop MySQL as well:
 
 ```sh
 sudo /usr/local/mysql/support-files/mysql.server stop
 ```
 
-## Problemi comuni
+## Common problems
 
-- `mvn: command not found`: installa Maven e riapri il Terminale.
-- `mysql: command not found`: aggiungi `/usr/local/mysql/bin` al `PATH` oppure usa il percorso completo dei programmi MySQL.
-- `Port 8080 already in use`: ferma l'altro Tomcat oppure cambia la porta HTTP in `CATALINA_BASE/conf/server.xml`.
-- `Database configuration is unavailable`: controlla il file `document-manager.xml` e riavvia Tomcat.
-- La pagina non si aggiorna dopo una modifica: ricompila il WAR, sostituiscilo in `webapps` e riavvia Tomcat.
+- `mvn: command not found`: install Maven and reopen Terminal.
+- `mysql: command not found`: add `/usr/local/mysql/bin` to `PATH`, or use the full path to the MySQL programs.
+- `Port 8080 already in use`: stop the other Tomcat instance or change the HTTP port in `CATALINA_BASE/conf/server.xml`.
+- `Database configuration is unavailable`: check `document-manager.xml` and restart Tomcat.
+- The page does not show a recent change: rebuild the WAR, replace it in `webapps` and restart Tomcat.
 
-Per verificare l'applicazione con account e file temporanei usa esclusivamente un database di prova; i test live sono descritti in [testing.md](testing.md).
+Use only a disposable database when testing the application with temporary accounts and files. The live tests are described in [testing.md](testing.md).

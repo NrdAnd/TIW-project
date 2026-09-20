@@ -59,4 +59,4 @@ For uploads, set MySQL `max_allowed_packet` to at least 64 MiB and allow enough 
 
 See [testing](testing.md) for automated checks. The live integration suite creates accounts and files, so use a disposable database for it.
 
-For a complete start and stop procedure from an ordinary Terminal, see [avvio-esterno.md](avvio-esterno.md).
+For a complete start and stop procedure from an ordinary Terminal, see [the external startup guide](avvio-esterno.md).
