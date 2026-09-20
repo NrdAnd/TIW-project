@@ -24,9 +24,12 @@ Requires JDK 19+, Maven 3.9+, Tomcat 9 and MySQL 8+.
 
 See [setup](docs/setup.md) for commands and configuration details. For a local interface preview without MySQL, run `python3 scripts/preview.py` and open `http://127.0.0.1:8765/homepage.html`; preview data is temporary.
 
+For a normal launch from Terminal or Finder, follow the [external startup guide](docs/avvio-esterno.md).
+
 ## Documentation
 
 - [Setup and deployment](docs/setup.md)
+- [External startup guide](docs/avvio-esterno.md)
 - [Architecture and API](docs/architecture.md)
 - [Testing](docs/testing.md)
 - [Security](docs/security.md)
