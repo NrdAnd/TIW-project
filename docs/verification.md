@@ -59,5 +59,5 @@ Use `TIW_BROWSER_CHANNEL=chrome` if relying on an installed Chrome. The live sui
 - No full penetration test, dependency vulnerability audit, sustained load test, all-browser certification or screen-reader audit was performed.
 - Per-file and malformed-batch rejection were exercised. Maximum account-quota saturation, 10,000-item saturation, process-crash recovery and real-time five-minute expiry were not stress-tested.
 - Authentication retains legacy plaintext-password storage and session-hardening limitations; see [security](security.md).
-- The supplied CI workflow has not run on GitHub because nothing was pushed.
+- The supplied CI workflow is separate from these local checks. Review its run status on the repository's Actions page after each push.
 - Screenshots and demo files are fictional. The local preview is in-memory; durable application storage is implemented and verified separately in MySQL.
