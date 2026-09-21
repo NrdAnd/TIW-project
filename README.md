@@ -1,39 +1,91 @@
 # Document Manager
 
-Document Manager is a web application for organising personal folders and files. It uses Java Servlets, MySQL and vanilla JavaScript.
+Document Manager is a Java web application for managing personal folders and files through a responsive browser interface. The backend uses Java Servlets and JDBC, the data is stored in MySQL, and the frontend is built with HTML, CSS, and vanilla JavaScript.
 
 ![Document Manager workspace](docs/images/workspace-desktop.png)
 
-## Features
+## Main features
 
-- Upload multiple files, download the original bytes and preview PNG, JPEG, GIF and WebP images.
-- Create, rename, move, search and delete folders and documents. Drag and drop is supported alongside standard controls.
-- Undo one or more actions from the current session, including file deletion and folder moves.
-- Keep each account's files separate with server-side ownership checks.
+- Account registration and session-based authentication.
+- Per-user folder trees and isolated workspaces.
+- Folder and document creation, renaming, moving, searching, and deletion.
+- Multiple-file uploads, downloads, and previews for PNG, JPEG, GIF, and WebP images.
+- Drag-and-drop file and folder management.
+- Session-based undo for recent workspace changes.
+- Server-side ownership checks, CSRF protection, and transactional database updates.
 
-Limits: 25 MiB per file, 20 files and 100 MiB per upload, 250 MiB per account. Undo history expires after five minutes of inactivity.
+Upload limits are 25 MiB per file, 20 files and 100 MiB per request, and 250 MiB per account. Undo history expires after five minutes of inactivity.
 
-## Get started
+## Requirements
 
-Requires JDK 19+, Maven 3.9+, Tomcat 9 and MySQL 8+.
+- JDK 19 or later
+- Maven 3.9 or later
+- Apache Tomcat 9
+- MySQL 8 or later
 
-1. Create the database with `database/schema.sql` and a database account for the application.
-2. Configure the database connection outside the repository using `config/document-manager.example.xml` as a template.
-3. Build with `mvn clean verify` and deploy `target/document-manager.war` to Tomcat.
-4. Open `/document-manager/index.html` on your Tomcat server and register an account.
+Tomcat 10 is not supported because the application uses the `javax.servlet` API.
 
-See [setup](docs/setup.md) for commands and configuration details. For a local interface preview without MySQL, run `python3 scripts/preview.py` and open `http://127.0.0.1:8765/homepage.html`; preview data is temporary.
+## Setup
 
-For a normal launch from Terminal or Finder, follow the [external startup guide](docs/avvio-esterno.md).
+### 1. Create the database
 
-## Documentation
+Run the schema on a new MySQL installation:
 
-- [Setup and deployment](docs/setup.md)
-- [External startup guide](docs/avvio-esterno.md)
-- [Architecture and API](docs/architecture.md)
-- [Testing](docs/testing.md)
-- [Security](docs/security.md)
+```sh
+mysql -u root -p < database/schema.sql
+```
+
+The script creates the `tiw_document_manager` database and all required tables. It does not add users or sample data.
+
+Create a dedicated database account for the application:
+
+```sql
+CREATE USER 'document_manager'@'localhost' IDENTIFIED BY 'choose-a-private-password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON tiw_document_manager.*
+  TO 'document_manager'@'localhost';
+```
+
+For an existing installation based on the original schema, back up the database and apply `database/migrations/002-files-and-undo.sql` once instead of importing the complete schema.
+
+### 2. Configure Tomcat
+
+Set `CATALINA_HOME` to the Tomcat installation directory and `CATALINA_BASE` to the directory used by the local Tomcat instance. Then copy the provided context configuration:
+
+```sh
+mkdir -p "$CATALINA_BASE/conf/Catalina/localhost"
+cp config/document-manager.example.xml \
+  "$CATALINA_BASE/conf/Catalina/localhost/document-manager.xml"
+```
+
+Edit the copied file and replace the database username and password placeholders. Keep this file outside the repository and do not commit credentials.
+
+The database connection can also be configured through the `TIW_DB_URL`, `TIW_DB_USER`, `TIW_DB_PASSWORD`, and optional `TIW_DB_DRIVER` environment variables. Environment variables take precedence over the Tomcat context parameters.
+
+## Build and run
+
+Build the application and run the automated Java tests:
+
+```sh
+mvn clean verify
+```
+
+Deploy the generated WAR and start Tomcat:
+
+```sh
+cp target/document-manager.war "$CATALINA_BASE/webapps/"
+"$CATALINA_HOME/bin/catalina.sh" start
+```
+
+Open [http://localhost:8080/document-manager/](http://localhost:8080/document-manager/) and create an account. Registration automatically creates the root folder for the new workspace.
+
+To stop the application:
+
+```sh
+"$CATALINA_HOME/bin/catalina.sh" stop
+```
+
+The application stores uploaded file contents in MySQL. Set `max_allowed_packet` to at least 64 MiB and provide sufficient database, temporary-file, and backup storage.
 
 ## License
 
-Project code and documentation are licensed under the [Apache License 2.0](LICENSE). Bundled third-party libraries retain their own licenses. The Politecnico di Milano name and logos are trademarks of their respective owner; Apache 2.0 does not grant trademark rights.
+This project is licensed under the [Apache License 2.0](LICENSE). Bundled third-party libraries remain subject to their respective licenses.
