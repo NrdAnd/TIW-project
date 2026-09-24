@@ -26,7 +26,13 @@ patterns = {
     ),
     "email address": re.compile(rb"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I),
 }
-safe_email_suffixes = (b"@example.com", b"@example.org", b"@example.net", b"@test.invalid")
+safe_email_domains = (b"example.com", b"example.org", b"example.net", b"test.invalid")
+
+
+def is_example_email(address):
+    domain = address.rsplit(b"@", 1)[-1].lower()
+    return any(domain == safe or domain.endswith(b"." + safe) for safe in safe_email_domains)
+
 
 for raw_path in files:
     if not raw_path:
@@ -49,7 +55,7 @@ for raw_path in files:
     for kind, pattern in patterns.items():
         matches = pattern.findall(data)
         if kind == "email address":
-            matches = [m for m in matches if not m.lower().endswith(safe_email_suffixes)]
+            matches = [m for m in matches if not is_example_email(m)]
         if matches:
             findings.append((name, kind))
 
