@@ -146,7 +146,7 @@ for endpoint in [
     "MoveFolder",
     "RenameItem",
 ]:
-    assert anonymous.request(endpoint)[0] == 403, endpoint
+    assert anonymous.request(endpoint)[0] == 401, endpoint
 passed("all file and undo routes require a server session")
 a.signup(user, password)
 b.signup("b" + suffix, password)
@@ -435,7 +435,7 @@ passed("another owner cannot undo an action by guessing its ID")
 a.ok("DeleteDocument", [("documentID", active["documentID"])])
 saved_photo_id = photo["documentID"]
 a.ok("Logout", [])
-assert a.request("GetTree")[0] == 403
+assert a.request("GetTree")[0] == 401
 fresh = Client()
 fresh.login(user, password)
 assert fresh.history()["actions"] == []

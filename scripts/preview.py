@@ -215,6 +215,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.data(
                 dict(
                     csrfToken=TOKEN,
+                    user="Demo · Preview",
                     maxFileSize=MAX_FILE,
                     maxRequestSize=MAX_REQUEST,
                     storageLimit=QUOTA,

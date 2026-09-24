@@ -492,9 +492,33 @@ const check = async (name, fn) => {
       await page.waitForFunction(() =>
         document
           .querySelector("#errorMessage")
-          .textContent.includes("Unable to reach the server"),
+          .textContent.includes("server could not be reached"),
       );
       assert.equal(await page.locator("#login-button").isEnabled(), true);
+      await page.unroute("**/CheckLoginCredentials");
+      await page.reload();
+
+      await page.route("**/CheckLoginCredentials", (r) =>
+        r.fulfill({
+          status: 404,
+          contentType: "text/html",
+          body: "<!doctype html><html><body><h1>HTTP Status 404</h1><pre>internal container details</pre></body></html>",
+        }),
+      );
+      await page.locator("#username").fill("test");
+      await page.locator("#password").fill("test");
+      await page.locator("#login-button").click();
+      await page.waitForFunction(
+        () => document.querySelector("#errorMessage").textContent.length > 0,
+      );
+      assert.equal(
+        await page.locator("#errorMessage").innerText(),
+        "The requested service is unavailable. Rebuild and redeploy the application.",
+      );
+      assert.doesNotMatch(
+        await page.locator("#errorMessage").innerText(),
+        /doctype|HTTP Status|container details/i,
+      );
       await page.unroute("**/CheckLoginCredentials");
       await page.reload();
       await page.setViewportSize({ width: 1440, height: 1040 });

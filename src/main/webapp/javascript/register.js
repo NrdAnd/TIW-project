@@ -42,42 +42,29 @@ function passwordMatch() {
       makeCall("POST", "CheckSignupCredentials", formData, function (req) {
         if (req.readyState === XMLHttpRequest.DONE) {
           document.getElementById("register-button").disabled = false;
-          let message = req.responseText;
-
-          switch (req.status) {
-            case 200:
-              sessionStorage.setItem("utente", message);
+          if (req.status === 200) {
+            try {
+              const result = parseJsonResponse(req.responseText);
+              if (!result.user) throw new Error("Missing user information.");
+              sessionStorage.setItem("utente", result.user);
               window.location.href = "homepage.html";
-              break;
-            case 400: // bad request
-              document.getElementById("errorMessage").textContent =
-                message || "Unable to reach the server. Please try again.";
-              document.getElementById("errorMessage").hidden = false;
-              break;
-            case 401: // unauthorized
-              document.getElementById("errorMessage").textContent =
-                message || "Unable to reach the server. Please try again.";
-              document.getElementById("errorMessage").hidden = false;
-              break;
-            case 403: //an other account is already logged in
-              window.location.href = req.getResponseHeader("Location");
-              window.sessionStorage.removeItem("utente");
-              alert(
-                "An other account is already logged in. Automatically log out...",
+            } catch (_) {
+              showRequestError(
+                document.getElementById("errorMessage"),
+                req,
+                "The server returned an invalid registration response. Please try again.",
               );
-              break;
-            case 409: // conflict
-              document.getElementById("errorMessage").textContent =
-                message || "Unable to reach the server. Please try again.";
-              document.getElementById("errorMessage").hidden = false;
-              break;
-            default: // Includes network errors/timeouts and unexpected server responses
-            case 500: // server error
-              document.getElementById("errorMessage").textContent =
-                message || "Unable to reach the server. Please try again.";
-              document.getElementById("errorMessage").hidden = false;
-              break;
+            }
+            return;
           }
+
+          if (req.status === 403 && req.getResponseHeader("Location")) {
+            window.sessionStorage.removeItem("utente");
+            window.location.href = req.getResponseHeader("Location");
+            return;
+          }
+
+          showRequestError(document.getElementById("errorMessage"), req);
         }
       });
     } else {

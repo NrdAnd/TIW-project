@@ -1,7 +1,7 @@
 package it.polimi.tiw.controllers;
 
-import com.google.gson.Gson;
 import it.polimi.tiw.beans.User;
+import it.polimi.tiw.utils.ApiResponse;
 import it.polimi.tiw.workspace.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +36,6 @@ import javax.servlet.http.*;
     maxFileSize = 25L * 1024 * 1024,
     maxRequestSize = 101L * 1024 * 1024)
 public class WorkspaceController extends HttpServlet {
-  private static final Gson JSON = new Gson();
   private static final Set<String> READ =
       Set.of(
           "SessionToken",
@@ -107,7 +106,15 @@ public class WorkspaceController extends HttpServlet {
         throw new WorkspaceException(405, "This endpoint does not support that method.");
       }
       String csrf = token(session, "workspaceCsrf"), key = token(session, "workspaceSession");
+      if (endpoint.equals("SessionToken")) {
+        json(resp, Map.of("csrfToken", csrf, "user", user.getUsername(),
+            "maxFileSize", FileRules.MAX_FILE, "maxRequestSize", FileRules.MAX_REQUEST,
+            "storageLimit", FileRules.QUOTA));
+        return;
+      }
       if (!read) {
+        if (req.getQueryString() != null && !req.getQueryString().isEmpty())
+          throw new WorkspaceException(400, "Query parameters are not allowed on mutation endpoints.");
         String supplied = req.getHeader("X-CSRF-Token");
         if (supplied == null
             || !MessageDigest.isEqual(
@@ -141,18 +148,6 @@ public class WorkspaceController extends HttpServlet {
         service.lock();
         Object result = Map.of("ok", true);
         switch (endpoint) {
-          case "SessionToken":
-            result =
-                Map.of(
-                    "csrfToken",
-                    csrf,
-                    "maxFileSize",
-                    FileRules.MAX_FILE,
-                    "maxRequestSize",
-                    FileRules.MAX_REQUEST,
-                    "storageLimit",
-                    FileRules.QUOTA);
-            break;
           case "GetTree":
             result = service.tree();
             break;
@@ -240,15 +235,43 @@ public class WorkspaceController extends HttpServlet {
   }
 
   private void json(HttpServletResponse resp, Object value) throws IOException {
-    resp.setContentType("application/json");
-    resp.getWriter().write(JSON.toJson(value));
+    ApiResponse.ok(resp, value);
   }
 
   private void error(HttpServletResponse resp, int status, String message) throws IOException {
-    if (resp.isCommitted()) return;
-    resp.resetBuffer();
-    resp.setStatus(status);
-    resp.setContentType("text/plain");
-    resp.getWriter().write(message);
+    String code;
+    switch (status) {
+      case 400:
+        code = "INVALID_REQUEST";
+        break;
+      case 401:
+        code = "AUTHENTICATION_REQUIRED";
+        break;
+      case 403:
+        code = "INVALID_REQUEST_TOKEN";
+        break;
+      case 404:
+        code = "NOT_FOUND";
+        break;
+      case 405:
+        code = "METHOD_NOT_ALLOWED";
+        break;
+      case 409:
+        code = "WORKSPACE_CONFLICT";
+        break;
+      case 413:
+        code = "UPLOAD_TOO_LARGE";
+        break;
+      case 415:
+        code = "UNSUPPORTED_FILE_TYPE";
+        break;
+      case 503:
+        code = "DATABASE_UNAVAILABLE";
+        break;
+      default:
+        code = "WORKSPACE_ERROR";
+        break;
+    }
+    ApiResponse.error(resp, status, code, message);
   }
 }

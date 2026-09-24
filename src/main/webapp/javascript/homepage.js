@@ -11,7 +11,10 @@
     editing = false,
     dragged = null,
     busy = false,
-    panelRevision = 0;
+    panelRevision = 0,
+    ready = false,
+    loading = false,
+    historyError = "";
   let limits = {
     maxFileSize: 25 * 1024 * 1024,
     maxRequestSize: 100 * 1024 * 1024,
@@ -67,10 +70,7 @@
           }
           if (response.status === 200) resolve(response.responseText);
           else {
-            const error = new Error(
-              response.responseText ||
-                "Unable to reach the server. Please try again.",
-            );
+            const error = new Error(requestErrorMessage(response));
             error.status = response.status;
             reject(error);
           }
@@ -97,52 +97,129 @@
       );
     });
   }
+  function updateControls() {
+    const unavailable = !ready || loading || busy;
+    ["RootButton", "UploadButton", "EditButton", "searchInput"].forEach(
+      (id) => ($(id).disabled = unavailable),
+    );
+    $("uploadDropzone").setAttribute("aria-disabled", String(unavailable));
+    $("RetryButton").disabled = loading || busy;
+    document.querySelectorAll(".undo-button").forEach((control) => {
+      const entry = history.find((entry) =>
+        entry.id === control.closest(".activity-item").dataset.actionId);
+      control.disabled = unavailable || !entry?.undoable;
+    });
+  }
+  function validateTree(value) {
+    const ids = new Set();
+    function visit(branch, depth = 0) {
+      if (!branch || !branch.folder || depth > 40 ||
+          !Number.isInteger(branch.folder.folderID) || branch.folder.folderID <= 0 ||
+          ids.has(branch.folder.folderID) || typeof branch.folder.folderName !== "string" ||
+          !Number.isInteger(branch.folder.depth) ||
+          !Array.isArray(branch.children) || !Array.isArray(branch.documentList) ||
+          branch.documentList.some((doc) => !doc || !Number.isInteger(doc.documentID) ||
+            typeof doc.documentName !== "string" || typeof doc.documentType !== "string"))
+        throw new Error("The server returned an invalid folder tree. Please retry.");
+      ids.add(branch.folder.folderID);
+      branch.children.forEach((child) => visit(child, depth + 1));
+    }
+    visit(value);
+    return value;
+  }
+  function validateHistory(value) {
+    if (!value || !Array.isArray(value.actions) ||
+        typeof value.revision !== "string" || !/^\d+$/.test(value.revision) ||
+        !Number.isFinite(value.storageUsed) || !Number.isFinite(value.storageLimit) ||
+        value.actions.some((entry) => !entry || typeof entry.id !== "string" ||
+          typeof entry.description !== "string" || typeof entry.undoable !== "boolean" ||
+          !Number.isInteger(entry.undoCount)))
+      throw new Error("The server returned invalid activity data. Please retry.");
+    return value;
+  }
+  async function loadSession() {
+    const config = parseJsonResponse(await request("GET", "SessionToken"));
+    if (!config || typeof config.csrfToken !== "string" || !config.csrfToken ||
+        typeof config.user !== "string" || !config.user.trim() ||
+        !Number.isFinite(config.maxFileSize) || !Number.isFinite(config.maxRequestSize) ||
+        !Number.isFinite(config.storageLimit))
+      throw new Error("The server returned invalid session data. Please retry.");
+    csrfToken = config.csrfToken;
+    limits = config;
+    // The cookie-backed server session works in every tab. Storage is only a display cache.
+    sessionStorage.setItem("utente", config.user);
+    $("userLabel").textContent = config.user;
+    $("userInitial").textContent = config.user.trim().charAt(0).toUpperCase() || "U";
+  }
+  async function bootstrap() {
+    if (loading || busy) return;
+    loading = true;
+    ready = false;
+    $("treeContainer").setAttribute("aria-busy", "true");
+    $("RetryButton").hidden = true;
+    updateControls();
+    try {
+      await loadSession();
+      await refresh();
+    } catch (error) {
+      announce(error.message, true);
+      $("rightContainer").replaceChildren(node("p", "alert", error.message));
+      $("RetryButton").hidden = false;
+    } finally {
+      loading = false;
+      $("treeContainer").setAttribute("aria-busy", "false");
+      updateControls();
+    }
+  }
   async function refresh() {
     $("treeContainer").setAttribute("aria-busy", "true");
     $("treeError").hidden = true;
     const revision = panelRevision;
-    const results = await Promise.allSettled([
-      request("GET", "GetTree").then(JSON.parse),
-      request("GET", "GetVersionHistory").then(JSON.parse),
-    ]);
-    if (results[0].status === "fulfilled" && results[0].value) {
-      tree = results[0].value;
+    try {
+      const results = await Promise.allSettled([
+        request("GET", "GetTree").then(parseJsonResponse).then(validateTree),
+        request("GET", "GetVersionHistory").then(parseJsonResponse).then(validateHistory),
+      ]);
+      ready = results[0].status === "fulfilled";
       folders.clear();
       documents.clear();
-      (function collect(branch) {
-        folders.set(branch.folder.folderID, branch.folder);
-        (branch.documentList || []).forEach((doc) =>
-          documents.set(doc.documentID, doc),
-        );
-        (branch.children || []).forEach(collect);
-      })(tree);
-      $("folderCount").textContent = [...folders.values()].filter(
-        (folder) => folder.depth > 0,
-      ).length;
-      $("documentCount").textContent = documents.size;
-      renderTree();
-    } else {
-      $("treeError").textContent =
-        results[0].reason?.message || "Unable to load your library.";
-      $("treeError").hidden = false;
-    }
-    if (results[1].status === "fulfilled") {
-      const data = results[1].value;
-      history = data.actions;
-      workspaceRevision = data.revision;
-      $("storageUsed").textContent =
-        bytes(data.storageUsed) +
-        " / " +
-        bytes(data.storageLimit) +
-        " · includes undo";
+      if (ready) {
+        tree = results[0].value;
+        (function collect(branch) {
+          folders.set(branch.folder.folderID, branch.folder);
+          branch.documentList.forEach((doc) => documents.set(doc.documentID, doc));
+          branch.children.forEach(collect);
+        })(tree);
+        $("folderCount").textContent = [...folders.values()].filter((f) => f.depth > 0).length;
+        $("documentCount").textContent = documents.size;
+        renderTree();
+      } else {
+        tree = null;
+        $("treeContainer").replaceChildren();
+        $("emptyState").hidden = true;
+        $("folderCount").textContent = "—";
+        $("documentCount").textContent = "—";
+        $("treeError").textContent = results[0].reason.message;
+        $("treeError").hidden = false;
+      }
+      historyError = results[1].status === "rejected" ? results[1].reason.message : "";
+      if (!historyError) {
+        const data = results[1].value;
+        history = data.actions;
+        workspaceRevision = data.revision;
+        $("storageUsed").textContent = bytes(data.storageUsed) + " / " + bytes(data.storageLimit) + " · includes undo";
+      } else {
+        history = [];
+        $("storageUsed").textContent = "Storage unavailable";
+      }
       if (panelRevision === revision) showActivity();
-    } else if (panelRevision === revision) {
-      $("rightContainer").replaceChildren(
-        node("h2", "", "Session activity"),
-        node("p", "alert", results[1].reason.message),
-      );
+      $("RetryButton").hidden = ready && !historyError;
+      if (ready && !historyError) $("statusMessage").hidden = true;
+      return ready && !historyError;
+    } finally {
+      $("treeContainer").setAttribute("aria-busy", "false");
+      updateControls();
     }
-    $("treeContainer").setAttribute("aria-busy", "false");
   }
   function setEdit(value) {
     editing = value;
@@ -321,6 +398,10 @@
         "Undo an action and everything after it. Available until your session ends.",
       ),
     );
+    if (historyError) {
+      panel.append(node("p", "alert", historyError));
+      return;
+    }
     if (!history.length) {
       const empty = node("p", "activity-empty");
       empty.append(
@@ -351,7 +432,7 @@
         "undo-button",
         () => undoAction(entry),
       );
-      undo.disabled = !entry.undoable || busy;
+      undo.disabled = !entry.undoable || busy || !ready || loading;
       undo.setAttribute(
         "aria-label",
         "Undo " +
@@ -377,7 +458,7 @@
     panel.append(list);
   }
   function undoAction(entry) {
-    if (busy || !entry.undoable) return;
+    if (busy || !ready || loading || !entry.undoable) return;
     const text =
       entry.undoCount === 1
         ? "Undo “" + entry.description + "”?"
@@ -437,7 +518,7 @@
     $("folderName").focus({ preventScroll: true });
   }
   function showUpload(destination = null, selected = []) {
-    if (busy) return;
+    if (busy || loading || !ready) return;
     panelRevision++;
     const panel = $("rightContainer");
     panel.replaceChildren($("uploadFormTemplate").content.cloneNode(true));
@@ -489,7 +570,7 @@
     focusPanel();
   }
   async function uploadFiles(files, destination) {
-    if (busy) return;
+    if (busy || loading || !ready) return;
     if (!files.length || files.length > 20) {
       announce("Choose between 1 and 20 files.", true);
       return;
@@ -516,7 +597,7 @@
   async function showDocument(id) {
     const revision = ++panelRevision;
     try {
-      const doc = JSON.parse(
+      const doc = parseJsonResponse(
         await request(
           "GET",
           "GetDocument?documentID=" + encodeURIComponent(id),
@@ -584,7 +665,7 @@
     }
   }
   function showRename(item) {
-    if (busy) return;
+    if (busy || loading || !ready) return;
     panelRevision++;
     const entry =
       item.type === "folder" ? folders.get(item.id) : documents.get(item.id);
@@ -630,7 +711,7 @@
     return false;
   }
   function showMove(item) {
-    if (busy) return;
+    if (busy || loading || !ready) return;
     panelRevision++;
     const entry =
       item.type === "folder" ? folders.get(item.id) : documents.get(item.id);
@@ -724,7 +805,7 @@
     );
   }
   async function mutate(endpoint, data, message) {
-    if (busy) return false;
+    if (busy || loading || !ready) return false;
     busy = true;
     const controls = [
       ...document.querySelectorAll(
@@ -740,8 +821,8 @@
     try {
       await request("POST", endpoint, data);
       panelRevision++;
-      await refresh();
-      announce(message);
+      const refreshed = await refresh();
+      announce(refreshed ? message : message + " The workspace could not refresh. Use Retry workspace.", !refreshed);
       return true;
     } catch (error) {
       if (endpoint === "UndoActions" && error.status === 409) {
@@ -754,19 +835,14 @@
       busy = false;
       controls.forEach((control) => (control.disabled = false));
       $("uploadProgress").hidden = true;
-      document.querySelectorAll(".undo-button").forEach((control) => {
-        const entry = history.find(
-          (entry) =>
-            entry.id === control.closest(".activity-item").dataset.actionId,
-        );
-        control.disabled = !entry?.undoable;
-      });
+      updateControls();
     }
   }
   async function logout() {
     if (busy) return;
     $("Logout").disabled = true;
     try {
+      if (!csrfToken) await loadSession();
       await request("POST", "Logout");
       sessionStorage.removeItem("utente");
       location.href = "index.html";
@@ -775,20 +851,13 @@
       $("Logout").disabled = false;
     }
   }
-  const user = sessionStorage.getItem("utente");
-  if (user === null) {
-    location.replace("index.html");
-    return;
-  }
-  $("userLabel").textContent = user.trim();
-  $("userInitial").textContent = user.trim().charAt(0).toUpperCase() || "U";
   $("Logout").addEventListener("click", logout);
   $("EditButton").addEventListener("click", () => setEdit(!editing));
   $("RootButton").addEventListener("click", () => {
-    if (tree && !busy) showFolderForm(tree.folder);
+    if (tree && ready && !loading && !busy) showFolderForm(tree.folder);
   });
   $("UploadButton").addEventListener("click", () => {
-    if (tree) showUpload();
+    if (tree && ready && !loading && !busy) showUpload();
   });
   $("searchInput").addEventListener("input", renderTree);
   $("overviewButton").addEventListener("click", () => {
@@ -806,12 +875,12 @@
   $("closeGuide").addEventListener("click", () => $("guideDialog").close());
   const dropzone = $("uploadDropzone");
   dropzone.addEventListener("click", () => {
-    if (tree) showUpload();
+    if (tree && ready && !loading && !busy) showUpload();
   });
   dropzone.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      if (tree) showUpload();
+      if (tree && ready && !loading && !busy) showUpload();
     }
   });
   dropzone.addEventListener("dragover", (event) => {
@@ -827,7 +896,7 @@
     event.preventDefault();
     event.stopPropagation();
     dropzone.classList.remove("dragover");
-    if (tree && event.dataTransfer.files.length)
+    if (tree && ready && !loading && !busy && event.dataTransfer.files.length)
       showUpload(null, [...event.dataTransfer.files]);
   });
   window.addEventListener("dragover", (event) => {
@@ -855,12 +924,6 @@
   $("rightContainer").append(
     node("p", "loading-state", "Loading your workspace…"),
   );
-  request("GET", "SessionToken")
-    .then(JSON.parse)
-    .then((config) => {
-      csrfToken = config.csrfToken;
-      limits = config;
-      return refresh();
-    })
-    .catch((error) => announce(error.message, true));
+  $("RetryButton").addEventListener("click", bootstrap);
+  bootstrap();
 })();

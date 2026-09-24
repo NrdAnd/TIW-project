@@ -32,7 +32,8 @@ public class TreeNode {
 	}
 
 	public void setDocumentList(ArrayList<Document> documentList) {
-		this.documentList.addAll(documentList);
+		this.documentList.clear();
+        if (documentList != null) this.documentList.addAll(documentList);
 	}
 
 	

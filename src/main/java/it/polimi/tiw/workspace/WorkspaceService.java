@@ -73,10 +73,11 @@ public final class WorkspaceService implements AutoCloseable {
             + " expires_at>CURRENT_TIMESTAMP",
         owner,
         sessionKey);
-    execute(
+    int expired = execute(
         "UPDATE WorkspaceAction SET before_state=NULL WHERE owner_id=? AND"
-            + " expires_at<=CURRENT_TIMESTAMP",
+            + " expires_at<=CURRENT_TIMESTAMP AND before_state IS NOT NULL",
         owner);
+    if (expired > 0) pruneBlobs();
   }
 
   public void commit() throws SQLException {

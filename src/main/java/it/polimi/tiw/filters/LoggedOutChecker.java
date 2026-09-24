@@ -1,46 +1,22 @@
 package it.polimi.tiw.filters;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import it.polimi.tiw.utils.ApiResponse;
 import java.io.IOException;
+import javax.servlet.*;
+import javax.servlet.http.*;
 
+/** Redundant authentication never signs out another tab or destroys undo history. */
 public class LoggedOutChecker implements Filter {
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        Filter.super.init(filterConfig);
+  @Override
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+      throws IOException, ServletException {
+    HttpServletRequest req = (HttpServletRequest) request;
+    HttpSession session = req.getSession(false);
+    if (session != null && session.getAttribute("utente") != null && req.getMethod().equals("POST")) {
+      ApiResponse.error((HttpServletResponse) response, 409, "ALREADY_AUTHENTICATED",
+          "You are already signed in. Open your workspace, or sign out before changing accounts.");
+      return;
     }
-
-    @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        // If the user is not logged in (not present in session) redirect to the login
-        HttpServletRequest req = (HttpServletRequest) servletRequest;
-        HttpServletResponse resp = (HttpServletResponse) servletResponse;
-        HttpSession session = req.getSession();
-
-        if (!session.isNew() && session.getAttribute("utente") != null && req.getMethod().equals("POST")) {
-        	
-            //((HttpServletResponse) resp).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            
-            if(session != null) {
-                session.invalidate();
-            }
-              
-            String loginpath = req.getServletContext().getContextPath() + "/index.html";
-            resp.getWriter().println("You are already logged in! Automatically log out of your previous account ...");
-            
-            resp.setStatus(403);
-            resp.setHeader("Location", loginpath);
-            return;
-            
-        } else {
-        	filterChain.doFilter(servletRequest, servletResponse);
-        }
-    }
-
-    @Override
-    public void destroy() {
-        Filter.super.destroy();
-    }
+    chain.doFilter(request, response);
+  }
 }

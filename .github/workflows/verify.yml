@@ -37,3 +37,95 @@ jobs:
             sleep 1
           done
           npm test
+
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: temporary-ci-root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ptemporary-ci-root"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    env:
+      # Disposable CI instance only; these are not deployment credentials.
+      TIW_DB_URL: jdbc:mysql://127.0.0.1:3306/tiw_document_manager?allowPublicKeyRetrieval=true&useSSL=false
+      TIW_DB_USER: tiw_ci
+      TIW_DB_PASSWORD: temporary-ci-app
+      TIW_LIVE_URL: http://127.0.0.1:8080/document-manager
+      TIW_ALLOW_TEMPORARY_DATA: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: mvn --batch-mode --no-transfer-progress verify
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Create disposable database and restricted application user
+        env:
+          MYSQL_PWD: temporary-ci-root
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
+          mysql -h 127.0.0.1 -u root < database/schema.sql
+          mysql -h 127.0.0.1 -u root <<'SQL'
+          SET GLOBAL max_allowed_packet=67108864;
+          CREATE USER 'tiw_ci'@'%' IDENTIFIED BY 'temporary-ci-app';
+          GRANT SELECT,INSERT,UPDATE,DELETE ON tiw_document_manager.* TO 'tiw_ci'@'%';
+          SQL
+          umask 077
+          cat > /tmp/tiw-ci-mysql.cnf <<'CNF'
+          [client]
+          user=root
+          password=temporary-ci-root
+          host=127.0.0.1
+          port=3306
+          CNF
+          python3 - <<'PY'
+          import os, xml.etree.ElementTree as E
+          context = E.Element('Context')
+          for name, env in [('dbUrl', 'TIW_DB_URL'), ('dbUser', 'TIW_DB_USER'), ('dbPassword', 'TIW_DB_PASSWORD')]:
+              E.SubElement(context, 'Parameter', name=name, value=os.environ[env], override='false')
+          E.ElementTree(context).write('/tmp/tiw-ci-context.xml')
+          PY
+      - name: Start the actual WAR on Tomcat 9
+        run: |
+          docker run --detach --name tiw-live --network host \
+            -e TIW_DB_URL -e TIW_DB_USER -e TIW_DB_PASSWORD \
+            --mount "type=bind,source=$PWD/target/document-manager.war,target=/usr/local/tomcat/webapps/document-manager.war,readonly" \
+            tomcat:9.0.122-jdk21-temurin
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "$TIW_LIVE_URL/index.html" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs tiw-live
+          exit 1
+      - name: Live servlet and browser regression suites
+        run: |
+          python3 scripts/test-integration.py --url "$TIW_LIVE_URL" --allow-temporary-data
+          python3 scripts/audit-api.py --url "$TIW_LIVE_URL" --allow-temporary-data --mysql-defaults /tmp/tiw-ci-mysql.cnf
+          node scripts/test-ui-live.cjs
+          node scripts/audit-browser.cjs
+          python3 scripts/audit-transactions.py --url "$TIW_LIVE_URL" --allow-temporary-data --mysql-defaults /tmp/tiw-ci-mysql.cnf
+          mkdir -p target/legacy-audit
+          javac -cp 'target/classes:target/document-manager/WEB-INF/lib/*' -d target/legacy-audit scripts/LegacyDaoAudit.java
+          java -cp 'target/legacy-audit:target/classes:target/document-manager/WEB-INF/lib/*' LegacyDaoAudit /tmp/tiw-ci-context.xml --allow-temporary-data
+      - name: Tomcat diagnostics and cleanup
+        if: always()
+        run: |
+          docker logs tiw-live || true
+          docker rm -f tiw-live || true
+          rm -f /tmp/tiw-ci-mysql.cnf /tmp/tiw-ci-context.xml

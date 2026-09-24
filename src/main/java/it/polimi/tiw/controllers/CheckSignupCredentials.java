@@ -3,9 +3,11 @@ package it.polimi.tiw.controllers;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.dao.FolderDAO;
 import it.polimi.tiw.dao.UserDAO;
+import it.polimi.tiw.utils.ApiResponse;
 import it.polimi.tiw.utils.ConnectionHandler;
 
 import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,152 +16,146 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.regex.Pattern;
+import it.polimi.tiw.utils.RequestFields;
+import java.util.Map;
+import it.polimi.tiw.utils.EmailRules;
 
 @WebServlet("/CheckSignupCredentials")
-@MultipartConfig
+@MultipartConfig(maxRequestSize = 16384, maxFileSize = 4096)
 public class CheckSignupCredentials extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private Connection connection = null;
-
-	public CheckSignupCredentials() {
-		super();
-	}
-
-	@Override
-	public void init() throws ServletException {
-		connection = ConnectionHandler.getConnection(getServletContext());
-	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+		req.setCharacterEncoding("UTF-8");
+		if (!RequestFields.unambiguous(req)) {
+			ApiResponse.error(resp, 400, "INVALID_REQUEST", "Duplicate fields or query parameters are not allowed.");
+			return;
+		}
 		String email = req.getParameter("email");
 		String password = req.getParameter("password");
 		String passwordCheck = req.getParameter("passwordCheck");
 		String username = req.getParameter("username");
 
-		resp.setContentType("text/plain");
-
-		// checking credentials are not null or empty
 		if (email == null || password == null || passwordCheck == null || username == null || email.isEmpty()
-				|| password.isEmpty() || username.isEmpty()) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Error: Missing credentials");
+				|| password.isEmpty() || passwordCheck.isEmpty() || username.isEmpty()) {
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_BAD_REQUEST,
+					"MISSING_REGISTRATION_DATA",
+					"Complete every field before creating your account.");
+			return;
+		}
+
+		email = email.trim();
+		username = username.trim();
+		if (email.isEmpty() || username.isEmpty()) {
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_BAD_REQUEST,
+					"MISSING_REGISTRATION_DATA",
+					"Complete every field before creating your account.");
 			return;
 		}
 		
 		if (email.length()>30 || username.length()>25 || password.length()>25 || passwordCheck.length()>25) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Error: Invalid credential length");
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_BAD_REQUEST,
+					"REGISTRATION_DATA_TOO_LONG",
+					"Use at most 25 characters for the username and password, and 30 for the email address.");
 			return;
 		}
 
-		// Validate email
-		Pattern emailPattern = Pattern.compile("^.+@.+\\..+$");
-		if (!emailPattern.matcher(email).matches()) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Error: Invalid Email");
-			return;
-		}
-		UserDAO userDao = new UserDAO(connection);
-		
-		try {
-			if (!userDao.emailIsDuplicate(email)) {
-				resp.setStatus(HttpServletResponse.SC_CONFLICT);
-				resp.getWriter().println("Error: Email already exists");
-				return;
-			}
-		} catch (SQLException e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error; Query went wrong");
+		if (!EmailRules.valid(email)) {
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_BAD_REQUEST,
+					"INVALID_EMAIL",
+					"Enter a valid email address.");
 			return;
 		}
 
-		// check that the entered passwords match
 		if (!passwordCheck.equals(password)) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			resp.getWriter().println("Passwords must be equal");
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_BAD_REQUEST,
+					"PASSWORD_MISMATCH",
+					"The two passwords do not match.");
 			return;
 		}
 
-
-		// checks the uniqueness of the username
-		boolean isDuplicate;
-		try {
-			isDuplicate = userDao.checkRegister(username);
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("SQL error: impossible to check if username is unique");
-			return;
-		}
-
-		if (isDuplicate) {
-			resp.setStatus(HttpServletResponse.SC_CONFLICT);
-			resp.getWriter().println("Username already exists!");
-			return;
-		}
-
-		// adds the user to the db
-		try {
-			userDao.registerUser(email, password, username);
-		} catch (SQLException e) {
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			resp.getWriter().println("SQL error: Impossible to Signup user");
-			return;
-		}
-
-		// Extracts the user in the DB
-		User utente;
-		try {
-			utente = userDao.getUtenteByUsername(username);
-			req.getSession().setMaxInactiveInterval(300);
-			req.getSession().setAttribute("utente", utente);
-			resp.setStatus(HttpServletResponse.SC_OK);
-			resp.setContentType("application/json");
-			resp.setCharacterEncoding("UTF-8");
-			resp.getWriter().println(utente.getEmail());
-
-			FolderDAO folderDao = new FolderDAO(connection);
+		try (Connection connection = ConnectionHandler.getConnection(getServletContext())) {
+			connection.setAutoCommit(false);
 			try {
-
-				int code;
-				code = folderDao.createHomePageFolder(utente.getUserID());
-				if (code != 1) {
-					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-							"SQL error: Query went wrong");
+				UserDAO userDao = new UserDAO(connection);
+				if (!userDao.emailIsDuplicate(email)) {
+					connection.rollback();
+					ApiResponse.error(
+							resp,
+							HttpServletResponse.SC_CONFLICT,
+							"EMAIL_ALREADY_EXISTS",
+							"An account already uses this email address.");
 					return;
 				}
+				if (userDao.checkRegister(username)) {
+					connection.rollback();
+					ApiResponse.error(
+							resp,
+							HttpServletResponse.SC_CONFLICT,
+							"USERNAME_ALREADY_EXISTS",
+							"This username is already in use. Choose another one.");
+					return;
+				}
+
+				int userId = userDao.registerUser(email, password, username);
+				new FolderDAO(connection).createHomePageFolder(userId);
+				connection.commit();
+
+				User user = new User();
+				user.setUserID(userId);
+				user.setUsername(username);
+				user.setEmail(email);
+				req.getSession().setMaxInactiveInterval(300);
+			req.changeSessionId();
+				req.getSession().setAttribute("utente", user);
+				ApiResponse.ok(resp, Map.of("user", username));
 			} catch (SQLException e) {
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "SQL error: Query went wrong");
-				return;
+				try {
+					connection.rollback();
+				} catch (SQLException rollbackError) {
+					getServletContext().log("Registration rollback failed.");
+				}
+				throw e;
 			}
-
+		} catch (UnavailableException e) {
+			getServletContext().log("Registration unavailable: database connection could not be opened.");
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+					"DATABASE_UNAVAILABLE",
+					"The database is unavailable. Check that MySQL is running and that the application credentials are correct.");
+		} catch (SQLIntegrityConstraintViolationException e) {
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_CONFLICT,
+					"ACCOUNT_ALREADY_EXISTS",
+					"The username or email address is already in use.");
 		} catch (SQLException e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-					"SQL Error: Impossible to fetch requested user");
-			return;
+			getServletContext().log("Registration database operation failed (SQL state " + e.getSQLState() + ").");
+			ApiResponse.error(
+					resp,
+					HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+					"REGISTRATION_FAILED",
+					"The account could not be created. No partial changes were saved.");
 		}
-
-		ArrayList<String> versionQueue = new ArrayList<>();
-		req.getSession().setAttribute("versionQueue", versionQueue);
-		
 	}
 	
 	
     @Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		doPost(req, resp);
-	}
-
-	
-	@Override
-	public void destroy() {
-		try {
-			ConnectionHandler.closeConnection(connection);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		ApiResponse.methodNotAllowed(resp, "POST");
 	}
 }

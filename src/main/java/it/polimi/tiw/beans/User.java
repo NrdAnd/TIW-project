@@ -5,7 +5,6 @@ public class User {
 	private int userID;
 	private String username;
 	private String email;
-	private String password;
 	
 	
 	public int getUserID() {
@@ -32,12 +31,5 @@ public class User {
 		this.email = email;
 	}
 
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
 
 }

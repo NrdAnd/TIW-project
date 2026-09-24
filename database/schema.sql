@@ -9,8 +9,8 @@ CREATE TABLE `User` (
   user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(25) NOT NULL,
   email VARCHAR(30) NOT NULL,
-  -- Legacy authentication compares this value directly.
-  password VARCHAR(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  -- Salted PBKDF2 hashes; migrate existing installations with migration 003.
+  password VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   UNIQUE KEY uq_user_username (username),
   UNIQUE KEY uq_user_email (email)
 ) ENGINE=InnoDB;

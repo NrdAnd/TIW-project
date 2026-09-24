@@ -41,8 +41,11 @@ class SessionFiltersTest {
         final HttpServletResponse response = proxy(HttpServletResponse.class, (p, method, args) -> {
             switch (method.getName()) {
                 case "setStatus": status = (int) args[0]; break;
-                case "setHeader": location = (String) args[1]; break;
+                case "setHeader":
+                    if ("Location".equals(args[0])) location = (String) args[1];
+                    break;
                 case "getWriter": return new PrintWriter(body);
+                case "isCommitted": return false;
             }
             return null;
         });
@@ -51,23 +54,25 @@ class SessionFiltersTest {
     @Test void anonymousSessionIsRejected() throws Exception {
         Exchange e = new Exchange();
         new Checker().doFilter(e.request, e.response, e.chain);
-        assertEquals(403, e.status); assertFalse(e.continued);
+        assertEquals(401, e.status); assertFalse(e.continued);
         assertEquals("/document-manager/index.html", e.location);
+        assertTrue(e.body.toString().contains("Your session has expired"));
+        assertFalse(e.body.toString().contains("<html"));
     }
     @Test void newSessionIsRejectedEvenWithAttribute() throws Exception {
         Exchange e = new Exchange(); e.isNew = true; e.authenticated = true;
         new Checker().doFilter(e.request, e.response, e.chain);
-        assertEquals(403, e.status); assertFalse(e.continued);
+        assertEquals(401, e.status); assertFalse(e.continued);
     }
     @Test void establishedAuthenticatedSessionPasses() throws Exception {
         Exchange e = new Exchange(); e.authenticated = true;
         new Checker().doFilter(e.request, e.response, e.chain);
         assertTrue(e.continued); assertEquals(0, e.status);
     }
-    @Test void secondLoginInvalidatesSessionAndStopsRequest() throws Exception {
+    @Test void secondLoginPreservesSessionAndStopsRequest() throws Exception {
         Exchange e = new Exchange(); e.authenticated = true;
         new LoggedOutChecker().doFilter(e.request, e.response, e.chain);
-        assertTrue(e.invalidated); assertFalse(e.continued); assertEquals(403, e.status);
+        assertFalse(e.invalidated); assertFalse(e.continued); assertEquals(409, e.status);
     }
     @Test void anonymousLoginCanProceed() throws Exception {
         Exchange e = new Exchange();
